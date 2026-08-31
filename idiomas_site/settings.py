@@ -32,6 +32,18 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
 
+# CSRF exige a origem com esquema (https://dominio). Railway/Render ficam
+# atrás de um proxy HTTPS — sem isso o Django rejeita todo POST (login,
+# formulários) com "Verificação CSRF falhou" mesmo com sessão válida.
+def _csrf_origin(host):
+    # ".up.railway.app" (curinga de subdomínio em ALLOWED_HOSTS) vira
+    # "https://*.up.railway.app" (sintaxe de curinga que o Django exige aqui)
+    return f'https://*{host}' if host.startswith('.') else f'https://{host}'
+
+CSRF_TRUSTED_ORIGINS = [
+    _csrf_origin(h) for h in ALLOWED_HOSTS if h not in ('localhost', '127.0.0.1')
+]
+
 
 # Application definition
 
