@@ -23,7 +23,6 @@ class Word(models.Model):
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="words")
     pt = models.CharField("português", max_length=80)
     en = models.CharField("inglês", max_length=80)
-    emoji = models.CharField(max_length=16)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

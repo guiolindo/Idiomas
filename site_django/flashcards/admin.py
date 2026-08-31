@@ -6,7 +6,7 @@ from .models import Topic, Word, Progress, Profile
 class WordInline(admin.TabularInline):
     model = Word
     extra = 1
-    fields = ("order", "pt", "en", "emoji")
+    fields = ("order", "pt", "en")
 
 
 @admin.register(Topic)
@@ -19,7 +19,7 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(Word)
 class WordAdmin(admin.ModelAdmin):
-    list_display = ("pt", "en", "topic", "emoji")
+    list_display = ("pt", "en", "topic")
     list_filter = ("topic",)
     search_fields = ("pt", "en")
 

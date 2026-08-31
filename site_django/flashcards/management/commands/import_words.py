@@ -18,6 +18,11 @@ class Command(BaseCommand):
             help="Apaga e recria as palavras de cada tópico mesmo que já existam "
                  "(CUIDADO: destrói edições feitas manualmente no admin).",
         )
+        parser.add_argument(
+            "--file", default=None,
+            help="Caminho pra um words.json alternativo (ex: um vocabulário maior "
+                 "gerado por IA). Por padrão usa app/data/words.json.",
+        )
 
     def handle(self, *args, **options):
         if Word.objects.exists() and not options["force"]:
@@ -27,17 +32,18 @@ class Command(BaseCommand):
             ))
             return
 
-        with open(DATA_PATH, encoding="utf-8") as f:
+        path = Path(options["file"]) if options["file"] else DATA_PATH
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
 
         for order, topic_data in enumerate(data["topics"]):
             topic, created = Topic.objects.update_or_create(
                 slug=slugify(topic_data["id"]),
-                defaults={"name": topic_data["name"], "emoji": topic_data["emoji"], "order": order},
+                defaults={"name": topic_data["name"], "emoji": topic_data.get("emoji", "🔤"), "order": order},
             )
             topic.words.all().delete()
             Word.objects.bulk_create([
-                Word(topic=topic, pt=w["pt"], en=w["en"], emoji=w["emoji"], order=i)
+                Word(topic=topic, pt=w["pt"], en=w["en"], order=i)
                 for i, w in enumerate(topic_data["words"])
             ])
             action = "criado" if created else "atualizado"

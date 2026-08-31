@@ -9,10 +9,10 @@ from .models import Topic, Word, Progress, Profile
 from .views import _bump_streak
 
 
-def make_topic(slug="frutas", name="Frutas", emoji="🍎", words=(("maçã", "apple", "🍎"), ("banana", "banana", "🍌"))):
+def make_topic(slug="frutas", name="Frutas", emoji="🍎", words=(("maçã", "apple"), ("banana", "banana"))):
     topic = Topic.objects.create(slug=slug, name=name, emoji=emoji, order=0)
-    for i, (pt, en, emoji) in enumerate(words):
-        Word.objects.create(topic=topic, pt=pt, en=en, emoji=emoji, order=i)
+    for i, (pt, en) in enumerate(words):
+        Word.objects.create(topic=topic, pt=pt, en=en, order=i)
     return topic
 
 
