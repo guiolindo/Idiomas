@@ -1,0 +1,2425 @@
+{
+  "topics": [
+    {
+      "id": "pessoas",
+      "name": "Pessoas e família",
+      "emoji": "👨‍👩‍👧",
+      "words": [
+        {
+          "pt": "mãe",
+          "en": "mother",
+          "emoji": "👩"
+        },
+        {
+          "pt": "pai",
+          "en": "father",
+          "emoji": "👨"
+        },
+        {
+          "pt": "filho",
+          "en": "son",
+          "emoji": "👦"
+        },
+        {
+          "pt": "filha",
+          "en": "daughter",
+          "emoji": "👧"
+        },
+        {
+          "pt": "irmão",
+          "en": "brother",
+          "emoji": "🧑"
+        },
+        {
+          "pt": "irmã",
+          "en": "sister",
+          "emoji": "👩"
+        },
+        {
+          "pt": "avô",
+          "en": "grandfather",
+          "emoji": "👴"
+        },
+        {
+          "pt": "avó",
+          "en": "grandmother",
+          "emoji": "👵"
+        },
+        {
+          "pt": "amigo",
+          "en": "friend",
+          "emoji": "🧑‍🤝‍🧑"
+        },
+        {
+          "pt": "pessoa",
+          "en": "person",
+          "emoji": "🧍"
+        },
+        {
+          "pt": "homem",
+          "en": "man",
+          "emoji": "🧔"
+        },
+        {
+          "pt": "mulher",
+          "en": "woman",
+          "emoji": "👩"
+        },
+        {
+          "pt": "bebê",
+          "en": "baby",
+          "emoji": "👶"
+        },
+        {
+          "pt": "criança",
+          "en": "child",
+          "emoji": "🧒"
+        },
+        {
+          "pt": "tio",
+          "en": "uncle",
+          "emoji": "👨‍🦱"
+        },
+        {
+          "pt": "tia",
+          "en": "aunt",
+          "emoji": "👩‍🦱"
+        }
+      ]
+    },
+    {
+      "id": "corpo",
+      "name": "Partes do corpo",
+      "emoji": "🫀",
+      "words": [
+        {
+          "pt": "cabeça",
+          "en": "head",
+          "emoji": "🗣"
+        },
+        {
+          "pt": "cabelo",
+          "en": "hair",
+          "emoji": "💇"
+        },
+        {
+          "pt": "olho",
+          "en": "eye",
+          "emoji": "👁"
+        },
+        {
+          "pt": "nariz",
+          "en": "nose",
+          "emoji": "👃"
+        },
+        {
+          "pt": "boca",
+          "en": "mouth",
+          "emoji": "👄"
+        },
+        {
+          "pt": "orelha",
+          "en": "ear",
+          "emoji": "👂"
+        },
+        {
+          "pt": "dente",
+          "en": "tooth",
+          "emoji": "🦷"
+        },
+        {
+          "pt": "língua",
+          "en": "tongue",
+          "emoji": "👅"
+        },
+        {
+          "pt": "mão",
+          "en": "hand",
+          "emoji": "✋"
+        },
+        {
+          "pt": "dedo",
+          "en": "finger",
+          "emoji": "☝️"
+        },
+        {
+          "pt": "braço",
+          "en": "arm",
+          "emoji": "💪"
+        },
+        {
+          "pt": "perna",
+          "en": "leg",
+          "emoji": "🦵"
+        },
+        {
+          "pt": "pé",
+          "en": "foot",
+          "emoji": "🦶"
+        },
+        {
+          "pt": "coração",
+          "en": "heart",
+          "emoji": "❤️"
+        },
+        {
+          "pt": "costas",
+          "en": "back",
+          "emoji": "🔙"
+        },
+        {
+          "pt": "barriga",
+          "en": "belly",
+          "emoji": "🤰"
+        }
+      ]
+    },
+    {
+      "id": "roupas",
+      "name": "Roupas e acessórios",
+      "emoji": "👕",
+      "words": [
+        {
+          "pt": "camisa",
+          "en": "shirt",
+          "emoji": "👔"
+        },
+        {
+          "pt": "camiseta",
+          "en": "t-shirt",
+          "emoji": "👕"
+        },
+        {
+          "pt": "calça",
+          "en": "pants",
+          "emoji": "👖"
+        },
+        {
+          "pt": "saia",
+          "en": "skirt",
+          "emoji": "🩱"
+        },
+        {
+          "pt": "vestido",
+          "en": "dress",
+          "emoji": "👗"
+        },
+        {
+          "pt": "sapato",
+          "en": "shoe",
+          "emoji": "👞"
+        },
+        {
+          "pt": "tênis",
+          "en": "sneakers",
+          "emoji": "👟"
+        },
+        {
+          "pt": "meia",
+          "en": "sock",
+          "emoji": "🧦"
+        },
+        {
+          "pt": "chapéu",
+          "en": "hat",
+          "emoji": "🎩"
+        },
+        {
+          "pt": "boné",
+          "en": "cap",
+          "emoji": "🧢"
+        },
+        {
+          "pt": "bolsa",
+          "en": "bag",
+          "emoji": "👜"
+        },
+        {
+          "pt": "óculos",
+          "en": "glasses",
+          "emoji": "👓"
+        },
+        {
+          "pt": "relógio",
+          "en": "watch",
+          "emoji": "⌚"
+        },
+        {
+          "pt": "casaco",
+          "en": "coat",
+          "emoji": "🧥"
+        },
+        {
+          "pt": "cinto",
+          "en": "belt",
+          "emoji": "🪢"
+        },
+        {
+          "pt": "luva",
+          "en": "glove",
+          "emoji": "🧤"
+        }
+      ]
+    },
+    {
+      "id": "casa",
+      "name": "Casa e cômodos",
+      "emoji": "🏠",
+      "words": [
+        {
+          "pt": "casa",
+          "en": "house",
+          "emoji": "🏠"
+        },
+        {
+          "pt": "apartamento",
+          "en": "apartment",
+          "emoji": "🏢"
+        },
+        {
+          "pt": "quarto",
+          "en": "bedroom",
+          "emoji": "🛏"
+        },
+        {
+          "pt": "sala",
+          "en": "living room",
+          "emoji": "🛋"
+        },
+        {
+          "pt": "cozinha",
+          "en": "kitchen",
+          "emoji": "🍳"
+        },
+        {
+          "pt": "banheiro",
+          "en": "bathroom",
+          "emoji": "🛁"
+        },
+        {
+          "pt": "porta",
+          "en": "door",
+          "emoji": "🚪"
+        },
+        {
+          "pt": "janela",
+          "en": "window",
+          "emoji": "🪟"
+        },
+        {
+          "pt": "mesa",
+          "en": "table",
+          "emoji": "🪑"
+        },
+        {
+          "pt": "cadeira",
+          "en": "chair",
+          "emoji": "🪑"
+        },
+        {
+          "pt": "cama",
+          "en": "bed",
+          "emoji": "🛏"
+        },
+        {
+          "pt": "parede",
+          "en": "wall",
+          "emoji": "🧱"
+        },
+        {
+          "pt": "telhado",
+          "en": "roof",
+          "emoji": "🏚"
+        },
+        {
+          "pt": "chão",
+          "en": "floor",
+          "emoji": "🟫"
+        },
+        {
+          "pt": "escada",
+          "en": "stairs",
+          "emoji": "🪜"
+        },
+        {
+          "pt": "jardim",
+          "en": "garden",
+          "emoji": "🌳"
+        }
+      ]
+    },
+    {
+      "id": "objetos",
+      "name": "Objetos do dia a dia",
+      "emoji": "🔑",
+      "words": [
+        {
+          "pt": "telefone",
+          "en": "phone",
+          "emoji": "📱"
+        },
+        {
+          "pt": "chave",
+          "en": "key",
+          "emoji": "🔑"
+        },
+        {
+          "pt": "livro",
+          "en": "book",
+          "emoji": "📕"
+        },
+        {
+          "pt": "caneta",
+          "en": "pen",
+          "emoji": "🖊"
+        },
+        {
+          "pt": "papel",
+          "en": "paper",
+          "emoji": "📄"
+        },
+        {
+          "pt": "carteira",
+          "en": "wallet",
+          "emoji": "👛"
+        },
+        {
+          "pt": "espelho",
+          "en": "mirror",
+          "emoji": "🪞"
+        },
+        {
+          "pt": "toalha",
+          "en": "towel",
+          "emoji": "🧻"
+        },
+        {
+          "pt": "tesoura",
+          "en": "scissors",
+          "emoji": "✂️"
+        },
+        {
+          "pt": "guarda-chuva",
+          "en": "umbrella",
+          "emoji": "☂️"
+        },
+        {
+          "pt": "lápis",
+          "en": "pencil",
+          "emoji": "✏️"
+        },
+        {
+          "pt": "mochila",
+          "en": "backpack",
+          "emoji": "🎒"
+        },
+        {
+          "pt": "computador",
+          "en": "computer",
+          "emoji": "💻"
+        },
+        {
+          "pt": "tela",
+          "en": "screen",
+          "emoji": "🖥"
+        },
+        {
+          "pt": "câmera",
+          "en": "camera",
+          "emoji": "📷"
+        },
+        {
+          "pt": "bateria",
+          "en": "battery",
+          "emoji": "🔋"
+        }
+      ]
+    },
+    {
+      "id": "comida",
+      "name": "Comidas e refeições",
+      "emoji": "🍽",
+      "words": [
+        {
+          "pt": "pão",
+          "en": "bread",
+          "emoji": "🍞"
+        },
+        {
+          "pt": "queijo",
+          "en": "cheese",
+          "emoji": "🧀"
+        },
+        {
+          "pt": "ovo",
+          "en": "egg",
+          "emoji": "🥚"
+        },
+        {
+          "pt": "arroz",
+          "en": "rice",
+          "emoji": "🍚"
+        },
+        {
+          "pt": "feijão",
+          "en": "beans",
+          "emoji": "🫘"
+        },
+        {
+          "pt": "carne",
+          "en": "meat",
+          "emoji": "🥩"
+        },
+        {
+          "pt": "frango",
+          "en": "chicken",
+          "emoji": "🍗"
+        },
+        {
+          "pt": "peixe",
+          "en": "fish",
+          "emoji": "🐟"
+        },
+        {
+          "pt": "sopa",
+          "en": "soup",
+          "emoji": "🍲"
+        },
+        {
+          "pt": "salada",
+          "en": "salad",
+          "emoji": "🥗"
+        },
+        {
+          "pt": "bolo",
+          "en": "cake",
+          "emoji": "🎂"
+        },
+        {
+          "pt": "chocolate",
+          "en": "chocolate",
+          "emoji": "🍫"
+        },
+        {
+          "pt": "café da manhã",
+          "en": "breakfast",
+          "emoji": "🍳"
+        },
+        {
+          "pt": "almoço",
+          "en": "lunch",
+          "emoji": "🍽"
+        },
+        {
+          "pt": "jantar",
+          "en": "dinner",
+          "emoji": "🍝"
+        },
+        {
+          "pt": "sobremesa",
+          "en": "dessert",
+          "emoji": "🍰"
+        }
+      ]
+    },
+    {
+      "id": "bebidas",
+      "name": "Bebidas",
+      "emoji": "🥤",
+      "words": [
+        {
+          "pt": "água",
+          "en": "water",
+          "emoji": "💧"
+        },
+        {
+          "pt": "suco",
+          "en": "juice",
+          "emoji": "🧃"
+        },
+        {
+          "pt": "leite",
+          "en": "milk",
+          "emoji": "🥛"
+        },
+        {
+          "pt": "café",
+          "en": "coffee",
+          "emoji": "☕"
+        },
+        {
+          "pt": "chá",
+          "en": "tea",
+          "emoji": "🍵"
+        },
+        {
+          "pt": "cerveja",
+          "en": "beer",
+          "emoji": "🍺"
+        },
+        {
+          "pt": "vinho",
+          "en": "wine",
+          "emoji": "🍷"
+        },
+        {
+          "pt": "refrigerante",
+          "en": "soda",
+          "emoji": "🥤"
+        },
+        {
+          "pt": "gelo",
+          "en": "ice",
+          "emoji": "🧊"
+        },
+        {
+          "pt": "limonada",
+          "en": "lemonade",
+          "emoji": "🍋"
+        },
+        {
+          "pt": "chocolate quente",
+          "en": "hot chocolate",
+          "emoji": "🍫"
+        },
+        {
+          "pt": "coquetel",
+          "en": "cocktail",
+          "emoji": "🍹"
+        }
+      ]
+    },
+    {
+      "id": "frutas",
+      "name": "Frutas e vegetais",
+      "emoji": "🍎",
+      "words": [
+        {
+          "pt": "maçã",
+          "en": "apple",
+          "emoji": "🍎"
+        },
+        {
+          "pt": "banana",
+          "en": "banana",
+          "emoji": "🍌"
+        },
+        {
+          "pt": "laranja",
+          "en": "orange",
+          "emoji": "🍊"
+        },
+        {
+          "pt": "uva",
+          "en": "grape",
+          "emoji": "🍇"
+        },
+        {
+          "pt": "morango",
+          "en": "strawberry",
+          "emoji": "🍓"
+        },
+        {
+          "pt": "manga",
+          "en": "mango",
+          "emoji": "🥭"
+        },
+        {
+          "pt": "abacaxi",
+          "en": "pineapple",
+          "emoji": "🍍"
+        },
+        {
+          "pt": "melancia",
+          "en": "watermelon",
+          "emoji": "🍉"
+        },
+        {
+          "pt": "tomate",
+          "en": "tomato",
+          "emoji": "🍅"
+        },
+        {
+          "pt": "batata",
+          "en": "potato",
+          "emoji": "🥔"
+        },
+        {
+          "pt": "cenoura",
+          "en": "carrot",
+          "emoji": "🥕"
+        },
+        {
+          "pt": "cebola",
+          "en": "onion",
+          "emoji": "🧅"
+        },
+        {
+          "pt": "alface",
+          "en": "lettuce",
+          "emoji": "🥬"
+        },
+        {
+          "pt": "pimentão",
+          "en": "pepper",
+          "emoji": "🫑"
+        },
+        {
+          "pt": "milho",
+          "en": "corn",
+          "emoji": "🌽"
+        },
+        {
+          "pt": "abacate",
+          "en": "avocado",
+          "emoji": "🥑"
+        }
+      ]
+    },
+    {
+      "id": "compras",
+      "name": "Lugares de compras",
+      "emoji": "🛒",
+      "words": [
+        {
+          "pt": "supermercado",
+          "en": "supermarket",
+          "emoji": "🛒"
+        },
+        {
+          "pt": "loja",
+          "en": "store",
+          "emoji": "🏬"
+        },
+        {
+          "pt": "mercado",
+          "en": "market",
+          "emoji": "🥕"
+        },
+        {
+          "pt": "padaria",
+          "en": "bakery",
+          "emoji": "🥖"
+        },
+        {
+          "pt": "farmácia",
+          "en": "pharmacy",
+          "emoji": "💊"
+        },
+        {
+          "pt": "shopping",
+          "en": "mall",
+          "emoji": "🏬"
+        },
+        {
+          "pt": "livraria",
+          "en": "bookstore",
+          "emoji": "📚"
+        },
+        {
+          "pt": "açougue",
+          "en": "butcher",
+          "emoji": "🥩"
+        },
+        {
+          "pt": "preço",
+          "en": "price",
+          "emoji": "🏷"
+        },
+        {
+          "pt": "desconto",
+          "en": "discount",
+          "emoji": "🎟"
+        },
+        {
+          "pt": "recibo",
+          "en": "receipt",
+          "emoji": "🧾"
+        },
+        {
+          "pt": "sacola",
+          "en": "shopping bag",
+          "emoji": "🛍"
+        }
+      ]
+    },
+    {
+      "id": "dinheiro",
+      "name": "Dinheiro e pagamento",
+      "emoji": "💳",
+      "words": [
+        {
+          "pt": "dinheiro",
+          "en": "money",
+          "emoji": "💵"
+        },
+        {
+          "pt": "cartão",
+          "en": "card",
+          "emoji": "💳"
+        },
+        {
+          "pt": "nota",
+          "en": "bill",
+          "emoji": "💴"
+        },
+        {
+          "pt": "moeda",
+          "en": "coin",
+          "emoji": "🪙"
+        },
+        {
+          "pt": "banco",
+          "en": "bank",
+          "emoji": "🏦"
+        },
+        {
+          "pt": "conta",
+          "en": "account",
+          "emoji": "🧾"
+        },
+        {
+          "pt": "pagar",
+          "en": "to pay",
+          "emoji": "💸"
+        },
+        {
+          "pt": "custo",
+          "en": "cost",
+          "emoji": "🏷"
+        },
+        {
+          "pt": "barato",
+          "en": "cheap",
+          "emoji": "🪙"
+        },
+        {
+          "pt": "caro",
+          "en": "expensive",
+          "emoji": "💰"
+        },
+        {
+          "pt": "troco",
+          "en": "change",
+          "emoji": "🪙"
+        },
+        {
+          "pt": "salário",
+          "en": "salary",
+          "emoji": "💰"
+        }
+      ]
+    },
+    {
+      "id": "tempo1",
+      "name": "Dias e meses",
+      "emoji": "📅",
+      "words": [
+        {
+          "pt": "hoje",
+          "en": "today",
+          "emoji": "📅"
+        },
+        {
+          "pt": "amanhã",
+          "en": "tomorrow",
+          "emoji": "➡️"
+        },
+        {
+          "pt": "ontem",
+          "en": "yesterday",
+          "emoji": "⬅️"
+        },
+        {
+          "pt": "segunda",
+          "en": "monday",
+          "emoji": "1️⃣"
+        },
+        {
+          "pt": "terça",
+          "en": "tuesday",
+          "emoji": "2️⃣"
+        },
+        {
+          "pt": "quarta",
+          "en": "wednesday",
+          "emoji": "3️⃣"
+        },
+        {
+          "pt": "quinta",
+          "en": "thursday",
+          "emoji": "4️⃣"
+        },
+        {
+          "pt": "sexta",
+          "en": "friday",
+          "emoji": "5️⃣"
+        },
+        {
+          "pt": "sábado",
+          "en": "saturday",
+          "emoji": "6️⃣"
+        },
+        {
+          "pt": "domingo",
+          "en": "sunday",
+          "emoji": "7️⃣"
+        },
+        {
+          "pt": "mês",
+          "en": "month",
+          "emoji": "🗓"
+        },
+        {
+          "pt": "ano",
+          "en": "year",
+          "emoji": "📆"
+        },
+        {
+          "pt": "janeiro",
+          "en": "january",
+          "emoji": "❄️"
+        },
+        {
+          "pt": "julho",
+          "en": "july",
+          "emoji": "☀️"
+        },
+        {
+          "pt": "dezembro",
+          "en": "december",
+          "emoji": "🎄"
+        }
+      ]
+    },
+    {
+      "id": "tempo2",
+      "name": "Unidades de tempo",
+      "emoji": "⏰",
+      "words": [
+        {
+          "pt": "segundo",
+          "en": "second",
+          "emoji": "⏱"
+        },
+        {
+          "pt": "minuto",
+          "en": "minute",
+          "emoji": "⏲"
+        },
+        {
+          "pt": "hora",
+          "en": "hour",
+          "emoji": "🕐"
+        },
+        {
+          "pt": "dia",
+          "en": "day",
+          "emoji": "🌞"
+        },
+        {
+          "pt": "semana",
+          "en": "week",
+          "emoji": "📅"
+        },
+        {
+          "pt": "manhã",
+          "en": "morning",
+          "emoji": "🌅"
+        },
+        {
+          "pt": "tarde",
+          "en": "afternoon",
+          "emoji": "🌇"
+        },
+        {
+          "pt": "noite",
+          "en": "night",
+          "emoji": "🌙"
+        },
+        {
+          "pt": "agora",
+          "en": "now",
+          "emoji": "⏰"
+        },
+        {
+          "pt": "sempre",
+          "en": "always",
+          "emoji": "♾"
+        },
+        {
+          "pt": "nunca",
+          "en": "never",
+          "emoji": "🚫"
+        },
+        {
+          "pt": "cedo",
+          "en": "early",
+          "emoji": "🐓"
+        },
+        {
+          "pt": "tarde (adv.)",
+          "en": "late",
+          "emoji": "🐢"
+        }
+      ]
+    },
+    {
+      "id": "clima",
+      "name": "Clima e estações",
+      "emoji": "☀️",
+      "words": [
+        {
+          "pt": "sol",
+          "en": "sun",
+          "emoji": "☀️"
+        },
+        {
+          "pt": "chuva",
+          "en": "rain",
+          "emoji": "🌧"
+        },
+        {
+          "pt": "vento",
+          "en": "wind",
+          "emoji": "💨"
+        },
+        {
+          "pt": "neve",
+          "en": "snow",
+          "emoji": "❄️"
+        },
+        {
+          "pt": "nuvem",
+          "en": "cloud",
+          "emoji": "☁️"
+        },
+        {
+          "pt": "tempestade",
+          "en": "storm",
+          "emoji": "⛈"
+        },
+        {
+          "pt": "calor",
+          "en": "heat",
+          "emoji": "🥵"
+        },
+        {
+          "pt": "frio",
+          "en": "cold",
+          "emoji": "🥶"
+        },
+        {
+          "pt": "verão",
+          "en": "summer",
+          "emoji": "🏖"
+        },
+        {
+          "pt": "inverno",
+          "en": "winter",
+          "emoji": "⛄"
+        },
+        {
+          "pt": "outono",
+          "en": "autumn",
+          "emoji": "🍂"
+        },
+        {
+          "pt": "primavera",
+          "en": "spring",
+          "emoji": "🌷"
+        },
+        {
+          "pt": "relâmpago",
+          "en": "lightning",
+          "emoji": "⚡"
+        },
+        {
+          "pt": "arco-íris",
+          "en": "rainbow",
+          "emoji": "🌈"
+        }
+      ]
+    },
+    {
+      "id": "direcoes",
+      "name": "Direções e localização",
+      "emoji": "🧭",
+      "words": [
+        {
+          "pt": "esquerda",
+          "en": "left",
+          "emoji": "⬅️"
+        },
+        {
+          "pt": "direita",
+          "en": "right",
+          "emoji": "➡️"
+        },
+        {
+          "pt": "em cima",
+          "en": "up",
+          "emoji": "⬆️"
+        },
+        {
+          "pt": "embaixo",
+          "en": "down",
+          "emoji": "⬇️"
+        },
+        {
+          "pt": "perto",
+          "en": "near",
+          "emoji": "📍"
+        },
+        {
+          "pt": "longe",
+          "en": "far",
+          "emoji": "🛤"
+        },
+        {
+          "pt": "aqui",
+          "en": "here",
+          "emoji": "📌"
+        },
+        {
+          "pt": "ali",
+          "en": "there",
+          "emoji": "👉"
+        },
+        {
+          "pt": "dentro",
+          "en": "inside",
+          "emoji": "📥"
+        },
+        {
+          "pt": "fora",
+          "en": "outside",
+          "emoji": "📤"
+        },
+        {
+          "pt": "frente",
+          "en": "front",
+          "emoji": "⏩"
+        },
+        {
+          "pt": "atrás",
+          "en": "behind",
+          "emoji": "⏪"
+        },
+        {
+          "pt": "norte",
+          "en": "north",
+          "emoji": "🧭"
+        },
+        {
+          "pt": "sul",
+          "en": "south",
+          "emoji": "🧭"
+        }
+      ]
+    },
+    {
+      "id": "cidade",
+      "name": "Lugares da cidade",
+      "emoji": "🏙",
+      "words": [
+        {
+          "pt": "rua",
+          "en": "street",
+          "emoji": "🛣"
+        },
+        {
+          "pt": "praça",
+          "en": "square",
+          "emoji": "⛲"
+        },
+        {
+          "pt": "hospital",
+          "en": "hospital",
+          "emoji": "🏥"
+        },
+        {
+          "pt": "escola",
+          "en": "school",
+          "emoji": "🏫"
+        },
+        {
+          "pt": "hotel",
+          "en": "hotel",
+          "emoji": "🏨"
+        },
+        {
+          "pt": "restaurante",
+          "en": "restaurant",
+          "emoji": "🍽"
+        },
+        {
+          "pt": "parque",
+          "en": "park",
+          "emoji": "🌳"
+        },
+        {
+          "pt": "igreja",
+          "en": "church",
+          "emoji": "⛪"
+        },
+        {
+          "pt": "estação",
+          "en": "station",
+          "emoji": "🚉"
+        },
+        {
+          "pt": "aeroporto",
+          "en": "airport",
+          "emoji": "✈️"
+        },
+        {
+          "pt": "ponte",
+          "en": "bridge",
+          "emoji": "🌉"
+        },
+        {
+          "pt": "praia",
+          "en": "beach",
+          "emoji": "🏖"
+        },
+        {
+          "pt": "museu",
+          "en": "museum",
+          "emoji": "🏛"
+        },
+        {
+          "pt": "cinema",
+          "en": "cinema",
+          "emoji": "🎬"
+        }
+      ]
+    },
+    {
+      "id": "transporte",
+      "name": "Meios de transporte",
+      "emoji": "🚗",
+      "words": [
+        {
+          "pt": "carro",
+          "en": "car",
+          "emoji": "🚗"
+        },
+        {
+          "pt": "ônibus",
+          "en": "bus",
+          "emoji": "🚌"
+        },
+        {
+          "pt": "trem",
+          "en": "train",
+          "emoji": "🚆"
+        },
+        {
+          "pt": "metrô",
+          "en": "subway",
+          "emoji": "🚇"
+        },
+        {
+          "pt": "avião",
+          "en": "airplane",
+          "emoji": "✈️"
+        },
+        {
+          "pt": "bicicleta",
+          "en": "bicycle",
+          "emoji": "🚲"
+        },
+        {
+          "pt": "moto",
+          "en": "motorcycle",
+          "emoji": "🏍"
+        },
+        {
+          "pt": "barco",
+          "en": "boat",
+          "emoji": "⛵"
+        },
+        {
+          "pt": "táxi",
+          "en": "taxi",
+          "emoji": "🚕"
+        },
+        {
+          "pt": "caminhão",
+          "en": "truck",
+          "emoji": "🚚"
+        },
+        {
+          "pt": "navio",
+          "en": "ship",
+          "emoji": "🚢"
+        },
+        {
+          "pt": "helicóptero",
+          "en": "helicopter",
+          "emoji": "🚁"
+        }
+      ]
+    },
+    {
+      "id": "viagem",
+      "name": "Vocabulário de viagem",
+      "emoji": "🧳",
+      "words": [
+        {
+          "pt": "passaporte",
+          "en": "passport",
+          "emoji": "🛂"
+        },
+        {
+          "pt": "mala",
+          "en": "suitcase",
+          "emoji": "🧳"
+        },
+        {
+          "pt": "bilhete",
+          "en": "ticket",
+          "emoji": "🎫"
+        },
+        {
+          "pt": "reserva",
+          "en": "reservation",
+          "emoji": "📝"
+        },
+        {
+          "pt": "bagagem",
+          "en": "luggage",
+          "emoji": "🧳"
+        },
+        {
+          "pt": "voo",
+          "en": "flight",
+          "emoji": "✈️"
+        },
+        {
+          "pt": "embarque",
+          "en": "boarding",
+          "emoji": "🛫"
+        },
+        {
+          "pt": "fronteira",
+          "en": "border",
+          "emoji": "🚧"
+        },
+        {
+          "pt": "mapa",
+          "en": "map",
+          "emoji": "🗺"
+        },
+        {
+          "pt": "guia",
+          "en": "guide",
+          "emoji": "📖"
+        },
+        {
+          "pt": "turista",
+          "en": "tourist",
+          "emoji": "🧑‍🎤"
+        },
+        {
+          "pt": "destino",
+          "en": "destination",
+          "emoji": "📍"
+        }
+      ]
+    },
+    {
+      "id": "ser",
+      "name": "Ser, estar, ter, haver",
+      "emoji": "🔗",
+      "words": [
+        {
+          "pt": "ser",
+          "en": "to be (essence)",
+          "emoji": "🧭"
+        },
+        {
+          "pt": "estar",
+          "en": "to be (state)",
+          "emoji": "📍"
+        },
+        {
+          "pt": "ter",
+          "en": "to have",
+          "emoji": "🤝"
+        },
+        {
+          "pt": "haver",
+          "en": "there is/are",
+          "emoji": "🔎"
+        },
+        {
+          "pt": "existir",
+          "en": "to exist",
+          "emoji": "✨"
+        },
+        {
+          "pt": "tornar-se",
+          "en": "to become",
+          "emoji": "🔄"
+        },
+        {
+          "pt": "ficar",
+          "en": "to stay",
+          "emoji": "⏳"
+        },
+        {
+          "pt": "parecer",
+          "en": "to seem",
+          "emoji": "👀"
+        },
+        {
+          "pt": "pertencer",
+          "en": "to belong",
+          "emoji": "🏷"
+        }
+      ]
+    },
+    {
+      "id": "mover",
+      "name": "Verbos de movimento",
+      "emoji": "🏃",
+      "words": [
+        {
+          "pt": "ir",
+          "en": "to go",
+          "emoji": "➡️"
+        },
+        {
+          "pt": "vir",
+          "en": "to come",
+          "emoji": "⬅️"
+        },
+        {
+          "pt": "andar",
+          "en": "to walk",
+          "emoji": "🚶"
+        },
+        {
+          "pt": "correr",
+          "en": "to run",
+          "emoji": "🏃"
+        },
+        {
+          "pt": "chegar",
+          "en": "to arrive",
+          "emoji": "🛬"
+        },
+        {
+          "pt": "sair",
+          "en": "to leave",
+          "emoji": "🚪"
+        },
+        {
+          "pt": "subir",
+          "en": "to go up",
+          "emoji": "⬆️"
+        },
+        {
+          "pt": "descer",
+          "en": "to go down",
+          "emoji": "⬇️"
+        },
+        {
+          "pt": "voltar",
+          "en": "to return",
+          "emoji": "↩️"
+        },
+        {
+          "pt": "entrar",
+          "en": "to enter",
+          "emoji": "📥"
+        },
+        {
+          "pt": "passar",
+          "en": "to pass",
+          "emoji": "➡️"
+        },
+        {
+          "pt": "seguir",
+          "en": "to follow",
+          "emoji": "👣"
+        }
+      ]
+    },
+    {
+      "id": "comunicar",
+      "name": "Verbos de comunicação",
+      "emoji": "🗣",
+      "words": [
+        {
+          "pt": "falar",
+          "en": "to speak",
+          "emoji": "🗣"
+        },
+        {
+          "pt": "dizer",
+          "en": "to say",
+          "emoji": "💬"
+        },
+        {
+          "pt": "perguntar",
+          "en": "to ask",
+          "emoji": "❓"
+        },
+        {
+          "pt": "responder",
+          "en": "to answer",
+          "emoji": "💡"
+        },
+        {
+          "pt": "ouvir",
+          "en": "to hear",
+          "emoji": "👂"
+        },
+        {
+          "pt": "escutar",
+          "en": "to listen",
+          "emoji": "🎧"
+        },
+        {
+          "pt": "gritar",
+          "en": "to shout",
+          "emoji": "📢"
+        },
+        {
+          "pt": "sussurrar",
+          "en": "to whisper",
+          "emoji": "🤫"
+        },
+        {
+          "pt": "ler",
+          "en": "to read",
+          "emoji": "📖"
+        },
+        {
+          "pt": "escrever",
+          "en": "to write",
+          "emoji": "✍️"
+        },
+        {
+          "pt": "contar",
+          "en": "to tell",
+          "emoji": "🗨"
+        },
+        {
+          "pt": "ligar",
+          "en": "to call",
+          "emoji": "📞"
+        }
+      ]
+    },
+    {
+      "id": "querer",
+      "name": "Necessidade e desejo",
+      "emoji": "💭",
+      "words": [
+        {
+          "pt": "querer",
+          "en": "to want",
+          "emoji": "💭"
+        },
+        {
+          "pt": "precisar",
+          "en": "to need",
+          "emoji": "🎯"
+        },
+        {
+          "pt": "gostar",
+          "en": "to like",
+          "emoji": "❤️"
+        },
+        {
+          "pt": "amar",
+          "en": "to love",
+          "emoji": "💕"
+        },
+        {
+          "pt": "poder",
+          "en": "can, to be able",
+          "emoji": "🟢"
+        },
+        {
+          "pt": "dever",
+          "en": "must, should",
+          "emoji": "📏"
+        },
+        {
+          "pt": "desejar",
+          "en": "to wish",
+          "emoji": "🌠"
+        },
+        {
+          "pt": "odiar",
+          "en": "to hate",
+          "emoji": "💢"
+        },
+        {
+          "pt": "preferir",
+          "en": "to prefer",
+          "emoji": "⭐"
+        },
+        {
+          "pt": "esperar",
+          "en": "to hope",
+          "emoji": "🤞"
+        }
+      ]
+    },
+    {
+      "id": "rotina",
+      "name": "Verbos da rotina",
+      "emoji": "🛌",
+      "words": [
+        {
+          "pt": "comer",
+          "en": "to eat",
+          "emoji": "🍽"
+        },
+        {
+          "pt": "beber",
+          "en": "to drink",
+          "emoji": "🥤"
+        },
+        {
+          "pt": "dormir",
+          "en": "to sleep",
+          "emoji": "😴"
+        },
+        {
+          "pt": "acordar",
+          "en": "to wake up",
+          "emoji": "⏰"
+        },
+        {
+          "pt": "trabalhar",
+          "en": "to work",
+          "emoji": "💼"
+        },
+        {
+          "pt": "estudar",
+          "en": "to study",
+          "emoji": "📚"
+        },
+        {
+          "pt": "descansar",
+          "en": "to rest",
+          "emoji": "🛋"
+        },
+        {
+          "pt": "cozinhar",
+          "en": "to cook",
+          "emoji": "🍳"
+        },
+        {
+          "pt": "limpar",
+          "en": "to clean",
+          "emoji": "🧽"
+        },
+        {
+          "pt": "tomar banho",
+          "en": "to shower",
+          "emoji": "🚿"
+        },
+        {
+          "pt": "jogar",
+          "en": "to play",
+          "emoji": "🎮"
+        },
+        {
+          "pt": "dirigir",
+          "en": "to drive",
+          "emoji": "🚗"
+        }
+      ]
+    },
+    {
+      "id": "acao",
+      "name": "Ações diárias",
+      "emoji": "🛠",
+      "words": [
+        {
+          "pt": "fazer",
+          "en": "to do, to make",
+          "emoji": "🔨"
+        },
+        {
+          "pt": "comprar",
+          "en": "to buy",
+          "emoji": "🛒"
+        },
+        {
+          "pt": "vender",
+          "en": "to sell",
+          "emoji": "💵"
+        },
+        {
+          "pt": "usar",
+          "en": "to use",
+          "emoji": "🔧"
+        },
+        {
+          "pt": "ver",
+          "en": "to see",
+          "emoji": "👀"
+        },
+        {
+          "pt": "abrir",
+          "en": "to open",
+          "emoji": "🔓"
+        },
+        {
+          "pt": "fechar",
+          "en": "to close",
+          "emoji": "🔒"
+        },
+        {
+          "pt": "dar",
+          "en": "to give",
+          "emoji": "🎁"
+        },
+        {
+          "pt": "pegar",
+          "en": "to take",
+          "emoji": "🤲"
+        },
+        {
+          "pt": "ajudar",
+          "en": "to help",
+          "emoji": "🤝"
+        },
+        {
+          "pt": "procurar",
+          "en": "to look for",
+          "emoji": "🔍"
+        },
+        {
+          "pt": "encontrar",
+          "en": "to find",
+          "emoji": "🎯"
+        }
+      ]
+    },
+    {
+      "id": "tam",
+      "name": "Tamanho e quantidade",
+      "emoji": "📏",
+      "words": [
+        {
+          "pt": "grande",
+          "en": "big",
+          "emoji": "🐘"
+        },
+        {
+          "pt": "pequeno",
+          "en": "small",
+          "emoji": "🐭"
+        },
+        {
+          "pt": "alto",
+          "en": "tall",
+          "emoji": "🦒"
+        },
+        {
+          "pt": "baixo",
+          "en": "short",
+          "emoji": "🐢"
+        },
+        {
+          "pt": "largo",
+          "en": "wide",
+          "emoji": "🛣"
+        },
+        {
+          "pt": "estreito",
+          "en": "narrow",
+          "emoji": "⛓"
+        },
+        {
+          "pt": "muito",
+          "en": "a lot",
+          "emoji": "📈"
+        },
+        {
+          "pt": "pouco",
+          "en": "a little",
+          "emoji": "📉"
+        },
+        {
+          "pt": "cheio",
+          "en": "full",
+          "emoji": "🥛"
+        },
+        {
+          "pt": "vazio",
+          "en": "empty",
+          "emoji": "🕳"
+        },
+        {
+          "pt": "mais",
+          "en": "more",
+          "emoji": "➕"
+        },
+        {
+          "pt": "menos",
+          "en": "less",
+          "emoji": "➖"
+        },
+        {
+          "pt": "todo",
+          "en": "all",
+          "emoji": "💯"
+        },
+        {
+          "pt": "nada",
+          "en": "nothing",
+          "emoji": "0️⃣"
+        }
+      ]
+    },
+    {
+      "id": "aval",
+      "name": "Avaliações e sensações",
+      "emoji": "👍",
+      "words": [
+        {
+          "pt": "bom",
+          "en": "good",
+          "emoji": "👍"
+        },
+        {
+          "pt": "ruim",
+          "en": "bad",
+          "emoji": "👎"
+        },
+        {
+          "pt": "fácil",
+          "en": "easy",
+          "emoji": "🟢"
+        },
+        {
+          "pt": "difícil",
+          "en": "hard",
+          "emoji": "🔴"
+        },
+        {
+          "pt": "bonito",
+          "en": "beautiful",
+          "emoji": "✨"
+        },
+        {
+          "pt": "feio",
+          "en": "ugly",
+          "emoji": "🫣"
+        },
+        {
+          "pt": "novo",
+          "en": "new",
+          "emoji": "🆕"
+        },
+        {
+          "pt": "velho",
+          "en": "old",
+          "emoji": "🕰"
+        },
+        {
+          "pt": "certo",
+          "en": "right",
+          "emoji": "✅"
+        },
+        {
+          "pt": "errado",
+          "en": "wrong",
+          "emoji": "❌"
+        },
+        {
+          "pt": "limpo",
+          "en": "clean",
+          "emoji": "🧼"
+        },
+        {
+          "pt": "sujo",
+          "en": "dirty",
+          "emoji": "🪣"
+        },
+        {
+          "pt": "gostoso",
+          "en": "tasty",
+          "emoji": "😋"
+        },
+        {
+          "pt": "chato",
+          "en": "boring",
+          "emoji": "🥱"
+        }
+      ]
+    },
+    {
+      "id": "emocao",
+      "name": "Emoções e estados",
+      "emoji": "😊",
+      "words": [
+        {
+          "pt": "feliz",
+          "en": "happy",
+          "emoji": "😊"
+        },
+        {
+          "pt": "triste",
+          "en": "sad",
+          "emoji": "😢"
+        },
+        {
+          "pt": "bravo",
+          "en": "angry",
+          "emoji": "😠"
+        },
+        {
+          "pt": "cansado",
+          "en": "tired",
+          "emoji": "😴"
+        },
+        {
+          "pt": "doente",
+          "en": "sick",
+          "emoji": "🤒"
+        },
+        {
+          "pt": "saudável",
+          "en": "healthy",
+          "emoji": "💪"
+        },
+        {
+          "pt": "ocupado",
+          "en": "busy",
+          "emoji": "📅"
+        },
+        {
+          "pt": "livre",
+          "en": "free",
+          "emoji": "🕊"
+        },
+        {
+          "pt": "com fome",
+          "en": "hungry",
+          "emoji": "🍽"
+        },
+        {
+          "pt": "com sede",
+          "en": "thirsty",
+          "emoji": "💧"
+        },
+        {
+          "pt": "com sono",
+          "en": "sleepy",
+          "emoji": "💤"
+        },
+        {
+          "pt": "com medo",
+          "en": "afraid",
+          "emoji": "😨"
+        },
+        {
+          "pt": "tranquilo",
+          "en": "calm",
+          "emoji": "😌"
+        },
+        {
+          "pt": "nervoso",
+          "en": "nervous",
+          "emoji": "😰"
+        },
+        {
+          "pt": "apaixonado",
+          "en": "in love",
+          "emoji": "😍"
+        }
+      ]
+    },
+    {
+      "id": "cores",
+      "name": "Cores principais",
+      "emoji": "🎨",
+      "words": [
+        {
+          "pt": "branco",
+          "en": "white",
+          "emoji": "⚪"
+        },
+        {
+          "pt": "preto",
+          "en": "black",
+          "emoji": "⚫"
+        },
+        {
+          "pt": "vermelho",
+          "en": "red",
+          "emoji": "🔴"
+        },
+        {
+          "pt": "azul",
+          "en": "blue",
+          "emoji": "🔵"
+        },
+        {
+          "pt": "verde",
+          "en": "green",
+          "emoji": "🟢"
+        },
+        {
+          "pt": "amarelo",
+          "en": "yellow",
+          "emoji": "🟡"
+        },
+        {
+          "pt": "laranja",
+          "en": "orange",
+          "emoji": "🟠"
+        },
+        {
+          "pt": "roxo",
+          "en": "purple",
+          "emoji": "🟣"
+        },
+        {
+          "pt": "rosa",
+          "en": "pink",
+          "emoji": "🌸"
+        },
+        {
+          "pt": "marrom",
+          "en": "brown",
+          "emoji": "🟤"
+        },
+        {
+          "pt": "cinza",
+          "en": "gray",
+          "emoji": "⚫"
+        },
+        {
+          "pt": "dourado",
+          "en": "gold",
+          "emoji": "🥇"
+        },
+        {
+          "pt": "prateado",
+          "en": "silver",
+          "emoji": "🥈"
+        }
+      ]
+    },
+    {
+      "id": "pronomes",
+      "name": "Pronomes",
+      "emoji": "👤",
+      "words": [
+        {
+          "pt": "eu",
+          "en": "I",
+          "emoji": "🙋"
+        },
+        {
+          "pt": "você",
+          "en": "you",
+          "emoji": "👉"
+        },
+        {
+          "pt": "ele",
+          "en": "he",
+          "emoji": "👨"
+        },
+        {
+          "pt": "ela",
+          "en": "she",
+          "emoji": "👩"
+        },
+        {
+          "pt": "nós",
+          "en": "we",
+          "emoji": "👥"
+        },
+        {
+          "pt": "vocês",
+          "en": "you (pl.)",
+          "emoji": "👉"
+        },
+        {
+          "pt": "eles",
+          "en": "they (m.)",
+          "emoji": "👨‍👨‍👦"
+        },
+        {
+          "pt": "elas",
+          "en": "they (f.)",
+          "emoji": "👩‍👩‍👧"
+        },
+        {
+          "pt": "meu",
+          "en": "my",
+          "emoji": "🔑"
+        },
+        {
+          "pt": "seu",
+          "en": "your",
+          "emoji": "🎯"
+        },
+        {
+          "pt": "nosso",
+          "en": "our",
+          "emoji": "🤝"
+        },
+        {
+          "pt": "dele",
+          "en": "his",
+          "emoji": "👨"
+        },
+        {
+          "pt": "dela",
+          "en": "her",
+          "emoji": "👩"
+        }
+      ]
+    },
+    {
+      "id": "conectivos",
+      "name": "Conectivos e conjunções",
+      "emoji": "🔗",
+      "words": [
+        {
+          "pt": "e",
+          "en": "and",
+          "emoji": "➕"
+        },
+        {
+          "pt": "mas",
+          "en": "but",
+          "emoji": "⚠️"
+        },
+        {
+          "pt": "ou",
+          "en": "or",
+          "emoji": "🔀"
+        },
+        {
+          "pt": "porque",
+          "en": "because",
+          "emoji": "💡"
+        },
+        {
+          "pt": "se",
+          "en": "if",
+          "emoji": "🤔"
+        },
+        {
+          "pt": "então",
+          "en": "then",
+          "emoji": "➡️"
+        },
+        {
+          "pt": "também",
+          "en": "also",
+          "emoji": "➕"
+        },
+        {
+          "pt": "embora",
+          "en": "although",
+          "emoji": "🌗"
+        },
+        {
+          "pt": "portanto",
+          "en": "therefore",
+          "emoji": "✅"
+        },
+        {
+          "pt": "enquanto",
+          "en": "while",
+          "emoji": "⏳"
+        },
+        {
+          "pt": "quando",
+          "en": "when",
+          "emoji": "⏰"
+        },
+        {
+          "pt": "assim",
+          "en": "so, thus",
+          "emoji": "🎯"
+        }
+      ]
+    },
+    {
+      "id": "preposicoes",
+      "name": "Preposições básicas",
+      "emoji": "🧩",
+      "words": [
+        {
+          "pt": "em",
+          "en": "in, on",
+          "emoji": "📥"
+        },
+        {
+          "pt": "de",
+          "en": "of, from",
+          "emoji": "⏪"
+        },
+        {
+          "pt": "para",
+          "en": "for, to",
+          "emoji": "🎯"
+        },
+        {
+          "pt": "com",
+          "en": "with",
+          "emoji": "🤝"
+        },
+        {
+          "pt": "sem",
+          "en": "without",
+          "emoji": "🚫"
+        },
+        {
+          "pt": "sobre",
+          "en": "about, on",
+          "emoji": "📘"
+        },
+        {
+          "pt": "entre",
+          "en": "between",
+          "emoji": "↔️"
+        },
+        {
+          "pt": "por",
+          "en": "by, through",
+          "emoji": "🔀"
+        },
+        {
+          "pt": "até",
+          "en": "until",
+          "emoji": "⏱"
+        },
+        {
+          "pt": "desde",
+          "en": "since",
+          "emoji": "⏳"
+        },
+        {
+          "pt": "contra",
+          "en": "against",
+          "emoji": "⚔️"
+        },
+        {
+          "pt": "durante",
+          "en": "during",
+          "emoji": "🔁"
+        }
+      ]
+    },
+    {
+      "id": "saudacoes",
+      "name": "Saudações e cortesia",
+      "emoji": "🙏",
+      "words": [
+        {
+          "pt": "olá",
+          "en": "hello",
+          "emoji": "👋"
+        },
+        {
+          "pt": "oi",
+          "en": "hi",
+          "emoji": "🙋"
+        },
+        {
+          "pt": "tchau",
+          "en": "bye",
+          "emoji": "👋"
+        },
+        {
+          "pt": "bom dia",
+          "en": "good morning",
+          "emoji": "🌅"
+        },
+        {
+          "pt": "boa tarde",
+          "en": "good afternoon",
+          "emoji": "🌇"
+        },
+        {
+          "pt": "boa noite",
+          "en": "good night",
+          "emoji": "🌙"
+        },
+        {
+          "pt": "obrigado",
+          "en": "thank you",
+          "emoji": "🙏"
+        },
+        {
+          "pt": "por favor",
+          "en": "please",
+          "emoji": "🙏"
+        },
+        {
+          "pt": "desculpe",
+          "en": "sorry",
+          "emoji": "🙇"
+        },
+        {
+          "pt": "com licença",
+          "en": "excuse me",
+          "emoji": "✋"
+        },
+        {
+          "pt": "de nada",
+          "en": "you're welcome",
+          "emoji": "😊"
+        },
+        {
+          "pt": "tudo bem?",
+          "en": "how are you?",
+          "emoji": "🤔"
+        },
+        {
+          "pt": "prazer",
+          "en": "nice to meet you",
+          "emoji": "🤝"
+        }
+      ]
+    },
+    {
+      "id": "interrogacao",
+      "name": "Palavras de interrogação",
+      "emoji": "❓",
+      "words": [
+        {
+          "pt": "o que",
+          "en": "what",
+          "emoji": "❔"
+        },
+        {
+          "pt": "quem",
+          "en": "who",
+          "emoji": "🧑"
+        },
+        {
+          "pt": "onde",
+          "en": "where",
+          "emoji": "📍"
+        },
+        {
+          "pt": "quando",
+          "en": "when",
+          "emoji": "⏰"
+        },
+        {
+          "pt": "por quê",
+          "en": "why",
+          "emoji": "💭"
+        },
+        {
+          "pt": "como",
+          "en": "how",
+          "emoji": "🛠"
+        },
+        {
+          "pt": "qual",
+          "en": "which",
+          "emoji": "🎯"
+        },
+        {
+          "pt": "quanto",
+          "en": "how much",
+          "emoji": "💰"
+        },
+        {
+          "pt": "quantos",
+          "en": "how many",
+          "emoji": "🔢"
+        }
+      ]
+    },
+    {
+      "id": "numeros",
+      "name": "Números",
+      "emoji": "🔢",
+      "words": [
+        {
+          "pt": "zero",
+          "en": "zero",
+          "emoji": "0️⃣"
+        },
+        {
+          "pt": "um",
+          "en": "one",
+          "emoji": "1️⃣"
+        },
+        {
+          "pt": "dois",
+          "en": "two",
+          "emoji": "2️⃣"
+        },
+        {
+          "pt": "três",
+          "en": "three",
+          "emoji": "3️⃣"
+        },
+        {
+          "pt": "quatro",
+          "en": "four",
+          "emoji": "4️⃣"
+        },
+        {
+          "pt": "cinco",
+          "en": "five",
+          "emoji": "5️⃣"
+        },
+        {
+          "pt": "seis",
+          "en": "six",
+          "emoji": "6️⃣"
+        },
+        {
+          "pt": "sete",
+          "en": "seven",
+          "emoji": "7️⃣"
+        },
+        {
+          "pt": "oito",
+          "en": "eight",
+          "emoji": "8️⃣"
+        },
+        {
+          "pt": "nove",
+          "en": "nine",
+          "emoji": "9️⃣"
+        },
+        {
+          "pt": "dez",
+          "en": "ten",
+          "emoji": "🔟"
+        },
+        {
+          "pt": "vinte",
+          "en": "twenty",
+          "emoji": "2️⃣0️⃣"
+        },
+        {
+          "pt": "cem",
+          "en": "one hundred",
+          "emoji": "💯"
+        },
+        {
+          "pt": "mil",
+          "en": "one thousand",
+          "emoji": "🔟"
+        }
+      ]
+    }
+  ]
+}

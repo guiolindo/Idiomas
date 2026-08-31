@@ -1,0 +1,982 @@
+<title>Caderno de Idiomas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F7F4EC; --surface:#FFFDF6; --ink:#1F2321; --ink-2:#5A5F5B; --ink-3:#8A8F87;
+    --line:#E4DDCB; --line-2:#D2C9B2;
+    --accent:#2E5D4E; --accent-ink:#F7F4EC; --accent-soft:#DCE7DE;
+    --gold:#9E7226; --gold-soft:#F1E3C4;
+    --wrong:#9F3E30; --wrong-soft:#F1D8D2;
+    --shadow: 0 1px 0 rgba(31,35,33,.04), 0 8px 24px rgba(31,35,33,.06);
+    --serif:'Fraunces', ui-serif, Georgia, serif;
+    --sans:'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --mono:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14181B; --surface:#1B2024; --ink:#EDE7D6; --ink-2:#A7ABA4; --ink-3:#767A72;
+      --line:#2A3033; --line-2:#3A4145;
+      --accent:#7CB196; --accent-ink:#14181B; --accent-soft:#22322C;
+      --gold:#E0AC5A; --gold-soft:#3A2E19;
+      --wrong:#E28175; --wrong-soft:#3A211D;
+      --shadow: 0 1px 0 rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14181B; --surface:#1B2024; --ink:#EDE7D6; --ink-2:#A7ABA4; --ink-3:#767A72;
+    --line:#2A3033; --line-2:#3A4145;
+    --accent:#7CB196; --accent-ink:#14181B; --accent-soft:#22322C;
+    --gold:#E0AC5A; --gold-soft:#3A2E19;
+    --wrong:#E28175; --wrong-soft:#3A211D;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.5;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  .app{ max-width:520px; margin:0 auto; padding:20px 18px 96px; }
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+    padding:6px 2px 22px; border-bottom:1px solid var(--line); margin-bottom:22px;
+  }
+  .wordmark{
+    font-family:var(--serif); font-weight:600; font-size:26px;
+    font-variation-settings:"opsz" 60, "SOFT" 60; letter-spacing:-.01em;
+  }
+  .wordmark em{ font-style:italic; color:var(--accent); font-weight:500 }
+  .top .sub{ font-family:var(--mono); font-size:11px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.14em }
+  .icon-btn{
+    appearance:none; background:transparent; border:1px solid var(--line-2);
+    color:var(--ink); width:36px; height:36px; border-radius:10px; cursor:pointer;
+    display:inline-grid; place-items:center; font-family:var(--mono); font-size:14px;
+  }
+  .icon-btn:hover{ background:var(--surface) }
+  .row{ display:flex; align-items:center; gap:10px }
+  h2{
+    font-family:var(--serif); font-weight:500; font-size:22px; letter-spacing:-.01em;
+    margin:0 0 12px; font-variation-settings:"opsz" 40;
+  }
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--ink-3); margin:0 0 8px;
+  }
+  .grid{
+    display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px;
+  }
+  .tile{
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:14px 14px 12px; cursor:pointer;
+    display:flex; flex-direction:column; gap:8px; text-align:left;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+    color:inherit; font:inherit;
+  }
+  .tile:hover{ border-color:var(--line-2); transform:translateY(-1px) }
+  .tile:active{ transform:translateY(0) }
+  .tile .emoji{ font-size:28px; line-height:1 }
+  .tile .name{
+    font-family:var(--serif); font-weight:500; font-size:16px; line-height:1.2;
+    font-variation-settings:"opsz" 24;
+  }
+  .tile .meta{
+    font-family:var(--mono); font-size:11px; color:var(--ink-3);
+    letter-spacing:.08em; display:flex; justify-content:space-between; margin-top:auto;
+  }
+  .tile .meta .known{ color:var(--accent) }
+
+  /* Study view */
+  .study{ display:none }
+  .study.on{ display:block }
+  .home.off{ display:none }
+  .study-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:16px;
+  }
+  .back{
+    appearance:none; background:transparent; border:0; color:var(--ink-2);
+    cursor:pointer; font:inherit; font-size:14px; display:inline-flex; align-items:center; gap:6px;
+    padding:6px 8px 6px 4px; border-radius:8px;
+  }
+  .back:hover{ color:var(--ink) }
+  .study-head .title{
+    font-family:var(--serif); font-weight:500; font-size:17px;
+    font-variation-settings:"opsz" 24; text-align:center; flex:1;
+  }
+  .progress{
+    font-family:var(--mono); font-size:11px; color:var(--ink-3);
+    letter-spacing:.08em; min-width:52px; text-align:right;
+  }
+  .modebar{
+    display:flex; gap:6px; padding:4px; border:1px solid var(--line);
+    background:var(--surface); border-radius:12px; margin-bottom:14px;
+  }
+  .modebar button{
+    flex:1; appearance:none; background:transparent; border:0; color:var(--ink-2);
+    padding:8px 6px; border-radius:9px; font:inherit; font-size:13px; cursor:pointer;
+    font-family:var(--sans);
+  }
+  .modebar button.on{
+    background:var(--ink); color:var(--bg);
+  }
+  :root[data-theme="dark"] .modebar button.on,
+  :root:not([data-theme="light"]) .modebar button.on{
+    background:var(--accent); color:var(--accent-ink);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .modebar button.on{ background:var(--accent); color:var(--accent-ink) }
+  }
+  .card{
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:18px; padding:34px 22px 26px; box-shadow:var(--shadow);
+    min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:14px;
+  }
+  .card .cue-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--ink-3);
+  }
+  .card .cue{
+    font-family:var(--serif); font-weight:500; font-size:44px; line-height:1.1;
+    letter-spacing:-.015em; font-variation-settings:"opsz" 96, "SOFT" 40;
+    text-wrap:balance;
+  }
+  .card .cue.emoji{ font-size:96px; font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif }
+  .card .photo-wrap{ width:100%; display:none; }
+  .card .photo-wrap.on{ display:block }
+  .card .photo-wrap img{
+    width:100%; max-height:220px; object-fit:cover; border-radius:12px;
+    border:1px solid var(--line); display:block; background:var(--bg);
+  }
+  .card .photo-wrap .credit{
+    font-family:var(--mono); font-size:10px; color:var(--ink-3); margin-top:6px; text-align:right;
+  }
+  .card .photo-wrap .credit a{ color:inherit }
+  .photo-status{ font-family:var(--mono); font-size:12px; color:var(--ink-3) }
+  .card .answer{
+    margin-top:6px; padding-top:14px; border-top:1px dashed var(--line-2);
+    width:100%; display:none;
+  }
+  .card .answer.on{ display:block }
+  .card .answer .en{
+    font-family:var(--serif); font-weight:600; font-size:32px; color:var(--accent);
+    font-variation-settings:"opsz" 60;
+  }
+  .card .answer .pt-sub{
+    font-family:var(--sans); font-size:14px; color:var(--ink-2); margin-top:4px;
+  }
+  .card .answer .emoji-sub{ font-size:32px; margin-top:6px }
+
+  /* Notebook */
+  .notebook{
+    margin-top:14px; background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:14px;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: 100% 32px;
+    background-position: 0 44px;
+  }
+  .notebook label{
+    display:block; font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-3); margin-bottom:8px;
+  }
+  .notebook input{
+    width:100%; border:0; background:transparent; color:var(--ink);
+    font-family:var(--serif); font-weight:500; font-size:24px; line-height:32px;
+    padding:0; outline:none; caret-color:var(--accent);
+    font-variation-settings:"opsz" 40;
+  }
+  .notebook input::placeholder{ color:var(--ink-3); font-style:italic }
+  .notebook .verdict{
+    margin-top:10px; font-family:var(--mono); font-size:12px; letter-spacing:.06em;
+    min-height:18px;
+  }
+  .verdict.ok{ color:var(--accent) }
+  .verdict.close{ color:var(--gold) }
+  .verdict.no{ color:var(--wrong) }
+
+  /* Controls */
+  .controls{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;
+  }
+  .controls.full{ grid-template-columns:1fr 1fr 1fr }
+  .btn{
+    appearance:none; border:1px solid var(--line-2); background:var(--surface);
+    color:var(--ink); font:inherit; font-size:15px; font-family:var(--sans); font-weight:500;
+    padding:14px 12px; border-radius:12px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn:hover{ border-color:var(--ink-3) }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent) }
+  .btn.gold{ background:var(--gold-soft); color:var(--gold); border-color:transparent }
+  .btn.gold:hover{ border-color:var(--gold) }
+  .btn.miss{ background:var(--wrong-soft); color:var(--wrong); border-color:transparent }
+  .btn.miss:hover{ border-color:var(--wrong) }
+
+  /* Settings panel */
+  .scrim{
+    position:fixed; inset:0; background:rgba(20,24,27,.42);
+    display:none; z-index:20;
+  }
+  .scrim.on{ display:block }
+  .sheet{
+    position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(440px, calc(100% - 32px));
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:18px; padding:22px 20px; box-shadow:var(--shadow);
+    z-index:21; display:none;
+  }
+  .sheet.on{ display:block }
+  .sheet h3{
+    font-family:var(--serif); font-weight:500; font-size:19px; margin:0 0 4px;
+    font-variation-settings:"opsz" 40;
+  }
+  .sheet .lede{ font-size:13px; color:var(--ink-2); margin:0 0 18px }
+  .field{ margin-bottom:14px }
+  .field .k{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ink-3); margin-bottom:6px;
+  }
+  .seg{
+    display:flex; gap:4px; padding:4px; border:1px solid var(--line);
+    background:var(--bg); border-radius:10px;
+  }
+  .seg button{
+    flex:1; background:transparent; border:0; padding:8px 6px; border-radius:7px;
+    color:var(--ink-2); cursor:pointer; font:inherit; font-size:13px; font-family:var(--sans);
+  }
+  .seg button.on{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow) }
+  .sheet .close{
+    margin-top:6px; width:100%; padding:12px; border-radius:11px;
+    background:var(--ink); color:var(--bg); border:0; font:inherit; font-weight:500; cursor:pointer;
+  }
+  :root[data-theme="dark"] .sheet .close,
+  :root:not([data-theme="light"]) .sheet .close{ background:var(--accent); color:var(--accent-ink) }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .sheet .close{ background:var(--accent); color:var(--accent-ink) }
+  }
+
+  /* Empty state / finished */
+  .done{
+    text-align:center; padding:40px 20px; background:var(--surface);
+    border:1px dashed var(--line-2); border-radius:16px;
+  }
+  .done h3{
+    font-family:var(--serif); font-weight:500; font-size:24px; margin:6px 0 6px;
+    font-variation-settings:"opsz" 60;
+  }
+  .done p{ color:var(--ink-2); margin:0 0 14px }
+
+  footer{
+    margin-top:28px; padding-top:16px; border-top:1px solid var(--line);
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--ink-3);
+    text-align:center;
+  }
+
+  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0 }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important } }
+</style>
+
+<div class="app">
+  <h2 class="sr-only">Caderno de Idiomas — flashcards de vocabulário</h2>
+
+  <header class="top">
+    <div>
+      <div class="wordmark">Caderno de <em>Idiomas</em></div>
+      <div class="sub" id="stat-line">— tópicos • — palavras</div>
+    </div>
+    <div class="row">
+      <button class="icon-btn" id="theme-btn" title="Tema" aria-label="Alternar tema">☾</button>
+      <button class="icon-btn" id="settings-btn" title="Ajustes" aria-label="Ajustes">⚙</button>
+    </div>
+  </header>
+
+  <section class="home" id="home">
+    <p class="eyebrow" id="home-eye">Escolha um tópico</p>
+    <div class="grid" id="topics"></div>
+    <footer>Suas palavras "sabidas" ficam salvas neste navegador.</footer>
+  </section>
+
+  <section class="study" id="study">
+    <div class="study-head">
+      <button class="back" id="back-btn">← Tópicos</button>
+      <div class="title" id="study-title">—</div>
+      <div class="progress" id="study-progress">0/0</div>
+    </div>
+
+    <div class="modebar" role="tablist" aria-label="Modo de estímulo">
+      <button data-cue="pt" class="on" role="tab">Palavra em PT</button>
+      <button data-cue="emoji" role="tab">Emoji</button>
+      <button data-cue="foto" role="tab">Foto real</button>
+      <button data-cue="mix" role="tab">Misturar</button>
+    </div>
+
+    <div class="card" id="card">
+      <div class="cue-label" id="cue-label">Traduza</div>
+      <div class="cue" id="cue">—</div>
+      <div class="photo-wrap" id="photo-wrap">
+        <img id="photo-img" alt="">
+        <div class="credit" id="photo-credit"></div>
+      </div>
+      <div class="answer" id="answer">
+        <div class="en" id="answer-en">—</div>
+        <div class="pt-sub" id="answer-pt">—</div>
+        <div class="emoji-sub" id="answer-emoji">—</div>
+      </div>
+    </div>
+
+    <div class="notebook" id="notebook" hidden>
+      <label for="nb-input">Caderno — escreva a resposta</label>
+      <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
+      <div class="verdict" id="verdict"></div>
+    </div>
+
+    <div class="controls" id="controls">
+      <button class="btn" id="reveal-btn">Revelar</button>
+      <button class="btn primary" id="next-btn">Próxima →</button>
+    </div>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="Ajustes">
+  <h3>Ajustes</h3>
+  <p class="lede">Escolha o idioma, o estímulo e ligue o modo caderno.</p>
+
+  <div class="field">
+    <div class="k">Idioma alvo</div>
+    <div class="seg" id="lang-seg">
+      <button data-lang="en" class="on">Inglês</button>
+      <button data-lang="es" disabled title="Em breve">Espanhol</button>
+      <button data-lang="fr" disabled title="Em breve">Francês</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="k">Modo caderno (recall)</div>
+    <div class="seg" id="nb-seg">
+      <button data-nb="off" class="on">Desligado</button>
+      <button data-nb="on">Ligado</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="k">Ordem</div>
+    <div class="seg" id="order-seg">
+      <button data-order="rand" class="on">Aleatória</button>
+      <button data-order="seq">Sequencial</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="k">Aparência</div>
+    <div class="seg" id="theme-seg">
+      <button data-th="auto" class="on">Sistema</button>
+      <button data-th="light">Claro</button>
+      <button data-th="dark">Escuro</button>
+    </div>
+  </div>
+
+  <button class="close" id="sheet-close">Feito</button>
+</div>
+
+<script>
+// =========================================================================
+// DATA — 33 tópicos, ~14 palavras cada, PT → EN + emoji
+// =========================================================================
+const CATS = [
+  ['pessoas','Pessoas e família','👨‍👩‍👧',[
+    ['mãe','mother','👩'],['pai','father','👨'],['filho','son','👦'],['filha','daughter','👧'],
+    ['irmão','brother','🧑'],['irmã','sister','👩'],['avô','grandfather','👴'],['avó','grandmother','👵'],
+    ['amigo','friend','🧑‍🤝‍🧑'],['pessoa','person','🧍'],['homem','man','🧔'],['mulher','woman','👩'],
+    ['bebê','baby','👶'],['criança','child','🧒'],['tio','uncle','👨‍🦱'],['tia','aunt','👩‍🦱'],
+  ]],
+  ['corpo','Partes do corpo','🫀',[
+    ['cabeça','head','🗣'],['cabelo','hair','💇'],['olho','eye','👁'],['nariz','nose','👃'],
+    ['boca','mouth','👄'],['orelha','ear','👂'],['dente','tooth','🦷'],['língua','tongue','👅'],
+    ['mão','hand','✋'],['dedo','finger','☝️'],['braço','arm','💪'],['perna','leg','🦵'],
+    ['pé','foot','🦶'],['coração','heart','❤️'],['costas','back','🔙'],['barriga','belly','🤰'],
+  ]],
+  ['roupas','Roupas e acessórios','👕',[
+    ['camisa','shirt','👔'],['camiseta','t-shirt','👕'],['calça','pants','👖'],['saia','skirt','🩱'],
+    ['vestido','dress','👗'],['sapato','shoe','👞'],['tênis','sneakers','👟'],['meia','sock','🧦'],
+    ['chapéu','hat','🎩'],['boné','cap','🧢'],['bolsa','bag','👜'],['óculos','glasses','👓'],
+    ['relógio','watch','⌚'],['casaco','coat','🧥'],['cinto','belt','🪢'],['luva','glove','🧤'],
+  ]],
+  ['casa','Casa e cômodos','🏠',[
+    ['casa','house','🏠'],['apartamento','apartment','🏢'],['quarto','bedroom','🛏'],['sala','living room','🛋'],
+    ['cozinha','kitchen','🍳'],['banheiro','bathroom','🛁'],['porta','door','🚪'],['janela','window','🪟'],
+    ['mesa','table','🪑'],['cadeira','chair','🪑'],['cama','bed','🛏'],['parede','wall','🧱'],
+    ['telhado','roof','🏚'],['chão','floor','🟫'],['escada','stairs','🪜'],['jardim','garden','🌳'],
+  ]],
+  ['objetos','Objetos do dia a dia','🔑',[
+    ['telefone','phone','📱'],['chave','key','🔑'],['livro','book','📕'],['caneta','pen','🖊'],
+    ['papel','paper','📄'],['carteira','wallet','👛'],['espelho','mirror','🪞'],['toalha','towel','🧻'],
+    ['tesoura','scissors','✂️'],['guarda-chuva','umbrella','☂️'],['lápis','pencil','✏️'],['mochila','backpack','🎒'],
+    ['computador','computer','💻'],['tela','screen','🖥'],['câmera','camera','📷'],['bateria','battery','🔋'],
+  ]],
+  ['comida','Comidas e refeições','🍽',[
+    ['pão','bread','🍞'],['queijo','cheese','🧀'],['ovo','egg','🥚'],['arroz','rice','🍚'],
+    ['feijão','beans','🫘'],['carne','meat','🥩'],['frango','chicken','🍗'],['peixe','fish','🐟'],
+    ['sopa','soup','🍲'],['salada','salad','🥗'],['bolo','cake','🎂'],['chocolate','chocolate','🍫'],
+    ['café da manhã','breakfast','🍳'],['almoço','lunch','🍽'],['jantar','dinner','🍝'],['sobremesa','dessert','🍰'],
+  ]],
+  ['bebidas','Bebidas','🥤',[
+    ['água','water','💧'],['suco','juice','🧃'],['leite','milk','🥛'],['café','coffee','☕'],
+    ['chá','tea','🍵'],['cerveja','beer','🍺'],['vinho','wine','🍷'],['refrigerante','soda','🥤'],
+    ['gelo','ice','🧊'],['limonada','lemonade','🍋'],['chocolate quente','hot chocolate','🍫'],['coquetel','cocktail','🍹'],
+  ]],
+  ['frutas','Frutas e vegetais','🍎',[
+    ['maçã','apple','🍎'],['banana','banana','🍌'],['laranja','orange','🍊'],['uva','grape','🍇'],
+    ['morango','strawberry','🍓'],['manga','mango','🥭'],['abacaxi','pineapple','🍍'],['melancia','watermelon','🍉'],
+    ['tomate','tomato','🍅'],['batata','potato','🥔'],['cenoura','carrot','🥕'],['cebola','onion','🧅'],
+    ['alface','lettuce','🥬'],['pimentão','pepper','🫑'],['milho','corn','🌽'],['abacate','avocado','🥑'],
+  ]],
+  ['compras','Lugares de compras','🛒',[
+    ['supermercado','supermarket','🛒'],['loja','store','🏬'],['mercado','market','🥕'],['padaria','bakery','🥖'],
+    ['farmácia','pharmacy','💊'],['shopping','mall','🏬'],['livraria','bookstore','📚'],['açougue','butcher','🥩'],
+    ['preço','price','🏷'],['desconto','discount','🎟'],['recibo','receipt','🧾'],['sacola','shopping bag','🛍'],
+  ]],
+  ['dinheiro','Dinheiro e pagamento','💳',[
+    ['dinheiro','money','💵'],['cartão','card','💳'],['nota','bill','💴'],['moeda','coin','🪙'],
+    ['banco','bank','🏦'],['conta','account','🧾'],['pagar','to pay','💸'],['custo','cost','🏷'],
+    ['barato','cheap','🪙'],['caro','expensive','💰'],['troco','change','🪙'],['salário','salary','💰'],
+  ]],
+  ['tempo1','Dias e meses','📅',[
+    ['hoje','today','📅'],['amanhã','tomorrow','➡️'],['ontem','yesterday','⬅️'],['segunda','monday','1️⃣'],
+    ['terça','tuesday','2️⃣'],['quarta','wednesday','3️⃣'],['quinta','thursday','4️⃣'],['sexta','friday','5️⃣'],
+    ['sábado','saturday','6️⃣'],['domingo','sunday','7️⃣'],['mês','month','🗓'],['ano','year','📆'],
+    ['janeiro','january','❄️'],['julho','july','☀️'],['dezembro','december','🎄'],
+  ]],
+  ['tempo2','Unidades de tempo','⏰',[
+    ['segundo','second','⏱'],['minuto','minute','⏲'],['hora','hour','🕐'],['dia','day','🌞'],
+    ['semana','week','📅'],['manhã','morning','🌅'],['tarde','afternoon','🌇'],['noite','night','🌙'],
+    ['agora','now','⏰'],['sempre','always','♾'],['nunca','never','🚫'],['cedo','early','🐓'],
+    ['tarde (adv.)','late','🐢'],
+  ]],
+  ['clima','Clima e estações','☀️',[
+    ['sol','sun','☀️'],['chuva','rain','🌧'],['vento','wind','💨'],['neve','snow','❄️'],
+    ['nuvem','cloud','☁️'],['tempestade','storm','⛈'],['calor','heat','🥵'],['frio','cold','🥶'],
+    ['verão','summer','🏖'],['inverno','winter','⛄'],['outono','autumn','🍂'],['primavera','spring','🌷'],
+    ['relâmpago','lightning','⚡'],['arco-íris','rainbow','🌈'],
+  ]],
+  ['direcoes','Direções e localização','🧭',[
+    ['esquerda','left','⬅️'],['direita','right','➡️'],['em cima','up','⬆️'],['embaixo','down','⬇️'],
+    ['perto','near','📍'],['longe','far','🛤'],['aqui','here','📌'],['ali','there','👉'],
+    ['dentro','inside','📥'],['fora','outside','📤'],['frente','front','⏩'],['atrás','behind','⏪'],
+    ['norte','north','🧭'],['sul','south','🧭'],
+  ]],
+  ['cidade','Lugares da cidade','🏙',[
+    ['rua','street','🛣'],['praça','square','⛲'],['hospital','hospital','🏥'],['escola','school','🏫'],
+    ['hotel','hotel','🏨'],['restaurante','restaurant','🍽'],['parque','park','🌳'],['igreja','church','⛪'],
+    ['estação','station','🚉'],['aeroporto','airport','✈️'],['ponte','bridge','🌉'],['praia','beach','🏖'],
+    ['museu','museum','🏛'],['cinema','cinema','🎬'],
+  ]],
+  ['transporte','Meios de transporte','🚗',[
+    ['carro','car','🚗'],['ônibus','bus','🚌'],['trem','train','🚆'],['metrô','subway','🚇'],
+    ['avião','airplane','✈️'],['bicicleta','bicycle','🚲'],['moto','motorcycle','🏍'],['barco','boat','⛵'],
+    ['táxi','taxi','🚕'],['caminhão','truck','🚚'],['navio','ship','🚢'],['helicóptero','helicopter','🚁'],
+  ]],
+  ['viagem','Vocabulário de viagem','🧳',[
+    ['passaporte','passport','🛂'],['mala','suitcase','🧳'],['bilhete','ticket','🎫'],['reserva','reservation','📝'],
+    ['bagagem','luggage','🧳'],['voo','flight','✈️'],['embarque','boarding','🛫'],['fronteira','border','🚧'],
+    ['mapa','map','🗺'],['guia','guide','📖'],['turista','tourist','🧑‍🎤'],['destino','destination','📍'],
+  ]],
+  ['ser','Ser, estar, ter, haver','🔗',[
+    ['ser','to be (essence)','🧭'],['estar','to be (state)','📍'],['ter','to have','🤝'],['haver','there is/are','🔎'],
+    ['existir','to exist','✨'],['tornar-se','to become','🔄'],['ficar','to stay','⏳'],['parecer','to seem','👀'],
+    ['pertencer','to belong','🏷'],
+  ]],
+  ['mover','Verbos de movimento','🏃',[
+    ['ir','to go','➡️'],['vir','to come','⬅️'],['andar','to walk','🚶'],['correr','to run','🏃'],
+    ['chegar','to arrive','🛬'],['sair','to leave','🚪'],['subir','to go up','⬆️'],['descer','to go down','⬇️'],
+    ['voltar','to return','↩️'],['entrar','to enter','📥'],['passar','to pass','➡️'],['seguir','to follow','👣'],
+  ]],
+  ['comunicar','Verbos de comunicação','🗣',[
+    ['falar','to speak','🗣'],['dizer','to say','💬'],['perguntar','to ask','❓'],['responder','to answer','💡'],
+    ['ouvir','to hear','👂'],['escutar','to listen','🎧'],['gritar','to shout','📢'],['sussurrar','to whisper','🤫'],
+    ['ler','to read','📖'],['escrever','to write','✍️'],['contar','to tell','🗨'],['ligar','to call','📞'],
+  ]],
+  ['querer','Necessidade e desejo','💭',[
+    ['querer','to want','💭'],['precisar','to need','🎯'],['gostar','to like','❤️'],['amar','to love','💕'],
+    ['poder','can, to be able','🟢'],['dever','must, should','📏'],['desejar','to wish','🌠'],['odiar','to hate','💢'],
+    ['preferir','to prefer','⭐'],['esperar','to hope','🤞'],
+  ]],
+  ['rotina','Verbos da rotina','🛌',[
+    ['comer','to eat','🍽'],['beber','to drink','🥤'],['dormir','to sleep','😴'],['acordar','to wake up','⏰'],
+    ['trabalhar','to work','💼'],['estudar','to study','📚'],['descansar','to rest','🛋'],['cozinhar','to cook','🍳'],
+    ['limpar','to clean','🧽'],['tomar banho','to shower','🚿'],['jogar','to play','🎮'],['dirigir','to drive','🚗'],
+  ]],
+  ['acao','Ações diárias','🛠',[
+    ['fazer','to do, to make','🔨'],['comprar','to buy','🛒'],['vender','to sell','💵'],['usar','to use','🔧'],
+    ['ver','to see','👀'],['abrir','to open','🔓'],['fechar','to close','🔒'],['dar','to give','🎁'],
+    ['pegar','to take','🤲'],['ajudar','to help','🤝'],['procurar','to look for','🔍'],['encontrar','to find','🎯'],
+  ]],
+  ['tam','Tamanho e quantidade','📏',[
+    ['grande','big','🐘'],['pequeno','small','🐭'],['alto','tall','🦒'],['baixo','short','🐢'],
+    ['largo','wide','🛣'],['estreito','narrow','⛓'],['muito','a lot','📈'],['pouco','a little','📉'],
+    ['cheio','full','🥛'],['vazio','empty','🕳'],['mais','more','➕'],['menos','less','➖'],
+    ['todo','all','💯'],['nada','nothing','0️⃣'],
+  ]],
+  ['aval','Avaliações e sensações','👍',[
+    ['bom','good','👍'],['ruim','bad','👎'],['fácil','easy','🟢'],['difícil','hard','🔴'],
+    ['bonito','beautiful','✨'],['feio','ugly','🫣'],['novo','new','🆕'],['velho','old','🕰'],
+    ['certo','right','✅'],['errado','wrong','❌'],['limpo','clean','🧼'],['sujo','dirty','🪣'],
+    ['gostoso','tasty','😋'],['chato','boring','🥱'],
+  ]],
+  ['emocao','Emoções e estados','😊',[
+    ['feliz','happy','😊'],['triste','sad','😢'],['bravo','angry','😠'],['cansado','tired','😴'],
+    ['doente','sick','🤒'],['saudável','healthy','💪'],['ocupado','busy','📅'],['livre','free','🕊'],
+    ['com fome','hungry','🍽'],['com sede','thirsty','💧'],['com sono','sleepy','💤'],['com medo','afraid','😨'],
+    ['tranquilo','calm','😌'],['nervoso','nervous','😰'],['apaixonado','in love','😍'],
+  ]],
+  ['cores','Cores principais','🎨',[
+    ['branco','white','⚪'],['preto','black','⚫'],['vermelho','red','🔴'],['azul','blue','🔵'],
+    ['verde','green','🟢'],['amarelo','yellow','🟡'],['laranja','orange','🟠'],['roxo','purple','🟣'],
+    ['rosa','pink','🌸'],['marrom','brown','🟤'],['cinza','gray','⚫'],['dourado','gold','🥇'],
+    ['prateado','silver','🥈'],
+  ]],
+  ['pronomes','Pronomes','👤',[
+    ['eu','I','🙋'],['você','you','👉'],['ele','he','👨'],['ela','she','👩'],
+    ['nós','we','👥'],['vocês','you (pl.)','👉'],['eles','they (m.)','👨‍👨‍👦'],['elas','they (f.)','👩‍👩‍👧'],
+    ['meu','my','🔑'],['seu','your','🎯'],['nosso','our','🤝'],['dele','his','👨'],['dela','her','👩'],
+  ]],
+  ['conectivos','Conectivos e conjunções','🔗',[
+    ['e','and','➕'],['mas','but','⚠️'],['ou','or','🔀'],['porque','because','💡'],
+    ['se','if','🤔'],['então','then','➡️'],['também','also','➕'],['embora','although','🌗'],
+    ['portanto','therefore','✅'],['enquanto','while','⏳'],['quando','when','⏰'],['assim','so, thus','🎯'],
+  ]],
+  ['preposicoes','Preposições básicas','🧩',[
+    ['em','in, on','📥'],['de','of, from','⏪'],['para','for, to','🎯'],['com','with','🤝'],
+    ['sem','without','🚫'],['sobre','about, on','📘'],['entre','between','↔️'],['por','by, through','🔀'],
+    ['até','until','⏱'],['desde','since','⏳'],['contra','against','⚔️'],['durante','during','🔁'],
+  ]],
+  ['saudacoes','Saudações e cortesia','🙏',[
+    ['olá','hello','👋'],['oi','hi','🙋'],['tchau','bye','👋'],['bom dia','good morning','🌅'],
+    ['boa tarde','good afternoon','🌇'],['boa noite','good night','🌙'],['obrigado','thank you','🙏'],
+    ['por favor','please','🙏'],['desculpe','sorry','🙇'],['com licença','excuse me','✋'],
+    ['de nada','you\'re welcome','😊'],['tudo bem?','how are you?','🤔'],['prazer','nice to meet you','🤝'],
+  ]],
+  ['interrogacao','Palavras de interrogação','❓',[
+    ['o que','what','❔'],['quem','who','🧑'],['onde','where','📍'],['quando','when','⏰'],
+    ['por quê','why','💭'],['como','how','🛠'],['qual','which','🎯'],['quanto','how much','💰'],
+    ['quantos','how many','🔢'],
+  ]],
+  ['numeros','Números','🔢',[
+    ['zero','zero','0️⃣'],['um','one','1️⃣'],['dois','two','2️⃣'],['três','three','3️⃣'],
+    ['quatro','four','4️⃣'],['cinco','five','5️⃣'],['seis','six','6️⃣'],['sete','seven','7️⃣'],
+    ['oito','eight','8️⃣'],['nove','nine','9️⃣'],['dez','ten','🔟'],['vinte','twenty','2️⃣0️⃣'],
+    ['cem','one hundred','💯'],['mil','one thousand','🔟'],
+  ]],
+];
+
+// =========================================================================
+// STATE + PERSISTENCE
+// =========================================================================
+const LS_KEY = 'idiomas.v1';
+const state = {
+  lang: 'en',
+  cue: 'pt',        // pt | emoji | mix
+  notebook: false,
+  order: 'rand',    // rand | seq
+  theme: 'auto',
+  known: {},        // { catId: { wordIdx: true } }
+  currentCat: null,
+  queue: [],
+  i: 0,
+  revealed: false,
+  session: 0,
+};
+function loadState(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+    Object.assign(state, s);
+  }catch(_){}
+}
+function saveState(){
+  const {lang,cue,notebook,order,theme,known} = state;
+  localStorage.setItem(LS_KEY, JSON.stringify({lang,cue,notebook,order,theme,known}));
+}
+
+// =========================================================================
+// HELPERS
+// =========================================================================
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+const rand = (n) => Math.floor(Math.random()*n);
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=rand(i+1); [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function fold(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ']/g,'').trim();
+}
+function levenshtein(a,b){
+  if(a===b) return 0;
+  if(!a.length) return b.length;
+  if(!b.length) return a.length;
+  const v0 = new Array(b.length+1);
+  const v1 = new Array(b.length+1);
+  for(let i=0;i<=b.length;i++) v0[i]=i;
+  for(let i=0;i<a.length;i++){
+    v1[0] = i+1;
+    for(let j=0;j<b.length;j++){
+      const cost = a[i]===b[j]?0:1;
+      v1[j+1] = Math.min(v1[j]+1, v0[j+1]+1, v0[j]+cost);
+    }
+    for(let j=0;j<=b.length;j++) v0[j]=v1[j];
+  }
+  return v1[b.length];
+}
+function matchAnswer(input, target){
+  const a = fold(input), b = fold(target);
+  if(!a) return 'empty';
+  if(a === b) return 'ok';
+  // strip leading "to " for verb forms
+  const b2 = b.replace(/^to /,'');
+  const a2 = a.replace(/^to /,'');
+  if(a2 === b2) return 'ok';
+  const d = Math.min(levenshtein(a,b), levenshtein(a2,b2));
+  const len = Math.max(b.length, 4);
+  if(d <= 1 || d/len < 0.18) return 'close';
+  return 'no';
+}
+function wordsOf(cat){ return cat[3]; }
+function countKnown(catId){
+  return Object.keys(state.known[catId]||{}).length;
+}
+
+// =========================================================================
+// RENDERING — HOME
+// =========================================================================
+function renderHome(){
+  const grid = $('#topics');
+  grid.innerHTML = '';
+  let totalWords = 0;
+  CATS.forEach((cat) => {
+    const [id,name,emoji,words] = cat;
+    totalWords += words.length;
+    const known = countKnown(id);
+    const tile = document.createElement('button');
+    tile.className = 'tile';
+    tile.type = 'button';
+    tile.innerHTML = `
+      <div class="emoji">${emoji}</div>
+      <div class="name">${name}</div>
+      <div class="meta"><span>${words.length} palavras</span><span class="known">${known} ✓</span></div>
+    `;
+    tile.addEventListener('click', () => openCategory(id));
+    grid.appendChild(tile);
+  });
+  $('#stat-line').textContent = `${CATS.length} tópicos · ${totalWords} palavras · PT → ${state.lang.toUpperCase()}`;
+}
+
+// =========================================================================
+// STUDY
+// =========================================================================
+function openCategory(id){
+  const cat = CATS.find(c=>c[0]===id);
+  if(!cat) return;
+  state.currentCat = id;
+  const words = wordsOf(cat);
+  const idxs = words.map((_,i)=>i);
+  state.queue = state.order==='seq' ? idxs : shuffled(idxs);
+  state.i = 0;
+  state.revealed = false;
+  state.session = (state.session||0) + 1;
+  $('#home').classList.add('off');
+  $('#study').classList.add('on');
+  $('#study-title').textContent = cat[1];
+  renderCard();
+}
+function backHome(){
+  state.currentCat = null;
+  $('#study').classList.remove('on');
+  $('#home').classList.remove('off');
+  renderHome();
+}
+function currentWord(){
+  const cat = CATS.find(c=>c[0]===state.currentCat);
+  if(!cat) return null;
+  const idx = state.queue[state.i];
+  return { cat, idx, word: cat[3][idx] };
+}
+function cueFor(){
+  if(state.cue==='mix'){
+    const r = Math.random();
+    return r < .34 ? 'pt' : (r < .67 ? 'emoji' : 'foto');
+  }
+  return state.cue;
+}
+
+// Wikimedia Commons photo lookup — no API key required.
+const photoCache = {}; // en word -> {url, page, title} | null (not found)
+async function fetchWikimediaPhoto(query){
+  if(query in photoCache) return photoCache[query];
+  try{
+    const api = 'https://commons.wikimedia.org/w/api.php'
+      + '?action=query&generator=search&gsrsearch=' + encodeURIComponent(query + ' filetype:bitmap')
+      + '&gsrlimit=6&gsrnamespace=6&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=480'
+      + '&format=json&origin=*';
+    const res = await fetch(api);
+    const json = await res.json();
+    const pages = json.query && json.query.pages;
+    if(!pages){ photoCache[query] = null; return null; }
+    const list = Object.values(pages).filter(p => p.imageinfo && p.imageinfo[0]);
+    if(!list.length){ photoCache[query] = null; return null; }
+    const info = list[0].imageinfo[0];
+    const result = {
+      url: info.thumburl || info.url,
+      page: info.descriptionurl,
+      title: (list[0].title||'').replace(/^File:/,'').replace(/\.[a-zA-Z]+$/,''),
+    };
+    photoCache[query] = result;
+    return result;
+  }catch(_){
+    photoCache[query] = null;
+    return null;
+  }
+}
+async function showPhoto(query){
+  const wrap = $('#photo-wrap');
+  const img = $('#photo-img');
+  const credit = $('#photo-credit');
+  const label = $('#cue-label');
+  wrap.classList.add('on');
+  img.removeAttribute('src');
+  img.alt = '';
+  credit.innerHTML = '<span class="photo-status">buscando foto…</span>';
+  const requestedFor = state.i;
+  const result = await fetchWikimediaPhoto(query);
+  if(state.i !== requestedFor) return; // user already moved on
+  if(!result){
+    wrap.classList.remove('on');
+    label.textContent = 'Sem foto — tente outra palavra';
+    return;
+  }
+  img.src = result.url;
+  img.alt = result.title;
+  credit.innerHTML = `<a href="${result.page}" target="_blank" rel="noopener">Wikimedia Commons</a>`;
+}
+function renderCard(){
+  const cw = currentWord();
+  const total = state.queue.length;
+  $('#study-progress').textContent = `${Math.min(state.i+1,total)}/${total}`;
+  if(state.i >= total){
+    renderDone();
+    return;
+  }
+  const [pt, en, emoji] = cw.word;
+  const cue = cueFor();
+  const cueEl = $('#cue');
+  const photoWrap = $('#photo-wrap');
+  photoWrap.classList.remove('on');
+  if(cue==='foto'){
+    cueEl.classList.remove('emoji');
+    cueEl.textContent = '';
+    $('#cue-label').textContent = 'Que palavra é essa?';
+    showPhoto(en.replace(/^to /,''));
+  }else{
+    cueEl.classList.toggle('emoji', cue==='emoji');
+    cueEl.textContent = cue==='emoji' ? emoji : pt;
+    $('#cue-label').textContent = cue==='emoji' ? 'Que palavra é essa?' : 'Traduza';
+  }
+  $('#answer-en').textContent = en;
+  $('#answer-pt').textContent = pt;
+  $('#answer-emoji').textContent = emoji;
+  $('#answer').classList.remove('on');
+  state.revealed = false;
+  // Notebook
+  const nb = $('#notebook');
+  nb.hidden = !state.notebook;
+  $('#nb-input').value = '';
+  $('#verdict').textContent = '';
+  $('#verdict').className = 'verdict';
+  if(state.notebook) setTimeout(()=>$('#nb-input').focus(), 60);
+  // Controls
+  renderControls();
+}
+function renderControls(){
+  const wrap = $('#controls');
+  if(!state.revealed){
+    wrap.className = 'controls';
+    wrap.innerHTML = `
+      <button class="btn" id="reveal-btn">Revelar</button>
+      <button class="btn primary" id="next-btn">Pular →</button>
+    `;
+    $('#reveal-btn').addEventListener('click', reveal);
+    $('#next-btn').addEventListener('click', next);
+  }else{
+    wrap.className = 'controls full';
+    wrap.innerHTML = `
+      <button class="btn miss" id="miss-btn">Errei</button>
+      <button class="btn gold" id="soso-btn">Quase</button>
+      <button class="btn primary" id="know-btn">Sabia ✓</button>
+    `;
+    $('#miss-btn').addEventListener('click', ()=>markAndNext(false));
+    $('#soso-btn').addEventListener('click', ()=>next());
+    $('#know-btn').addEventListener('click', ()=>markAndNext(true));
+  }
+}
+function reveal(){
+  state.revealed = true;
+  $('#answer').classList.add('on');
+  // If notebook mode, judge
+  if(state.notebook){
+    const cw = currentWord();
+    const v = matchAnswer($('#nb-input').value, cw.word[1]);
+    const el = $('#verdict');
+    if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; }
+    else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; }
+    else if(v==='empty'){ el.textContent = 'Você não escreveu nada.'; el.className='verdict no'; }
+    else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; }
+  }
+  renderControls();
+}
+function markAndNext(known){
+  const cw = currentWord();
+  if(!cw) return;
+  const catId = cw.cat[0];
+  state.known[catId] = state.known[catId] || {};
+  if(known){ state.known[catId][cw.idx] = true; }
+  else { delete state.known[catId][cw.idx]; }
+  saveState();
+  next();
+}
+function next(){
+  state.i++;
+  state.revealed = false;
+  renderCard();
+}
+function renderDone(){
+  const catId = state.currentCat;
+  const known = countKnown(catId);
+  const cat = CATS.find(c=>c[0]===catId);
+  const total = cat[3].length;
+  const wrap = $('#card');
+  wrap.innerHTML = `
+    <div class="done">
+      <div style="font-size:44px">🌱</div>
+      <h3>Rodada completa.</h3>
+      <p>Você marcou <b>${known}/${total}</b> como sabidas neste tópico.</p>
+    </div>
+  `;
+  $('#answer').classList.remove('on');
+  const c = $('#controls');
+  c.className = 'controls';
+  c.innerHTML = `
+    <button class="btn" id="again-btn">Repetir tópico</button>
+    <button class="btn primary" id="home-btn">Outro tópico</button>
+  `;
+  $('#again-btn').addEventListener('click', ()=>openCategory(catId));
+  $('#home-btn').addEventListener('click', backHome);
+  $('#notebook').hidden = true;
+}
+
+// =========================================================================
+// SETTINGS + THEME
+// =========================================================================
+function applyTheme(){
+  if(state.theme==='auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', state.theme);
+  const dark = state.theme==='dark' || (state.theme==='auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  $('#theme-btn').textContent = dark ? '☀' : '☾';
+}
+function openSheet(){ $('#scrim').classList.add('on'); $('#sheet').classList.add('on'); }
+function closeSheet(){ $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
+
+function bindSeg(sel, key, cb){
+  $$(sel + ' button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(b.disabled) return;
+      $$(sel + ' button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      const v = b.dataset[key];
+      cb(v);
+      saveState();
+    });
+  });
+}
+function initSegs(){
+  bindSeg('#lang-seg','lang', v=>{ state.lang=v; renderHome(); });
+  bindSeg('#nb-seg','nb', v=>{ state.notebook = v==='on'; if(state.currentCat) renderCard(); });
+  bindSeg('#order-seg','order', v=>{ state.order=v; });
+  bindSeg('#theme-seg','th', v=>{ state.theme=v; applyTheme(); });
+  // reflect current state
+  const setSeg = (sel, attr, val) => {
+    $$(sel + ' button').forEach(b=>{
+      b.classList.toggle('on', b.dataset[attr]===val);
+    });
+  };
+  setSeg('#lang-seg','lang', state.lang);
+  setSeg('#nb-seg','nb', state.notebook?'on':'off');
+  setSeg('#order-seg','order', state.order);
+  setSeg('#theme-seg','th', state.theme);
+}
+
+function initModebar(){
+  $$('.modebar button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      $$('.modebar button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      state.cue = b.dataset.cue;
+      saveState();
+      if(state.currentCat) renderCard();
+    });
+  });
+  $$('.modebar button').forEach(b=>b.classList.toggle('on', b.dataset.cue===state.cue));
+}
+
+// =========================================================================
+// BOOT
+// =========================================================================
+function init(){
+  loadState();
+  applyTheme();
+  renderHome();
+  initModebar();
+  initSegs();
+
+  $('#back-btn').addEventListener('click', backHome);
+  $('#settings-btn').addEventListener('click', openSheet);
+  $('#sheet-close').addEventListener('click', closeSheet);
+  $('#scrim').addEventListener('click', closeSheet);
+  $('#theme-btn').addEventListener('click', ()=>{
+    const order = ['auto','light','dark'];
+    const i = order.indexOf(state.theme);
+    state.theme = order[(i+1) % order.length];
+    // reflect in seg
+    $$('#theme-seg button').forEach(b=>b.classList.toggle('on', b.dataset.th===state.theme));
+    applyTheme(); saveState();
+  });
+
+  // Notebook: Enter reveals
+  $('#nb-input').addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){
+      if(!state.revealed) reveal();
+      else next();
+    }
+  });
+
+  // Keyboard shortcuts on study screen
+  document.addEventListener('keydown', (e)=>{
+    if(!$('#study').classList.contains('on')) return;
+    if(e.target.tagName === 'INPUT') return;
+    if(e.key===' '){ e.preventDefault(); state.revealed ? next() : reveal(); }
+    if(e.key==='ArrowRight') next();
+    if(e.key==='1' && state.revealed) markAndNext(false);
+    if(e.key==='3' && state.revealed) markAndNext(true);
+  });
+
+  // React to system theme change when in auto
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', ()=>{
+    if(state.theme==='auto') applyTheme();
+  });
+}
+init();
+</script>

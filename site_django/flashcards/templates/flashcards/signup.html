@@ -1,0 +1,33 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Criar conta · Caderno de Idiomas{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-mark">Caderno de <em>Idiomas</em></div>
+    <h1>Criar conta</h1>
+    <p class="lede">Grátis. Seu progresso fica salvo pra sempre.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="field">
+        <div class="k">E-mail</div>
+        {{ form.email }}
+        {% if form.email.errors %}<p class="form-error">{{ form.email.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <div class="k">Senha</div>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<p class="form-error">{{ form.password1.errors.0 }}</p>{% endif %}
+      </div>
+      <div class="field">
+        <div class="k">Confirme a senha</div>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<p class="form-error">{{ form.password2.errors.0 }}</p>{% endif %}
+      </div>
+      <button class="btn primary" type="submit" style="width:100%">Criar conta</button>
+    </form>
+
+    <p class="auth-switch">Já tem conta? <a href="{% url 'login' %}">Entrar</a></p>
+  </div>
+</div>
+{% endblock %}

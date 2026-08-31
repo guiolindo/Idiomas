@@ -1,0 +1,30 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Entrar · Caderno de Idiomas{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-mark">Caderno de <em>Idiomas</em></div>
+    <h1>Entrar</h1>
+    <p class="lede">Seu progresso te espera.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <p class="form-error">{{ form.non_field_errors.0 }}</p>
+      {% endif %}
+      <div class="field">
+        <div class="k">E-mail</div>
+        <input type="email" name="username" autofocus autocomplete="email" required>
+      </div>
+      <div class="field">
+        <div class="k">Senha</div>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn primary" type="submit" style="width:100%">Entrar</button>
+    </form>
+
+    <p class="auth-switch"><a href="{% url 'password_reset' %}">Esqueceu a senha?</a></p>
+    <p class="auth-switch">Ainda não tem conta? <a href="{% url 'signup' %}">Criar conta</a></p>
+  </div>
+</div>
+{% endblock %}

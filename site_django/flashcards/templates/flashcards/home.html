@@ -1,0 +1,99 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="stats-card">
+  <div class="stats-ring">
+    <svg viewBox="0 0 64 64" width="56" height="56">
+      <circle cx="32" cy="32" r="27" class="ring-track"></circle>
+      <circle cx="32" cy="32" r="27" class="ring-fill" data-pct="{{ overall_pct }}"></circle>
+    </svg>
+    <span class="ring-label">{{ overall_pct }}%</span>
+  </div>
+  <div class="stats-body">
+    <div class="stats-count">{{ total_known }} / {{ total_words }} palavras</div>
+    <div class="stats-streak">
+      {% if profile.streak_count %}
+        {{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia seguido,dias seguidos" }} 🔥
+      {% else %}
+        Comece hoje a sua sequência 🔥
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if continue_topic %}
+<a class="continue-banner" href="{% url 'study' continue_topic.slug %}">
+  <div class="cb-emoji">{{ continue_topic.emoji }}</div>
+  <div class="cb-text">
+    <div class="cb-label">Continuar estudando</div>
+    <div class="cb-title">{{ continue_topic.name }}</div>
+  </div>
+  <div class="cb-arrow">→</div>
+</a>
+{% endif %}
+
+<div class="search-row">
+  <input type="search" id="search-input" placeholder="Buscar tópico… (ex: comida, verbos)" aria-label="Buscar tópico">
+</div>
+
+<div class="filter-row" id="filter-row">
+  <button data-filter="all" class="on">Todos</button>
+  <button data-filter="progress">Em progresso</button>
+  <button data-filter="done">Dominados</button>
+  <button data-filter="new">Não iniciados</button>
+</div>
+
+<div class="grid" id="topics">
+  {% for tc in topic_cards %}
+  <a class="tile{% if tc.done %} done{% endif %}"
+     href="{% url 'study' tc.topic.slug %}"
+     data-name="{{ tc.topic.name|lower }}"
+     data-state="{% if tc.done %}done{% elif tc.known > 0 %}progress{% else %}new{% endif %}">
+    <div class="emoji">{{ tc.topic.emoji }}</div>
+    <div class="name">{{ tc.topic.name }}</div>
+    <div class="meta"><span>{{ tc.total }} palavras</span><span class="known">{{ tc.known }} ✓</span></div>
+    <div class="bar"><div class="bar-fill" style="width:{{ tc.pct }}%"></div></div>
+  </a>
+  {% endfor %}
+</div>
+<p class="empty-search" id="empty-search" hidden>Nenhum tópico bate com essa busca.</p>
+
+<footer>Sua conta é sua — o progresso fica salvo aqui, não só neste navegador.</footer>
+
+<script>
+  document.querySelectorAll('.ring-fill').forEach(function(el){
+    var pct = Number(el.dataset.pct||0);
+    var circ = 2*Math.PI*27;
+    el.style.strokeDasharray = circ;
+    el.style.strokeDashoffset = circ * (1 - pct/100);
+  });
+  var tiles = Array.from(document.querySelectorAll('#topics .tile'));
+  var search = document.getElementById('search-input');
+  var filterRow = document.getElementById('filter-row');
+  var emptyMsg = document.getElementById('empty-search');
+  var currentFilter = 'all';
+
+  function applyFilters(){
+    var q = search.value.trim().toLowerCase();
+    var visible = 0;
+    tiles.forEach(function(t){
+      var matchesText = !q || t.dataset.name.indexOf(q) !== -1;
+      var matchesChip = currentFilter === 'all' || t.dataset.state === currentFilter;
+      var show = matchesText && matchesChip;
+      t.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    emptyMsg.hidden = visible > 0;
+  }
+  search.addEventListener('input', applyFilters);
+  filterRow.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      filterRow.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      currentFilter = b.dataset.filter;
+      applyFilters();
+    });
+  });
+</script>
+{% endblock %}

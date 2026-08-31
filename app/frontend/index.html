@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caderno de Idiomas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <h2 class="sr-only">Caderno de Idiomas — flashcards de vocabulário</h2>
+
+    <header class="top">
+      <div>
+        <div class="wordmark">Caderno de <em>Idiomas</em></div>
+        <div class="sub" id="stat-line">carregando…</div>
+      </div>
+      <div class="row">
+        <button class="icon-btn" id="account-btn" title="Conta" aria-label="Conta"></button>
+        <button class="icon-btn" id="theme-btn" title="Tema" aria-label="Alternar tema">☾</button>
+        <button class="icon-btn" id="settings-btn" title="Ajustes" aria-label="Ajustes">⚙</button>
+      </div>
+    </header>
+
+    <section class="home" id="home">
+
+      <div class="stats-card" id="stats-card">
+        <div class="stats-ring" id="stats-ring">
+          <svg viewBox="0 0 64 64" width="56" height="56">
+            <circle cx="32" cy="32" r="27" class="ring-track"></circle>
+            <circle cx="32" cy="32" r="27" class="ring-fill" id="ring-fill"></circle>
+          </svg>
+          <span class="ring-label" id="ring-label">0%</span>
+        </div>
+        <div class="stats-body">
+          <div class="stats-count" id="stats-count">0 / 0 palavras</div>
+          <div class="stats-streak" id="stats-streak">Comece hoje a sua sequência 🔥</div>
+        </div>
+      </div>
+
+      <a class="continue-banner" id="continue-banner" href="#" hidden>
+        <div class="cb-emoji" id="cb-emoji">📖</div>
+        <div class="cb-text">
+          <div class="cb-label">Continuar de onde parou</div>
+          <div class="cb-title" id="cb-title">—</div>
+        </div>
+        <div class="cb-arrow">→</div>
+      </a>
+
+      <div class="search-row">
+        <input type="search" id="search-input" placeholder="Buscar tópico… (ex: comida, verbos)" aria-label="Buscar tópico">
+      </div>
+
+      <div class="filter-row" id="filter-row">
+        <button data-filter="all" class="on">Todos</button>
+        <button data-filter="progress">Em progresso</button>
+        <button data-filter="done">Dominados</button>
+        <button data-filter="new">Não iniciados</button>
+      </div>
+
+      <div class="grid" id="topics"></div>
+      <p class="empty-search" id="empty-search" hidden>Nenhum tópico bate com essa busca.</p>
+
+      <footer id="home-footer">Seu progresso fica salvo neste navegador — entre com seu e-mail para sincronizar entre aparelhos.</footer>
+    </section>
+
+    <section class="study" id="study">
+      <div class="study-head">
+        <button class="back" id="back-btn">← Tópicos</button>
+        <div class="title" id="study-title">—</div>
+        <div class="progress" id="study-progress">0/0</div>
+      </div>
+
+      <div class="modebar" role="tablist" aria-label="Modo de estímulo">
+        <button data-cue="pt" class="on" role="tab">Palavra em PT</button>
+        <button data-cue="emoji" role="tab">Emoji</button>
+        <button data-cue="foto" role="tab">Foto real</button>
+        <button data-cue="mix" role="tab">Misturar</button>
+      </div>
+
+      <div class="card" id="card">
+        <div class="cue-label" id="cue-label">Traduza</div>
+        <div class="cue" id="cue">—</div>
+        <div class="photo-wrap" id="photo-wrap">
+          <img id="photo-img" alt="">
+          <div class="credit" id="photo-credit"></div>
+        </div>
+        <div class="answer" id="answer">
+          <div class="en" id="answer-en">—</div>
+          <div class="pt-sub" id="answer-pt">—</div>
+          <div class="emoji-sub" id="answer-emoji">—</div>
+        </div>
+      </div>
+
+      <div class="notebook" id="notebook" hidden>
+        <label for="nb-input">Caderno — escreva a resposta</label>
+        <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="controls" id="controls">
+        <button class="btn" id="reveal-btn">Revelar</button>
+        <button class="btn primary" id="next-btn">Próxima →</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <div class="sheet" id="sheet" role="dialog" aria-label="Ajustes">
+    <h3>Ajustes</h3>
+    <p class="lede">Escolha o idioma, o estímulo e ligue o modo caderno.</p>
+
+    <div class="field">
+      <div class="k">Idioma alvo</div>
+      <div class="seg" id="lang-seg">
+        <button data-lang="en" class="on">Inglês</button>
+        <button data-lang="es" disabled title="Em breve">Espanhol</button>
+        <button data-lang="fr" disabled title="Em breve">Francês</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="k">Modo caderno (recall)</div>
+      <div class="seg" id="nb-seg">
+        <button data-nb="off" class="on">Desligado</button>
+        <button data-nb="on">Ligado</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="k">Ordem</div>
+      <div class="seg" id="order-seg">
+        <button data-order="rand" class="on">Aleatória</button>
+        <button data-order="seq">Sequencial</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="k">Aparência</div>
+      <div class="seg" id="theme-seg">
+        <button data-th="auto" class="on">Sistema</button>
+        <button data-th="light">Claro</button>
+        <button data-th="dark">Escuro</button>
+      </div>
+    </div>
+
+    <button class="close" id="sheet-close">Feito</button>
+  </div>
+
+  <div class="sheet" id="account-sheet" role="dialog" aria-label="Conta">
+    <div id="auth-unavailable" hidden>
+      <h3>Login ainda não ligado</h3>
+      <p class="lede">Este app ainda está usando um projeto Supabase de exemplo — veja <code>app/README.md</code> para criar o seu (gratuito) e colar a URL/chave em <code>js/config.js</code>. Sem isso, seu progresso continua salvo neste navegador normalmente.</p>
+      <button class="close" id="account-close-1">Entendi</button>
+    </div>
+
+    <div id="auth-signed-out">
+      <h3>Entrar</h3>
+      <p class="lede">Salve seu progresso e continue de qualquer aparelho. Sem senha — a gente manda um link por e-mail.</p>
+      <div class="field">
+        <div class="k">Seu e-mail</div>
+        <input type="email" id="auth-email" placeholder="voce@email.com" autocomplete="email">
+      </div>
+      <button class="btn primary" id="auth-send" style="width:100%">Enviar link mágico</button>
+      <p class="auth-status" id="auth-status"></p>
+    </div>
+
+    <div id="auth-signed-in" hidden>
+      <h3>Sua conta</h3>
+      <div class="account-row">
+        <div class="avatar" id="account-avatar">?</div>
+        <div>
+          <div class="account-email" id="account-email">—</div>
+          <div class="account-sync" id="account-sync">progresso sincronizado</div>
+        </div>
+      </div>
+      <button class="btn" id="auth-signout" style="width:100%; margin-top:16px">Sair</button>
+    </div>
+
+    <button class="close" id="account-close-2">Fechar</button>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

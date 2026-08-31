@@ -1,0 +1,66 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Caderno de Idiomas{% endblock %}</title>
+<link rel="icon" type="image/svg+xml" href="{% static 'flashcards/favicon.svg' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="{% static 'flashcards/css/style.css' %}">
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <nav class="topnav">
+    <a class="topnav-brand" href="{% url 'home' %}">Caderno de <em>Idiomas</em></a>
+    <div class="topnav-actions">
+      <button class="icon-btn" id="theme-btn" type="button" title="Tema" aria-label="Alternar tema">☾</button>
+      <a class="topnav-user" href="{% url 'password_change' %}" title="{{ user.email }} · alterar senha">{{ user.email|slice:":1"|upper }}</a>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="link-btn" type="submit">Sair</button>
+      </form>
+    </div>
+  </nav>
+  {% endif %}
+
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for message in messages %}
+    <div class="flash flash-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main class="app">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    (function(){
+      var saved = localStorage.getItem('idiomas.theme');
+      if(saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+      var btn = document.getElementById('theme-btn');
+      function reflect(){
+        var cur = document.documentElement.getAttribute('data-theme');
+        var dark = cur === 'dark' || (!cur && matchMedia('(prefers-color-scheme: dark)').matches);
+        if(btn) btn.textContent = dark ? '☀' : '☾';
+      }
+      reflect();
+      if(btn){
+        btn.addEventListener('click', function(){
+          var order = ['', 'light', 'dark'];
+          var cur = document.documentElement.getAttribute('data-theme') || '';
+          var next = order[(order.indexOf(cur) + 1) % order.length];
+          if(next) document.documentElement.setAttribute('data-theme', next);
+          else document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('idiomas.theme', next);
+          reflect();
+        });
+      }
+    })();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

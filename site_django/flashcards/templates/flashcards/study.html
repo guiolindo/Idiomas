@@ -1,0 +1,59 @@
+{% extends "flashcards/base.html" %}
+{% load static %}
+{% block title %}{{ topic.name }} · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="study-head">
+  <a class="back" href="{% url 'home' %}">← Tópicos</a>
+  <div class="title">{{ topic.name }}</div>
+  <div class="progress" id="study-progress">0/0</div>
+</div>
+
+<div class="modebar" role="tablist" aria-label="Modo de estímulo">
+  <button data-cue="pt" class="on" role="tab">Palavra em PT</button>
+  <button data-cue="foto" role="tab">Foto</button>
+  <button data-cue="mix" role="tab">Misturar</button>
+</div>
+
+<label class="scope-toggle" id="scope-toggle">
+  <input type="checkbox" id="scope-input">
+  <span>Só o que ainda não sei (<span id="scope-count">0</span>)</span>
+</label>
+
+<div class="card" id="card">
+  <div class="cue-label" id="cue-label">Traduza</div>
+  <div class="cue" id="cue">—</div>
+  <div class="photo-wrap" id="photo-wrap">
+    <img id="photo-img" alt="">
+    <div class="credit" id="photo-credit"></div>
+  </div>
+  <div class="answer" id="answer">
+    <div class="en" id="answer-en">—</div>
+    <div class="pt-sub" id="answer-pt">—</div>
+  </div>
+</div>
+
+<div class="notebook" id="notebook">
+  <label for="nb-input">Escreva a tradução</label>
+  <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
+  <div class="verdict" id="verdict"></div>
+</div>
+
+<div class="controls" id="controls">
+  <button class="btn" id="reveal-btn">Revelar</button>
+  <button class="btn primary" id="next-btn">Próxima →</button>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.WORDS = {{ words_json|safe }};
+  window.KNOWN_IDS = {{ known_ids_json|safe }};
+  window.CSRF_TOKEN = "{{ csrf_token }}";
+  window.MARK_URL_BASE = "/api/progresso/";
+  window.IMAGE_URL = "{% url 'api_image' %}";
+  window.HOME_URL = "{% url 'home' %}";
+</script>
+<script src="{% static 'flashcards/js/study.js' %}"></script>
+{% endblock %}
