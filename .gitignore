@@ -12,3 +12,6 @@ site_django/staticfiles/
 
 # Logs de dev
 *.log
+
+# rascunhos locais (scripts de geração de vocabulário via IA local, etc)
+scratch/

@@ -9,37 +9,42 @@ JavaScript vanilla para a interação do cartão. Sem framework de frontend.
 
 Modelos principais:
 - `Topic` (tópico: slug, nome, emoji, ordem)
-- `Word` (pt, en, tópico, `has_photo` — se faz sentido mostrar foto)
-- `Progress` (usuário, palavra, sabia/não sabia, data)
+- `Word` (pt, en, tópico, `has_photo`, `photo_url`/`photo_page` cacheados)
+- `Progress` (usuário, palavra, `level` 0–4, `next_review`, `last_wrong_answer`)
 - `Profile` (usuário, sequência de dias estudados)
 
 Fluxo de uso: o usuário cria conta (e-mail + senha), vê um dashboard com
-progresso geral, sequência de dias e uma lista de tópicos com busca e
-filtros (todos / em progresso / dominados / não iniciados). Ao entrar num
-tópico, estuda cartão por cartão: vê a palavra em português ou (se a
-palavra tem `has_photo=true`) uma foto real do conceito, buscada ao vivo
-na Wikipedia. A opção "Foto" só aparece pro aluno se pelo menos uma
-palavra do tópico tiver `has_photo=true` — tópicos só de palavras
-abstratas (preposições, pronomes) nem mostram essa opção. O aluno digita
-a tradução em inglês num campo sempre visível (não é opcional), recebe
-uma correção tolerante a acento e pequenos erros de digitação, e marca
-"sabia" ou "errei". Erros da rodada podem ser revisados na hora. Existe
-um filtro "só o que ainda não sei" por tópico.
+anel de progresso (palavras dominadas / total), sequência de dias, um
+widget de "N revisões vencidas" (quando existem) que já leva direto pro
+tópico mais crítico, e uma lista de tópicos com busca e filtros (todos /
+em progresso / dominados / não iniciados). Ao entrar num tópico, a
+sessão já vem filtrada só com o que está vencido ou nunca foi visto —
+repetição espaçada tipo Leitner leve (níveis 0 a 4, intervalos 1/3/7/15/30
+dias). Se nada está vencido, mostra "tudo em dia" em vez de forçar
+estudo. Cada cartão mostra a palavra em português ou (se `has_photo=true`
+e a URL já está cacheada por `check_photos`) uma foto real do conceito —
+sem round-trip pra Wikipedia na maioria das vezes. A opção "Foto" nem
+aparece se o tópico não tem nenhuma palavra fotografável (preposições,
+pronomes etc). O aluno digita a tradução num campo sempre visível (não é
+opcional), vê se errou a mesma palavra da última vez ("você escreveu X
+da última vez"), e responde com 3 níveis — Errei (nível 0, revisão
+amanhã) / Quase (mantém nível, revisão amanhã) / Sabia (sobe de nível,
+intervalo maior) — com atalhos de teclado 1/2/3. Erros da rodada podem
+ser revisados na hora, sem sair do tópico.
 
 Já existe: autenticação completa (cadastro, login, recuperação de senha,
 troca de senha), painel de administração do Django pra gerenciar
 tópicos/palavras sem código (com exportação CSV), importador que aceita
 JSON ou CSV, um comando (`check_photos`) que verifica empiricamente na
-Wikipedia se cada palavra tem foto e ajusta `has_photo` sozinho, 13
-testes automatizados, hardening de segurança para produção (HTTPS,
+Wikipedia se cada palavra tem foto (e cacheia a URL) em vez de adivinhar,
+17 testes automatizados, hardening de segurança para produção (HTTPS,
 cookies seguros, HSTS).
 
 Já foi decidido e não deve ser revisitado sem motivo forte: nada de
-emoji como estímulo de aprendizagem (só foto real ou texto — emoji foi
-removido de propósito, inclusive o modo "Misturar" palavra/foto, que
-existiu brevemente e foi removido por não ter serventia real); o campo
-de digitação/recall fica sempre ativo (não é um modo opcional que
-precisa ser ligado).
+emoji como estímulo de aprendizagem (só foto real ou texto); nenhum modo
+"misturar" palavra/foto; o campo de digitação/recall sempre ativo (nunca
+opcional); repetição espaçada simples tipo Leitner (não pedir SM-2/Anki
+completo — decisão consciente de manter transparente e fácil de manter).
 
 ## Sua tarefa
 
@@ -52,16 +57,17 @@ estudo) — não como um gerador de lista de features genéricas.
    como encaixaria na arquitetura acima (em que modelo/view/template
    mexeria).
 2. Priorize por impacto no aprendizado real do usuário, não por
-   "impressionar visualmente". Coisas como repetição espaçada de verdade
-   (baseada em histórico de acerto/erro, não só "sabia/não sabia" binário),
-   dificuldade adaptativa, e revisão inteligente valem mais que
-   decoração.
+   "impressionar visualmente". O SRS básico já existe — pense no que vem
+   depois dele (ex: refinar os intervalos com dados reais de acerto,
+   evitar sobrecarga quando muitas revisões vencem no mesmo dia, etc.),
+   não em reconstruí-lo do zero.
 3. Para cada ideia, diga explicitamente se ela é simples (poucas horas),
    média ou complexa — não proponha arquitetura sofisticada onde uma
    solução simples resolve.
 4. Não sugira reintroduzir emoji como estímulo de aprendizagem, nem um
-   modo "misturar" palavra/foto, nem tornar o campo de recall opcional
-   — essas três coisas já foram tentadas e removidas de propósito.
+   modo "misturar" palavra/foto, nem tornar o campo de recall opcional,
+   nem trocar o Leitner leve por um SM-2/Anki completo — essas decisões
+   já foram tomadas de propósito.
 5. Termine com as 2 mudanças que você faria primeiro, se só pudesse
    fazer duas.
 

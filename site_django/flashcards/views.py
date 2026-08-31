@@ -1,18 +1,19 @@
 import json
 from datetime import timedelta
 
-import httpx
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.cache import cache
+from django.db.models import Count
 from django.http import JsonResponse, HttpResponseNotAllowed
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import SignupForm
-from .models import Topic, Word, Progress, Profile
+from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
+from .wikipedia import fetch_summary
 
 
 def signup(request):
@@ -39,9 +40,11 @@ class IdiomasLogoutView(LogoutView):
     next_page = "login"
 
 
-def _known_map(user):
-    """{topic_id: set(word_id sabido)}"""
-    rows = Progress.objects.filter(user=user, known=True).values_list("word__topic_id", "word_id")
+def _mastered_map(user):
+    """{topic_id: set(word_id dominado — nível máximo do SRS)}"""
+    rows = Progress.objects.filter(user=user, level__gte=SRS_MAX_LEVEL).values_list(
+        "word__topic_id", "word_id"
+    )
     out = {}
     for topic_id, word_id in rows:
         out.setdefault(topic_id, set()).add(word_id)
@@ -50,57 +53,89 @@ def _known_map(user):
 
 @login_required
 def home(request):
+    now = timezone.now()
     topics = list(Topic.objects.all())
-    known_map = _known_map(request.user)
+    mastered_map = _mastered_map(request.user)
     total_words = 0
-    total_known = 0
+    total_mastered = 0
     topic_cards = []
     for t in topics:
         words = list(t.words.all())
         total = len(words)
-        known = len(known_map.get(t.id, set()) & {w.id for w in words})
+        mastered = len(mastered_map.get(t.id, set()) & {w.id for w in words})
         total_words += total
-        total_known += known
+        total_mastered += mastered
         topic_cards.append({
             "topic": t,
             "total": total,
-            "known": known,
-            "pct": round(known / total * 100) if total else 0,
-            "done": total > 0 and known == total,
+            "known": mastered,
+            "pct": round(mastered / total * 100) if total else 0,
+            "done": total > 0 and mastered == total,
         })
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
-    overall_pct = round(total_known / total_words * 100) if total_words else 0
+    overall_pct = round(total_mastered / total_words * 100) if total_words else 0
 
     # última palavra estudada (pra "continuar de onde parou")
     last_progress = Progress.objects.filter(user=request.user).order_by("-updated_at").first()
     continue_topic = last_progress.word.topic if last_progress else None
 
+    # revisões vencidas: cartas que já foram estudadas antes e estão devendo
+    # revisão agora — não conta palavra nova (nunca estudada), só o que o
+    # aluno já viu e precisa reforçar.
+    overdue_qs = Progress.objects.filter(user=request.user, next_review__lte=now)
+    overdue_count = overdue_qs.count()
+    overdue_topic = None
+    if overdue_count:
+        top = (
+            overdue_qs.values("word__topic")
+            .annotate(n=Count("id"))
+            .order_by("-n")
+            .first()
+        )
+        if top:
+            overdue_topic = Topic.objects.get(id=top["word__topic"])
+
     return render(request, "flashcards/home.html", {
         "topic_cards": topic_cards,
         "total_words": total_words,
-        "total_known": total_known,
+        "total_known": total_mastered,
         "overall_pct": overall_pct,
         "profile": profile,
         "continue_topic": continue_topic,
+        "overdue_count": overdue_count,
+        "overdue_topic": overdue_topic,
     })
 
 
 @login_required
 def study(request, slug):
     topic = get_object_or_404(Topic, slug=slug)
-    words = list(topic.words.values("id", "pt", "en", "has_photo"))
-    known_ids = set(
-        Progress.objects.filter(user=request.user, known=True, word__topic=topic)
-        .values_list("word_id", flat=True)
-    )
+    now = timezone.now()
+    progress_map = {
+        p.word_id: p for p in Progress.objects.filter(user=request.user, word__topic=topic)
+    }
+    words = []
+    for w in topic.words.all():
+        p = progress_map.get(w.id)
+        due = (p is None) or (p.next_review <= now)
+        words.append({
+            "id": w.id,
+            "pt": w.pt,
+            "en": w.en,
+            "has_photo": w.has_photo,
+            "photo_url": w.photo_url,
+            "photo_page": w.photo_page,
+            "due": due,
+            "last_wrong": p.last_wrong_answer if p else "",
+        })
     _bump_streak(request.user)
     return render(request, "flashcards/study.html", {
         "topic": topic,
         "words_json": json.dumps(words),
-        "known_ids_json": json.dumps(list(known_ids)),
         # só mostra a opção "Foto" se pelo menos uma palavra do tópico tiver
         "topic_has_photo": any(w["has_photo"] for w in words),
+        "any_due": any(w["due"] for w in words),
     })
 
 
@@ -118,29 +153,23 @@ def _bump_streak(user):
 @login_required
 @require_POST
 def api_mark_progress(request, word_id):
-    known = request.POST.get("known") == "true"
+    result = request.POST.get("result")  # 'miss' | 'soso' | 'know'
+    if result not in ("miss", "soso", "know"):
+        return JsonResponse({"error": "result inválido"}, status=400)
+    wrong_answer = request.POST.get("wrong_answer", "")
     word = get_object_or_404(Word, id=word_id)
-    if known:
-        Progress.objects.update_or_create(user=request.user, word=word, defaults={"known": True})
-    else:
-        Progress.objects.filter(user=request.user, word=word).delete()
-    return JsonResponse({"ok": True})
+    progress, _ = Progress.objects.get_or_create(user=request.user, word=word)
+    progress.apply_feedback(result, wrong_answer=wrong_answer)
+    return JsonResponse({
+        "ok": True,
+        "level": progress.level,
+        "mastered": progress.mastered,
+        "next_review": progress.next_review.isoformat(),
+    })
 
 
 @login_required
 def api_image(request):
-    """
-    Busca a foto de capa do artigo da Wikipedia sobre a palavra.
-
-    Usamos a API de resumo da Wikipedia (não a busca da Wikimedia Commons)
-    de propósito: ela devolve UM artigo já desambiguado por palavra (então
-    "apple" cai na fruta, não em qualquer coisa que combine com o texto),
-    e a ausência de "thumbnail" é justamente o sinal que usamos pra saber
-    que a palavra não tem uma foto que faça sentido (verbos, preposições,
-    conceitos abstratos etc. viram artigos de desambiguação ou não têm
-    imagem de capa). A busca da Commons também vinha sendo bloqueada pela
-    política antibot da Wikimedia sob volume de tráfego de app.
-    """
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
     q = request.GET.get("q", "").strip()
@@ -152,33 +181,6 @@ def api_image(request):
     if cached is not None:
         return JsonResponse(cached)
 
-    headers = {
-        "User-Agent": "CadernoDeIdiomas/1.0 (app pessoal de flashcards; contato: brzueira342386@gmail.com)"
-    }
-    title = q.strip().replace(" ", "_")
-    try:
-        resp = httpx.get(
-            f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}",
-            headers=headers, timeout=8, follow_redirects=True,
-        )
-    except httpx.HTTPError:
-        result = {"found": False}
-        cache.set(cache_key, result, 60 * 60)
-        return JsonResponse(result)
-
-    data = resp.json() if resp.status_code == 200 else {}
-    thumb = data.get("thumbnail")
-    # "disambiguation" = página de desambiguação (ex: "use" -> lista de sentidos),
-    # não uma imagem específica da palavra — tratamos como "sem foto" também.
-    if resp.status_code == 200 and thumb and data.get("type") != "disambiguation":
-        result = {
-            "found": True,
-            "url": thumb["source"],
-            "page": data.get("content_urls", {}).get("desktop", {}).get("page", ""),
-            "title": data.get("title", q),
-        }
-    else:
-        result = {"found": False}
-
+    result = fetch_summary(q)
     cache.set(cache_key, result, 60 * 60 * 24 * 7)
     return JsonResponse(result)

@@ -9,17 +9,23 @@
   <div class="progress" id="study-progress">0/0</div>
 </div>
 
+{% if not any_due %}
+<div class="done">
+  <div style="font-size:44px">✅</div>
+  <h3>Tudo em dia por aqui.</h3>
+  <p>Nenhuma palavra deste tópico está vencida agora. Volte mais tarde ou escolha outro tópico.</p>
+</div>
+<div class="controls" style="margin-top:16px">
+  <a class="btn primary" href="{% url 'home' %}" style="grid-column:1/-1">Voltar aos tópicos</a>
+</div>
+{% else %}
+
 {% if topic_has_photo %}
 <div class="modebar" role="tablist" aria-label="Modo de estímulo">
   <button data-cue="pt" class="on" role="tab">Palavra em PT</button>
   <button data-cue="foto" role="tab">Foto</button>
 </div>
 {% endif %}
-
-<label class="scope-toggle" id="scope-toggle">
-  <input type="checkbox" id="scope-input">
-  <span>Só o que ainda não sei (<span id="scope-count">0</span>)</span>
-</label>
 
 <div class="card" id="card">
   <div class="cue-label" id="cue-label">Traduza</div>
@@ -37,6 +43,7 @@
 <div class="notebook" id="notebook">
   <label for="nb-input">Escreva a tradução</label>
   <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
+  <div class="last-wrong" id="last-wrong" hidden></div>
   <div class="verdict" id="verdict"></div>
 </div>
 
@@ -45,13 +52,13 @@
   <button class="btn primary" id="next-btn">Próxima →</button>
 </div>
 
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
   window.WORDS = {{ words_json|safe }};
   window.TOPIC_HAS_PHOTO = {{ topic_has_photo|yesno:"true,false" }};
-  window.KNOWN_IDS = {{ known_ids_json|safe }};
   window.CSRF_TOKEN = "{{ csrf_token }}";
   window.MARK_URL_BASE = "/api/progresso/";
   window.IMAGE_URL = "{% url 'api_image' %}";

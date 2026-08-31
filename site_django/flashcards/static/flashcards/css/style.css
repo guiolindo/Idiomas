@@ -106,6 +106,10 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
 .cb-label{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
 .cb-title{ font-size:16px; margin-top:2px; font-variation-settings:"opsz" 24; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cb-arrow{ font-size:18px; color:var(--accent); flex:none }
+.continue-banner.overdue{ background:var(--gold-soft); }
+.continue-banner.overdue:hover{ border-color:var(--gold) }
+.continue-banner.overdue .cb-label,
+.continue-banner.overdue .cb-arrow{ color:var(--gold) }
 
 /* Search + filters */
 .search-row{ margin-bottom:10px }
@@ -150,11 +154,6 @@ footer{
 .modebar{ display:flex; gap:6px; padding:4px; border:1px solid var(--line); background:var(--surface); border-radius:12px; margin-bottom:14px; }
 .modebar button{ flex:1; appearance:none; background:transparent; border:0; color:var(--ink-2); padding:8px 6px; border-radius:9px; font:inherit; font-size:13px; cursor:pointer; }
 .modebar button.on{ background:var(--accent); color:var(--accent-ink); }
-.scope-toggle{
-  display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2);
-  margin:-2px 0 14px 2px; cursor:pointer; user-select:none;
-}
-.scope-toggle input{ accent-color:var(--accent); width:15px; height:15px; margin:0; }
 .card{
   background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:34px 22px 26px;
   box-shadow:var(--shadow); min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -183,6 +182,10 @@ footer{
   font-family:var(--serif); font-weight:500; font-size:24px; line-height:32px; padding:0; outline:none; caret-color:var(--accent);
 }
 .notebook input::placeholder{ color:var(--ink-3); font-style:italic }
+.notebook .last-wrong{
+  margin-top:10px; font-size:12px; color:var(--gold); background:var(--gold-soft);
+  padding:6px 10px; border-radius:8px;
+}
 .notebook .verdict{ margin-top:10px; font-family:var(--mono); font-size:12px; letter-spacing:.06em; min-height:18px; }
 .verdict.ok{ color:var(--accent) }
 .verdict.close{ color:var(--gold) }
@@ -196,6 +199,10 @@ footer{
   display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;
 }
 .btn:hover{ border-color:var(--ink-3) }
+.btn kbd{
+  font-family:var(--mono); font-size:11px; opacity:.6; border:1px solid currentColor;
+  border-radius:4px; padding:0 5px; line-height:1.5;
+}
 .btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent) }
 .btn.gold{ background:var(--gold-soft); color:var(--gold); border-color:transparent }
 .btn.miss{ background:var(--wrong-soft); color:var(--wrong); border-color:transparent }

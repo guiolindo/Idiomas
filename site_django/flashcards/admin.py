@@ -47,8 +47,8 @@ class WordAdmin(admin.ModelAdmin):
 
 @admin.register(Progress)
 class ProgressAdmin(admin.ModelAdmin):
-    list_display = ("user", "word", "known", "updated_at")
-    list_filter = ("known", "word__topic")
+    list_display = ("user", "word", "level", "next_review", "updated_at")
+    list_filter = ("level", "word__topic")
     search_fields = ("user__username", "user__email", "word__pt", "word__en")
 
 

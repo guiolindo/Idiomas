@@ -22,7 +22,16 @@
   </div>
 </div>
 
-{% if continue_topic %}
+{% if overdue_count %}
+<a class="continue-banner overdue" href="{% url 'study' overdue_topic.slug %}">
+  <div class="cb-emoji">⏰</div>
+  <div class="cb-text">
+    <div class="cb-label">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</div>
+    <div class="cb-title">Revisar {{ overdue_topic.name|lower }} agora</div>
+  </div>
+  <div class="cb-arrow">→</div>
+</a>
+{% elif continue_topic %}
 <a class="continue-banner" href="{% url 'study' continue_topic.slug %}">
   <div class="cb-emoji">{{ continue_topic.emoji }}</div>
   <div class="cb-text">

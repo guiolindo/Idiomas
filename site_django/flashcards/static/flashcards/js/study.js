@@ -39,7 +39,7 @@
   }
 
   const LS_KEY = 'idiomas.study-prefs';
-  let prefs = { cue:'pt', order:'rand', onlyUnknown:false };
+  let prefs = { cue:'pt', order:'rand' };
   try{ Object.assign(prefs, JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(_){}
   // este tópico pode não ter nenhuma palavra fotografável (ex: preposições) —
   // nesse caso a aba "Foto" nem existe no HTML, então ignoramos qualquer
@@ -47,32 +47,19 @@
   if(!window.TOPIC_HAS_PHOTO) prefs.cue = 'pt';
   function savePrefs(){ localStorage.setItem(LS_KEY, JSON.stringify(prefs)); }
 
-  const WORDS = window.WORDS; // [{id,pt,en,has_photo}]
-  const known = new Set(window.KNOWN_IDS);
+  const ALL_WORDS = window.WORDS || []; // [{id,pt,en,has_photo,photo_url,photo_page,due,last_wrong}]
+  const WORDS = ALL_WORDS.filter(w => w.due); // só o que está vencido ou é novo entra na sessão
   const st = { queue: [], i: 0, revealed: false, sessionMissed: [] };
 
-  function updateScopeCount(){
-    const remaining = WORDS.filter(w=>!known.has(w.id)).length;
-    $('#scope-count').textContent = remaining;
-  }
-
   function buildQueue(){
-    updateScopeCount();
-    let idxs = WORDS.map((_,i)=>i);
-    if(prefs.onlyUnknown){
-      const filtered = idxs.filter(i=>!known.has(WORDS[i].id));
-      if(filtered.length) idxs = filtered; // se já sabe tudo, cai de volta pro tópico inteiro
-    }
+    const idxs = WORDS.map((_,i)=>i);
     st.queue = prefs.order==='seq' ? idxs : shuffled(idxs);
     st.i = 0;
   }
   function currentWord(){ return WORDS[st.queue[st.i]]; }
 
-  // Foto de capa da Wikipedia — algumas palavras (verbos, preposições,
-  // conceitos abstratos) simplesmente não têm uma foto que faça sentido.
-  // Quando isso acontece, caímos de volta pra palavra em texto sem alarde.
   const photoCache = {};
-  async function fetchPhoto(query){
+  async function fetchPhotoLive(query){
     if(query in photoCache) return photoCache[query];
     try{
       const res = await fetch(`${window.IMAGE_URL}?q=${encodeURIComponent(query)}`);
@@ -88,19 +75,32 @@
     cueEl.textContent = w.pt;
     $('#cue-label').textContent = 'Traduza';
   }
+  function paintPhoto(url, title, page){
+    const img = $('#photo-img'), credit = $('#photo-credit');
+    img.src = url; img.alt = title || '';
+    credit.innerHTML = page
+      ? `<a href="${page}" target="_blank" rel="noopener">Wikipedia</a>`
+      : '';
+  }
   async function showPhoto(w){
     const wrap = $('#photo-wrap'), img = $('#photo-img'), credit = $('#photo-credit'), cueEl = $('#cue');
     wrap.classList.add('on');
     cueEl.textContent = '';
+    $('#cue-label').textContent = 'Que palavra é essa?';
+    // foto já veio pronta do servidor (populada pelo check_photos) — sem round-trip nenhum
+    if(w.photo_url){
+      img.src = w.photo_url; img.alt = w.en;
+      credit.innerHTML = w.photo_page ? `<a href="${w.photo_page}" target="_blank" rel="noopener">Wikipedia</a>` : '';
+      return;
+    }
+    // fallback: busca ao vivo (palavra ainda não passou pelo check_photos)
     img.removeAttribute('src'); img.alt = '';
     credit.innerHTML = '<span class="photo-status">buscando foto…</span>';
-    $('#cue-label').textContent = 'Que palavra é essa?';
     const requestedFor = st.i;
-    const result = await fetchPhoto(w.en.replace(/^to /,''));
+    const result = await fetchPhotoLive(w.en.replace(/^to /,''));
     if(st.i !== requestedFor) return;
     if(!result){ showAsText(w); return; }
-    img.src = result.url; img.alt = result.title;
-    credit.innerHTML = `<a href="${result.page}" target="_blank" rel="noopener">Wikipedia</a>`;
+    paintPhoto(result.url, result.title, result.page);
   }
 
   function renderCard(){
@@ -115,6 +115,14 @@
     $('#answer-pt').textContent = w.pt;
     $('#answer').classList.remove('on');
     st.revealed = false;
+
+    const lastWrongEl = $('#last-wrong');
+    if(w.last_wrong){
+      lastWrongEl.hidden = false;
+      lastWrongEl.textContent = `Da última vez você escreveu "${w.last_wrong}" — repare na grafia.`;
+    }else{
+      lastWrongEl.hidden = true;
+    }
 
     $('#nb-input').value = '';
     $('#verdict').textContent = '';
@@ -132,10 +140,13 @@
       $('#next-btn').addEventListener('click', next);
     }else{
       wrap.className = 'controls full';
-      wrap.innerHTML = `<button class="btn miss" id="miss-btn">Errei</button><button class="btn gold" id="soso-btn">Quase</button><button class="btn primary" id="know-btn">Sabia ✓</button>`;
-      $('#miss-btn').addEventListener('click', ()=>markAndNext(false));
-      $('#soso-btn').addEventListener('click', ()=>next());
-      $('#know-btn').addEventListener('click', ()=>markAndNext(true));
+      wrap.innerHTML = `
+        <button class="btn miss" id="miss-btn">Errei <kbd>1</kbd></button>
+        <button class="btn gold" id="soso-btn">Quase <kbd>2</kbd></button>
+        <button class="btn primary" id="know-btn">Sabia <kbd>3</kbd></button>`;
+      $('#miss-btn').addEventListener('click', ()=>respond('miss'));
+      $('#soso-btn').addEventListener('click', ()=>respond('soso'));
+      $('#know-btn').addEventListener('click', ()=>respond('know'));
     }
   }
   function reveal(){
@@ -150,42 +161,41 @@
     else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; }
     renderControls();
   }
-  function syncWord(wordId, isKnown){
-    fetch(`${window.MARK_URL_BASE}${wordId}/`, {
+  function syncWord(wordId, result, wrongAnswer){
+    return fetch(`${window.MARK_URL_BASE}${wordId}/`, {
       method: 'POST',
       headers: { 'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `known=${isKnown}`,
+      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}`,
     }).catch(()=>{});
   }
-  function markAndNext(isKnown){
+  function respond(result){
     const w = currentWord();
     if(!w) return;
-    if(isKnown) known.add(w.id);
-    else{
-      known.delete(w.id);
+    const typed = $('#nb-input').value.trim();
+    if(result==='miss'){
       if(!st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
+      syncWord(w.id, 'miss', typed);
+    }else{
+      syncWord(w.id, result, '');
     }
-    syncWord(w.id, isKnown);
-    updateScopeCount();
     next();
   }
   function next(){ st.i++; st.revealed = false; renderCard(); }
 
   function renderDone(){
-    const knownCount = WORDS.filter(w=>known.has(w.id)).length;
     const missedCount = st.sessionMissed.length;
     const wrap = $('#card');
     wrap.innerHTML = `
       <div class="done">
         <div style="font-size:44px">${missedCount ? '💪' : '🌱'}</div>
         <h3>Rodada completa.</h3>
-        <p>Você marcou <b>${knownCount}/${WORDS.length}</b> como sabidas neste tópico${missedCount ? `, errou ${missedCount}` : ''}.</p>
+        <p>Você revisou <b>${WORDS.length}</b> ${WORDS.length===1?'palavra':'palavras'}${missedCount ? `, errou ${missedCount}` : ''}.</p>
       </div>
     `;
     const c = $('#controls');
     c.className = 'controls';
     const reviewBtn = missedCount ? `<button class="btn miss" id="review-btn">Revisar erros (${missedCount})</button>` : '';
-    c.innerHTML = `${reviewBtn}<button class="btn" id="again-btn">Repetir tópico</button><a class="btn primary" id="home-btn" href="${window.HOME_URL}">Outro tópico</a>`;
+    c.innerHTML = `${reviewBtn}<a class="btn primary" id="home-btn" href="${window.HOME_URL}">Voltar aos tópicos</a>`;
     if(missedCount){
       $('#review-btn').addEventListener('click', ()=>{
         const missedSet = new Set(st.sessionMissed);
@@ -194,7 +204,6 @@
         renderCard();
       });
     }
-    $('#again-btn').addEventListener('click', ()=>{ buildQueue(); renderCard(); });
     $('#notebook').style.display = 'none';
   }
 
@@ -210,16 +219,6 @@
       });
     });
   }
-  function initScopeToggle(){
-    const input = $('#scope-input');
-    input.checked = prefs.onlyUnknown;
-    input.addEventListener('change', ()=>{
-      prefs.onlyUnknown = input.checked;
-      savePrefs();
-      buildQueue();
-      renderCard();
-    });
-  }
 
   $('#nb-input')?.addEventListener('keydown', (e)=>{
     if(e.key==='Enter'){ st.revealed ? next() : reveal(); }
@@ -228,12 +227,16 @@
     if(e.target.tagName === 'INPUT') return;
     if(e.key===' '){ e.preventDefault(); st.revealed ? next() : reveal(); }
     if(e.key==='ArrowRight') next();
-    if(e.key==='1' && st.revealed) markAndNext(false);
-    if(e.key==='3' && st.revealed) markAndNext(true);
+    if(st.revealed){
+      if(e.key==='1') respond('miss');
+      if(e.key==='2') respond('soso');
+      if(e.key==='3') respond('know');
+    }
   });
 
-  buildQueue();
-  initModebar();
-  initScopeToggle();
-  renderCard();
+  if(WORDS.length){
+    buildQueue();
+    initModebar();
+    renderCard();
+  }
 })();

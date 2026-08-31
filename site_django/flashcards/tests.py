@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Topic, Word, Progress, Profile
+from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
 from .views import _bump_streak
 
 
@@ -72,30 +72,62 @@ class ProgressTests(TestCase):
         Profile.objects.create(user=self.user)
         self.client.login(username="p@t.com", password="x1234567")
 
-    def test_mark_known_creates_progress(self):
+    def test_know_creates_progress_and_advances_level(self):
         resp = self.client.post(
-            reverse("api_mark_progress", args=[self.word.id]), {"known": "true"}
+            reverse("api_mark_progress", args=[self.word.id]), {"result": "know"}
         )
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue(Progress.objects.filter(user=self.user, word=self.word, known=True).exists())
+        progress = Progress.objects.get(user=self.user, word=self.word)
+        self.assertEqual(progress.level, 1)
+        self.assertGreater(progress.next_review, timezone.now())
 
-    def test_mark_unknown_deletes_progress(self):
-        Progress.objects.create(user=self.user, word=self.word, known=True)
+    def test_miss_resets_level_and_stores_wrong_answer(self):
+        progress = Progress.objects.create(user=self.user, word=self.word, level=3)
         resp = self.client.post(
-            reverse("api_mark_progress", args=[self.word.id]), {"known": "false"}
+            reverse("api_mark_progress", args=[self.word.id]),
+            {"result": "miss", "wrong_answer": "aple"},
         )
         self.assertEqual(resp.status_code, 200)
-        self.assertFalse(Progress.objects.filter(user=self.user, word=self.word).exists())
+        progress.refresh_from_db()
+        self.assertEqual(progress.level, 0)
+        self.assertEqual(progress.last_wrong_answer, "aple")
+
+    def test_soso_keeps_level_but_reschedules(self):
+        progress = Progress.objects.create(user=self.user, word=self.word, level=2)
+        self.client.post(reverse("api_mark_progress", args=[self.word.id]), {"result": "soso"})
+        progress.refresh_from_db()
+        self.assertEqual(progress.level, 2)
+
+    def test_invalid_result_rejected(self):
+        resp = self.client.post(reverse("api_mark_progress", args=[self.word.id]), {"result": "banana"})
+        self.assertEqual(resp.status_code, 400)
 
     def test_mark_progress_requires_login(self):
         self.client.logout()
-        resp = self.client.post(reverse("api_mark_progress", args=[self.word.id]), {"known": "true"})
+        resp = self.client.post(reverse("api_mark_progress", args=[self.word.id]), {"result": "know"})
         self.assertEqual(resp.status_code, 302)
 
-    def test_home_counts_reflect_progress(self):
-        Progress.objects.create(user=self.user, word=self.word, known=True)
+    def test_home_counts_mastered_words(self):
+        Progress.objects.create(user=self.user, word=self.word, level=SRS_MAX_LEVEL)
         resp = self.client.get(reverse("home"))
         self.assertContains(resp, "1 / 2 palavras")
+
+    def test_word_due_when_no_progress_or_overdue(self):
+        due_word = self.topic.words.last()
+        Progress.objects.create(
+            user=self.user, word=self.word,
+            next_review=timezone.now() + timedelta(days=10),
+        )
+        resp = self.client.get(reverse("study", args=[self.topic.slug]))
+        self.assertContains(resp, due_word.pt)
+
+    def test_overdue_widget_shows_on_home(self):
+        Progress.objects.create(
+            user=self.user, word=self.word,
+            next_review=timezone.now() - timedelta(days=1),
+        )
+        resp = self.client.get(reverse("home"))
+        self.assertContains(resp, "revisão vencida")
 
 
 class StreakTests(TestCase):
