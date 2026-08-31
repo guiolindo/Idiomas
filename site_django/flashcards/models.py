@@ -24,6 +24,13 @@ class Word(models.Model):
     pt = models.CharField("português", max_length=80)
     en = models.CharField("inglês", max_length=80)
     order = models.PositiveIntegerField(default=0)
+    has_photo = models.BooleanField(
+        "tem foto que faz sentido",
+        default=True,
+        help_text="Desmarque para palavras abstratas (verbos, preposições, "
+                   "conceitos) onde uma foto não ajuda — o modo Foto nem "
+                   "aparece pro aluno nesses casos.",
+    )
 
     class Meta:
         ordering = ["order", "id"]

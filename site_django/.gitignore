@@ -4,3 +4,5 @@ db.sqlite3
 .env
 staticfiles/
 server.log
+check_photos.log
+*.log

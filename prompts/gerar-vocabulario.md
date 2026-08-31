@@ -1,6 +1,6 @@
-Você vai expandir o banco de vocabulário de um app de flashcards português → inglês, gerando um arquivo JSON pronto pra importar.
+Você vai expandir o banco de vocabulário de um app de flashcards português → inglês, gerando um arquivo pronto pra importar (JSON ou CSV — veja as duas opções abaixo).
 
-## Formato exato de saída
+## Formato de saída — opção 1: JSON
 
 ```json
 {
@@ -10,21 +10,69 @@ Você vai expandir o banco de vocabulário de um app de flashcards português �
       "name": "Frutas e vegetais",
       "emoji": "🍎",
       "words": [
-        {"pt": "maçã", "en": "apple"},
-        {"pt": "banana", "en": "banana"}
+        {"pt": "maçã", "en": "apple", "has_photo": true},
+        {"pt": "usar", "en": "to use", "has_photo": false}
       ]
     }
   ]
 }
 ```
 
-Regras de formato:
-- `id`: minúsculo, sem espaço/acento, único (vira parte da URL).
-- `name`: nome do tópico em português, como aparece na tela.
-- `emoji`: um emoji que representa o tópico (usado só como ícone do
-  tópico na lista — não é mais usado no cartão de estudo).
-- `words`: cada palavra com `pt` (português) e `en` (inglês). Não inclua
-  campo de emoji por palavra — não é mais usado.
+## Formato de saída — opção 2: CSV
+
+Se preferir (ou se o JSON ficar grande demais pra uma resposta), gere
+CSV com exatamente estas colunas, uma linha por palavra:
+
+```
+topic_id,topic_name,topic_emoji,pt,en,has_photo
+frutas,Frutas e vegetais,🍎,maçã,apple,sim
+frutas,Frutas e vegetais,🍎,usar,to use,nao
+```
+
+`has_photo` em CSV usa `sim`/`nao`. Repita `topic_name` e `topic_emoji`
+em toda linha do mesmo tópico (fica redundante, é esperado — o
+importador agrupa pelo `topic_id`).
+
+Use qualquer um dos dois formatos, mas não misture os dois na mesma
+resposta.
+
+## O campo `has_photo` — o mais importante desta tarefa
+
+Cada palavra precisa vir com `has_photo: true` ou `false` (ou
+`sim`/`nao` no CSV), indicando se faz sentido mostrar uma foto real
+pra ensinar essa palavra. Isso não é decoração — o app usa esse campo
+pra decidir se mostra a opção "Foto" pro aluno naquele cartão. Errar
+pra mais (marcar `true` numa palavra sem foto sensata) faz o app tentar
+buscar uma foto, não achar nada relevante e cair pro texto sozinho — não
+quebra nada, mas é sinal de julgamento ruim. Capriche.
+
+**Marque `has_photo: true`** quando a palavra é um objeto, ser vivo,
+lugar, alimento, cor, ou qualquer coisa concreta que uma foto mostra sem
+ambiguidade — ex: "maçã", "cachorro", "hospital", "vermelho", "chuva",
+"triste" (uma expressão facial já é reconhecível).
+
+**Marque `has_photo: false`** quando a palavra é:
+- um verbo abstrato ou auxiliar: "ser", "estar", "poder", "dever", "usar"
+- uma preposição, conjunção, pronome, artigo: "com", "porque", "eu", "o"
+- uma palavra de interrogação: "onde", "quando", "por quê"
+- um número por extenso ou conceito de quantidade abstrata: "vinte", "muito"
+- qualquer conceito sem forma física única e reconhecível
+
+Na dúvida, pergunte-se: "se eu buscasse uma foto de capa na Wikipédia em
+inglês pra essa palavra, ela ilustraria bem o significado, sem
+ambiguidade?" Se a resposta for não ou "só ilustraria parcialmente",
+marque `false`.
+
+(O app também confere isso de forma automática depois, então seu
+julgamento aqui é o ponto de partida, não a palavra final — mas quanto
+mais preciso, menos trabalho de revisão sobra.)
+
+## Regras de formato
+
+- `id`/`topic_id`: minúsculo, sem espaço/acento, único (vira parte da URL).
+- `name`/`topic_name`: nome do tópico em português, como aparece na tela.
+- `emoji`/`topic_emoji`: um emoji que representa o tópico (ícone da lista
+  de tópicos — não aparece mais no cartão de estudo).
 - Sem duplicar uma mesma palavra `en` dentro do mesmo tópico.
 - Português correto, incluindo acentos. Prefira a forma mais comum e
   cotidiana da palavra, não a mais rara ou técnica.
@@ -59,9 +107,12 @@ Cada um tem hoje entre 9 e 16 palavras.
    Cada tópico novo com `id` novo e único, 15 a 25 palavras.
 3. Evite palavras excessivamente abstratas ou técnicas incomuns — o
    público é iniciante/intermediário aprendendo inglês do zero.
-4. Gere o JSON completo e válido, pronto pra colar direto num arquivo
-   `words.json`. Não invente estrutura diferente da mostrada acima.
-5. Se o resultado ficar muito grande pra uma resposta só, gere por
+4. Preencha `has_photo` em toda palavra, seguindo o critério acima.
+5. Gere a saída completa e válida (JSON ou CSV, não misture), pronta
+   pra importar direto. Não invente estrutura diferente da mostrada
+   acima, e não escreva nenhuma prosa fora do bloco de código — só o
+   JSON ou só o CSV.
+6. Se o resultado ficar muito grande pra uma resposta só, gere por
    partes (ex: primeiro os tópicos existentes expandidos, depois os
-   tópicos novos), mas cada parte precisa ser um JSON válido no mesmo
-   formato — nunca prosa fora do JSON.
+   tópicos novos), mas cada parte precisa ser válida sozinha no mesmo
+   formato escolhido.

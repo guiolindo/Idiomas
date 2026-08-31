@@ -7,18 +7,23 @@ terceiro pra autenticação.
 ## O que tem hoje
 
 - **Contas de verdade**: cadastro com e-mail + senha (hash seguro do
-  próprio Django), sessão, logout.
+  próprio Django), login, logout, recuperação de senha por e-mail e
+  troca de senha estando logado.
 - **Progresso no banco**: cada palavra marcada "sabia"/"errei" é salva em
   `Progress`, ligada ao usuário — funciona em qualquer aparelho que você
   faça login, não fica preso a um navegador.
-- **Painel de administração** em `/admin/` — gerencie tópicos, palavras e
-  veja o progresso de qualquer usuário sem escrever código.
+- **Painel de administração** em `/admin/` — gerencie tópicos, palavras
+  (com exportação pra CSV) e veja o progresso de qualquer usuário sem
+  escrever código.
 - **Dashboard**: anel de progresso geral, sequência de dias estudados
   (streak), banner "continuar de onde parou", busca e filtros por tópico.
-- **Estudo**: modo palavra/emoji/foto real (Wikimedia, buscada pelo
-  próprio backend) e modo caderno (digita a resposta, checagem tolerante
-  a acento/erro de digitação). Erros da rodada podem ser revisados na
-  hora, sem sair do tópico.
+- **Estudo**: palavra em português ou foto real (buscada ao vivo na
+  Wikipedia). A opção "Foto" só aparece quando o tópico tem pelo menos
+  uma palavra com `has_photo=True` — sem emoji em lugar nenhum. O campo
+  de digitação da tradução fica sempre visível (não é um modo opcional),
+  com correção tolerante a acento e pequenos erros. Erros da rodada
+  podem ser revisados na hora, sem sair do tópico. Filtro "só o que
+  ainda não sei" por tópico.
 
 ## Estrutura
 
@@ -27,18 +32,21 @@ site_django/
   manage.py
   idiomas_site/        configurações do projeto (settings, urls)
   flashcards/           o app: models, views, templates, admin
-    models.py            Topic, Word, Progress, Profile (streak)
+    models.py            Topic, Word (com has_photo), Progress, Profile (streak)
     views.py             páginas + endpoints de API (progresso, imagem)
     forms.py             cadastro (email como login)
-    admin.py             painel de administração
+    admin.py             painel de administração + exportação CSV
     templates/flashcards/
     static/flashcards/
-    management/commands/import_words.py   importa app/data/words.json
+    management/commands/
+      import_words.py    importa tópicos/palavras (JSON ou CSV)
+      check_photos.py    verifica na Wikipedia se cada palavra tem foto
+                          e atualiza has_photo sozinho
 ```
 
 A pasta `app/` na raiz (FastAPI + front separado) foi o rascunho anterior
 — pode ser apagada quando quiser, este projeto não depende dela (só reusa
-`app/data/words.json` como fonte pra popular o banco).
+`app/data/words.json` como fonte pra popular o banco pela primeira vez).
 
 ## Rodando localmente
 
@@ -49,14 +57,10 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python manage.py migrate
-python manage.py import_words        # popula tópicos/palavras a partir do words.json (só roda se o banco estiver vazio)
+python manage.py import_words        # popula tópicos/palavras (só roda se o banco estiver vazio)
 python manage.py createsuperuser     # sua conta de admin
 python manage.py runserver
 ```
-
-`import_words` não sobrescreve nada se já houver palavras no banco — protege
-edições feitas no admin. Pra forçar recarregar tudo do `words.json`, use
-`python manage.py import_words --force` (isso apaga edições manuais).
 
 Acesse `http://localhost:8000`. O painel de administração fica em
 `http://localhost:8000/admin/`.
@@ -66,6 +70,32 @@ progresso, sequência de dias):
 
 ```bash
 python manage.py test flashcards
+```
+
+## Gerenciando o vocabulário
+
+`import_words` não sobrescreve nada se já houver palavras no banco —
+protege edições feitas no admin. Pra forçar recarregar tudo, use
+`python manage.py import_words --force` (isso apaga edições manuais).
+
+Aceita tanto JSON quanto CSV via `--file`:
+
+```bash
+python manage.py import_words --file caminho/vocabulario_novo.json
+python manage.py import_words --file caminho/vocabulario_novo.csv
+```
+
+O CSV precisa das colunas `topic_id,topic_name,topic_emoji,pt,en,has_photo`
+(veja `prompts/gerar-vocabulario.md` pra gerar um vocabulário novo com
+uma IA, já nesse formato). O admin também exporta as palavras existentes
+pra CSV (selecione linhas em `/admin/flashcards/word/` → ação
+"Exportar selecionadas para CSV").
+
+Pra reconferir na Wikipedia, palavra por palavra, se `has_photo` está
+certo (em vez de confiar só no que foi importado):
+
+```bash
+python manage.py check_photos
 ```
 
 ## Deploy grátis (um único serviço)
@@ -80,7 +110,9 @@ python manage.py test flashcards
    URL dele na variável de ambiente `DATABASE_URL`.
 4. Defina as outras variáveis (veja `.env.example`): `DJANGO_SECRET_KEY`
    (gere uma nova, aleatória), `DJANGO_DEBUG=False`,
-   `DJANGO_ALLOWED_HOSTS=seuapp.onrender.com`.
+   `DJANGO_ALLOWED_HOSTS=seuapp.onrender.com`. Nunca commite um `.env`
+   de verdade — o `.gitignore` já bloqueia isso, e todas as chaves ficam
+   só em variável de ambiente.
 5. Depois do primeiro deploy, rode uma vez (console do serviço):
    ```bash
    python manage.py migrate
@@ -93,9 +125,10 @@ precisa de Vercel/Netlify nem de configurar nada à parte.
 
 ## Próximos passos possíveis
 
-- **Recuperação de senha** — Django já tem as views prontas
-  (`PasswordResetView` etc.), só falta configurar envio de e-mail (hoje
-  não está ligado).
+Veja `prompts/melhorar-sistema.md` — é um prompt pronto pra pedir pra
+uma IA analisar o estado atual e priorizar as próximas melhorias
+(repetição espaçada de verdade, dificuldade adaptativa, etc.).
+
 - **Espanhol/Francês** — o seletor de idioma já existe na UI; falta
   adicionar as traduções no `Word` (hoje só há `en`) e um campo pra
   escolher o idioma alvo por usuário.

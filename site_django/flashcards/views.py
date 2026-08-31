@@ -89,7 +89,7 @@ def home(request):
 @login_required
 def study(request, slug):
     topic = get_object_or_404(Topic, slug=slug)
-    words = list(topic.words.values("id", "pt", "en"))
+    words = list(topic.words.values("id", "pt", "en", "has_photo"))
     known_ids = set(
         Progress.objects.filter(user=request.user, known=True, word__topic=topic)
         .values_list("word_id", flat=True)
@@ -99,6 +99,8 @@ def study(request, slug):
         "topic": topic,
         "words_json": json.dumps(words),
         "known_ids_json": json.dumps(list(known_ids)),
+        # só mostra a opção "Foto" se pelo menos uma palavra do tópico tiver
+        "topic_has_photo": any(w["has_photo"] for w in words),
     })
 
 

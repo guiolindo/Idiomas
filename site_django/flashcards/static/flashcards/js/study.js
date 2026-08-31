@@ -41,9 +41,13 @@
   const LS_KEY = 'idiomas.study-prefs';
   let prefs = { cue:'pt', order:'rand', onlyUnknown:false };
   try{ Object.assign(prefs, JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(_){}
+  // este tópico pode não ter nenhuma palavra fotografável (ex: preposições) —
+  // nesse caso a aba "Foto" nem existe no HTML, então ignoramos qualquer
+  // preferência antiga de outro tópico que ainda apontasse pra ela.
+  if(!window.TOPIC_HAS_PHOTO) prefs.cue = 'pt';
   function savePrefs(){ localStorage.setItem(LS_KEY, JSON.stringify(prefs)); }
 
-  const WORDS = window.WORDS; // [{id,pt,en}]
+  const WORDS = window.WORDS; // [{id,pt,en,has_photo}]
   const known = new Set(window.KNOWN_IDS);
   const st = { queue: [], i: 0, revealed: false, sessionMissed: [] };
 
@@ -63,10 +67,6 @@
     st.i = 0;
   }
   function currentWord(){ return WORDS[st.queue[st.i]]; }
-  function cueFor(){
-    if(prefs.cue==='mix') return Math.random() < .5 ? 'pt' : 'foto';
-    return prefs.cue;
-  }
 
   // Foto de capa da Wikipedia — algumas palavras (verbos, preposições,
   // conceitos abstratos) simplesmente não têm uma foto que faça sentido.
@@ -108,8 +108,7 @@
     $('#study-progress').textContent = `${Math.min(st.i+1,total)}/${total}`;
     if(st.i >= total){ renderDone(); return; }
     const w = currentWord();
-    const cue = cueFor();
-    if(cue==='foto') showPhoto(w);
+    if(prefs.cue==='foto' && w.has_photo) showPhoto(w);
     else showAsText(w);
 
     $('#answer-en').textContent = w.en;

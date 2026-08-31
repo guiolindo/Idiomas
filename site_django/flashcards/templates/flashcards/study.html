@@ -9,11 +9,12 @@
   <div class="progress" id="study-progress">0/0</div>
 </div>
 
+{% if topic_has_photo %}
 <div class="modebar" role="tablist" aria-label="Modo de estímulo">
   <button data-cue="pt" class="on" role="tab">Palavra em PT</button>
   <button data-cue="foto" role="tab">Foto</button>
-  <button data-cue="mix" role="tab">Misturar</button>
 </div>
+{% endif %}
 
 <label class="scope-toggle" id="scope-toggle">
   <input type="checkbox" id="scope-input">
@@ -49,6 +50,7 @@
 {% block extra_js %}
 <script>
   window.WORDS = {{ words_json|safe }};
+  window.TOPIC_HAS_PHOTO = {{ topic_has_photo|yesno:"true,false" }};
   window.KNOWN_IDS = {{ known_ids_json|safe }};
   window.CSRF_TOKEN = "{{ csrf_token }}";
   window.MARK_URL_BASE = "/api/progresso/";

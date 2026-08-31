@@ -9,31 +9,37 @@ JavaScript vanilla para a interação do cartão. Sem framework de frontend.
 
 Modelos principais:
 - `Topic` (tópico: slug, nome, emoji, ordem)
-- `Word` (pt, en, tópico)
+- `Word` (pt, en, tópico, `has_photo` — se faz sentido mostrar foto)
 - `Progress` (usuário, palavra, sabia/não sabia, data)
 - `Profile` (usuário, sequência de dias estudados)
 
 Fluxo de uso: o usuário cria conta (e-mail + senha), vê um dashboard com
 progresso geral, sequência de dias e uma lista de tópicos com busca e
 filtros (todos / em progresso / dominados / não iniciados). Ao entrar num
-tópico, estuda cartão por cartão: vê a palavra em português ou uma foto
-real do conceito (buscada ao vivo na Wikipedia; quando a palavra não tem
-imagem que faça sentido — verbos, preposições, conceitos abstratos — cai
-automaticamente para o texto), digita a tradução em inglês num campo
-sempre visível (não é opcional), recebe uma correção tolerante a acento e
-pequenos erros de digitação, e marca "sabia" ou "errei". Erros da rodada
-podem ser revisados na hora. Existe um filtro "só o que ainda não sei"
-por tópico.
+tópico, estuda cartão por cartão: vê a palavra em português ou (se a
+palavra tem `has_photo=true`) uma foto real do conceito, buscada ao vivo
+na Wikipedia. A opção "Foto" só aparece pro aluno se pelo menos uma
+palavra do tópico tiver `has_photo=true` — tópicos só de palavras
+abstratas (preposições, pronomes) nem mostram essa opção. O aluno digita
+a tradução em inglês num campo sempre visível (não é opcional), recebe
+uma correção tolerante a acento e pequenos erros de digitação, e marca
+"sabia" ou "errei". Erros da rodada podem ser revisados na hora. Existe
+um filtro "só o que ainda não sei" por tópico.
 
 Já existe: autenticação completa (cadastro, login, recuperação de senha,
 troca de senha), painel de administração do Django pra gerenciar
-tópicos/palavras sem código, 13 testes automatizados, hardening de
-segurança para produção (HTTPS, cookies seguros, HSTS).
+tópicos/palavras sem código (com exportação CSV), importador que aceita
+JSON ou CSV, um comando (`check_photos`) que verifica empiricamente na
+Wikipedia se cada palavra tem foto e ajusta `has_photo` sozinho, 13
+testes automatizados, hardening de segurança para produção (HTTPS,
+cookies seguros, HSTS).
 
 Já foi decidido e não deve ser revisitado sem motivo forte: nada de
 emoji como estímulo de aprendizagem (só foto real ou texto — emoji foi
-removido de propósito), o campo de digitação/recall fica sempre ativo
-(não é um modo opcional que precisa ser ligado).
+removido de propósito, inclusive o modo "Misturar" palavra/foto, que
+existiu brevemente e foi removido por não ter serventia real); o campo
+de digitação/recall fica sempre ativo (não é um modo opcional que
+precisa ser ligado).
 
 ## Sua tarefa
 
@@ -53,8 +59,9 @@ estudo) — não como um gerador de lista de features genéricas.
 3. Para cada ideia, diga explicitamente se ela é simples (poucas horas),
    média ou complexa — não proponha arquitetura sofisticada onde uma
    solução simples resolve.
-4. Não sugira reintroduzir emoji como estímulo de aprendizagem, nem
-   tornar o campo de recall opcional — isso já foi decidido.
+4. Não sugira reintroduzir emoji como estímulo de aprendizagem, nem um
+   modo "misturar" palavra/foto, nem tornar o campo de recall opcional
+   — essas três coisas já foram tentadas e removidas de propósito.
 5. Termine com as 2 mudanças que você faria primeiro, se só pudesse
    fazer duas.
 
