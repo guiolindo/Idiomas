@@ -1,14 +1,13 @@
-# Ambientes virtuais Python
+# Ambiente virtual Python
+.venv/
 site_django_venv/
-app/backend/.venv/
-**/.venv/
 __pycache__/
 *.pyc
 
 # Banco local e segredos
-site_django/db.sqlite3
-site_django/staticfiles/
-**/.env
+db.sqlite3
+staticfiles/
+.env
 
 # Logs de dev
 *.log

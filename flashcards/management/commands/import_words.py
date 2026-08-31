@@ -7,7 +7,7 @@ from django.utils.text import slugify
 
 from flashcards.models import Topic, Word
 
-DATA_PATH = Path(__file__).resolve().parents[4] / "app" / "data" / "words.json"
+DATA_PATH = Path(__file__).resolve().parents[3] / "data" / "words.json"
 
 
 def _truthy(value) -> bool:
