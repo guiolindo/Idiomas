@@ -66,25 +66,42 @@ def home(request):
     now = timezone.now()
     topics = list(Topic.objects.all())
     mastered_map = _mastered_map(request.user)
+    # todas as palavras que o aluno já viu pelo menos uma vez (Progress
+    # existe) — é isso que o aluno percebe como "progresso salvo",
+    # diferente de "dominada" (SRS_MAX_LEVEL) que leva semanas de revisão.
+    studied_ids = set(Progress.objects.filter(user=request.user).values_list("word_id", flat=True))
     total_words = 0
     total_mastered = 0
+    total_studied = 0
     topic_cards = []
     for t in topics:
         words = list(t.words.all())
+        word_ids = {w.id for w in words}
         total = len(words)
-        mastered = len(mastered_map.get(t.id, set()) & {w.id for w in words})
+        mastered = len(mastered_map.get(t.id, set()) & word_ids)
+        studied = len(studied_ids & word_ids)
         total_words += total
         total_mastered += mastered
+        total_studied += studied
         topic_cards.append({
             "topic": t,
             "total": total,
             "known": mastered,
-            "pct": round(mastered / total * 100) if total else 0,
+            "studied": studied,
+            "pct": round(studied / total * 100) if total else 0,
             "done": total > 0 and mastered == total,
         })
 
+    # respostas dadas hoje (feedback imediato ao aluno de que o app tá
+    # gravando o esforço)
+    today_start = timezone.localtime(now).replace(hour=0, minute=0, second=0, microsecond=0)
+    answered_today = Progress.objects.filter(user=request.user, updated_at__gte=today_start).count()
+
     profile, _ = Profile.objects.get_or_create(user=request.user)
-    overall_pct = round(total_mastered / total_words * 100) if total_words else 0
+    # anel mostra o quanto o aluno já *começou a estudar* (o número que
+    # muda a cada palavra respondida) e não só as "dominadas", que quase
+    # sempre é 0 até semanas depois de começar.
+    overall_pct = round(total_studied / total_words * 100) if total_words else 0
 
     # Coach com IA: gera no máximo 1x por hora de atividade, e só se ainda
     # não gerou nada pra essa leva de atividade (evita re-chamar a IA toda
@@ -129,6 +146,7 @@ def home(request):
         "topic_cards": topic_cards,
         "total_words": total_words,
         "total_known": total_mastered,
+        "total_studied": total_studied,
         "overall_pct": overall_pct,
         "profile": profile,
         "continue_topic": continue_topic,
@@ -137,6 +155,45 @@ def home(request):
         "ai_feedback": ai_feedback,
         "greeting": _greeting(now),
         "first_name": (request.user.first_name or request.user.email.split("@")[0]).capitalize(),
+        "answered_today": answered_today,
+    })
+
+
+@login_required
+def topic_detail(request, slug):
+    """Página de "índice" do tópico: lista todas as palavras com o nível de
+    progresso do aluno, sem forçar sessão de estudo. Deixa o aluno *ver* o
+    que tem no tópico antes de estudar (evita a sensação de "caixa preta")."""
+    topic = get_object_or_404(Topic, slug=slug)
+    now = timezone.now()
+    progress_map = {
+        p.word_id: p for p in Progress.objects.filter(user=request.user, word__topic=topic)
+    }
+    rows = []
+    counts = {"new": 0, "learning": 0, "due": 0, "mastered": 0}
+    for w in topic.words.all():
+        p = progress_map.get(w.id)
+        if p is None:
+            state = "new"
+        elif p.level >= SRS_MAX_LEVEL:
+            state = "mastered"
+        elif p.next_review <= now:
+            state = "due"
+        else:
+            state = "learning"
+        counts[state] += 1
+        rows.append({
+            "word": w,
+            "state": state,
+            "level": p.level if p else 0,
+            "next_review": p.next_review if p else None,
+        })
+    return render(request, "flashcards/topic_detail.html", {
+        "topic": topic,
+        "rows": rows,
+        "counts": counts,
+        "total": len(rows),
+        "any_due": counts["new"] + counts["due"] > 0,
     })
 
 

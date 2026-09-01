@@ -174,12 +174,16 @@
 
   function renderDone(){
     const missedCount = st.sessionMissed.length;
+    const total = WORDS.length;
+    const rightCount = total - missedCount;
+    const pct = total ? Math.round(rightCount / total * 100) : 0;
     const wrap = $('#card');
+    // Sem emoji, tudo em papel — mesma linguagem da tela de estudo.
     wrap.innerHTML = `
       <div class="done">
-        <div style="font-size:44px">${missedCount ? '💪' : '🌱'}</div>
-        <h3>Rodada completa.</h3>
-        <p>Você revisou <b>${WORDS.length}</b> ${WORDS.length===1?'palavra':'palavras'}${missedCount ? `, errou ${missedCount}` : ''}.</p>
+        <div class="done-label">Rodada completa</div>
+        <div class="done-score"><b>${rightCount}</b> <span class="done-slash">/</span> ${total} <span class="done-pct">${pct}%</span></div>
+        <p class="done-sub">${missedCount ? `${missedCount} ${missedCount===1?'palavra pra revisar':'palavras pra revisar'} agora.` : 'Perfeito. Volte amanhã pra próxima rodada.'}</p>
       </div>
     `;
     const c = $('#controls');

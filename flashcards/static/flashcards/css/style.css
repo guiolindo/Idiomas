@@ -154,6 +154,7 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
   font-family:var(--mono); font-size:11px; color:var(--ink-3);
   letter-spacing:.16em; text-transform:uppercase; margin:0 0 22px;
 }
+.home-sub .today-count{ color:var(--accent); font-weight:600; }
 
 /* Bookplate / label — nome pro "cartão de progresso" */
 .stats-card{
@@ -175,7 +176,9 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
 .stats-body{ min-width:0 }
 .stats-count{ font-family:var(--serif); font-size:20px; font-weight:500; font-variation-settings:"opsz" 24; }
 .stats-count b{ font-weight:600 }
-.stats-streak{ font-family:var(--mono); font-size:11px; color:var(--ink-3); margin-top:4px; letter-spacing:.06em; }
+.stats-streak{ font-family:var(--mono); font-size:11px; color:var(--ink-3); margin-top:6px; letter-spacing:.06em; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.stats-streak .pill{ background:var(--accent-soft); color:var(--accent); padding:2px 8px; border-radius:999px; font-weight:600; }
+.stats-streak .dot{ opacity:.5; }
 .stats-streak .flame{ color:var(--wrong); font-style:normal; }
 
 /* Coach com IA — parece uma nota rabiscada na margem */
@@ -410,12 +413,76 @@ footer{
 .btn.miss{ background:var(--wrong-soft); color:var(--wrong); border-color:transparent }
 
 .done{
-  text-align:center; padding:48px 24px; background:var(--paper);
-  border:1px dashed var(--line-2); border-radius:16px;
+  text-align:center; padding:52px 24px 44px; background:var(--paper);
+  border:1px solid var(--line); border-radius:6px 16px 16px 6px;
   box-shadow:var(--shadow-card);
+  position:relative;
+}
+.done::before{
+  content:""; position:absolute; left:22px; top:0; bottom:0; width:1px;
+  background:var(--margin); opacity:.55;
+}
+.done .done-label{
+  font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-3);
+  margin-bottom:14px;
+}
+.done .done-score{
+  font-family:var(--display); font-weight:400; font-size:64px; line-height:1;
+  letter-spacing:-.02em; color:var(--ink);
+}
+.done .done-score b{ font-weight:400; color:var(--accent); }
+.done .done-score .done-slash{ color:var(--ink-3); font-size:44px; margin:0 4px; }
+.done .done-score .done-pct{
+  display:block; font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+  color:var(--ink-2); margin-top:12px; text-transform:uppercase;
 }
 .done h3{ font-family:var(--display); font-weight:400; font-size:30px; letter-spacing:-.01em; margin:8px 0 10px; }
+.done .done-sub{ color:var(--ink-2); margin:16px 0 0; font-size:15px; font-family:var(--serif); font-style:italic; }
 .done p{ color:var(--ink-2); margin:0 0 14px; font-size:15px; }
+
+/* Topic detail — página de índice */
+.topic-summary{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+  margin-bottom:16px;
+}
+.ts-item{
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  padding:12px 8px; text-align:center; display:flex; flex-direction:column; gap:4px;
+}
+.ts-item .ts-num{
+  font-family:var(--display); font-weight:400; font-size:26px; line-height:1;
+  letter-spacing:-.01em; color:var(--ink);
+}
+.ts-item .ts-label{
+  font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+.btn-full{ display:block; width:100%; margin-bottom:16px; }
+.pending-caught-up{
+  background:var(--accent-soft); color:var(--accent); border-radius:10px;
+  padding:12px 14px; margin-bottom:16px; font-family:var(--serif); font-style:italic;
+  font-size:14px; text-align:center;
+}
+.word-list{ list-style:none; padding:0; margin:0; }
+.word-row{
+  display:grid; grid-template-columns:12px 1fr auto auto; gap:12px; align-items:baseline;
+  padding:12px 14px; background:var(--paper); border:1px solid var(--line);
+  border-radius:8px; margin-bottom:6px;
+}
+.wr-dot{ width:8px; height:8px; border-radius:50%; background:var(--line-2); align-self:center; }
+.state-mastered .wr-dot{ background:var(--accent); }
+.state-due .wr-dot{ background:var(--wrong); }
+.state-learning .wr-dot{ background:var(--gold); }
+.wr-pt{ font-family:var(--serif); font-weight:500; font-size:16px; color:var(--ink); font-variation-settings:"opsz" 24; }
+.wr-en{ font-family:var(--mono); font-size:12px; color:var(--ink-2); letter-spacing:.02em; }
+.wr-tag{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); padding:2px 6px; border-radius:4px; border:1px solid var(--line);
+}
+.wr-tag.due{ color:var(--wrong); border-color:var(--wrong-soft); background:var(--wrong-soft); }
+.wr-tag.learning{ color:var(--gold); border-color:var(--gold-soft); background:var(--gold-soft); }
+.wr-tag.new{ color:var(--ink-3); }
+.state-mastered .wr-tag{ color:var(--accent); border-color:var(--accent-soft); background:var(--accent-soft); }
 
 /* ==== Auth — ficha de biblioteca / cartão de matrícula ==== */
 .auth-page{ display:flex; align-items:center; justify-content:center; min-height:78vh; padding:32px 0; }

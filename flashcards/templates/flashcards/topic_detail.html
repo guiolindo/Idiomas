@@ -1,0 +1,38 @@
+{% extends "flashcards/base.html" %}
+{% block title %}{{ topic.name }} · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="study-head">
+  <a class="back" href="{% url 'home' %}">← Tópicos</a>
+  <div class="title">{{ topic.name }}</div>
+  <div class="progress">{{ total }}</div>
+</div>
+
+<div class="topic-summary">
+  <div class="ts-item"><span class="ts-num">{{ counts.mastered }}</span><span class="ts-label">dominadas</span></div>
+  <div class="ts-item"><span class="ts-num">{{ counts.due }}</span><span class="ts-label">vencidas</span></div>
+  <div class="ts-item"><span class="ts-num">{{ counts.learning }}</span><span class="ts-label">em revisão</span></div>
+  <div class="ts-item"><span class="ts-num">{{ counts.new }}</span><span class="ts-label">novas</span></div>
+</div>
+
+{% if any_due %}
+  <a class="btn primary btn-full" href="{% url 'study' topic.slug %}">Estudar agora ({{ counts.new|add:counts.due }})</a>
+{% else %}
+  <div class="pending-caught-up">Nada vencido por aqui. Volte mais tarde ou escolha outro tópico.</div>
+{% endif %}
+
+<ul class="word-list">
+  {% for row in rows %}
+  <li class="word-row state-{{ row.state }}">
+    <span class="wr-dot" title="{{ row.state }}"></span>
+    <span class="wr-pt">{{ row.word.pt }}</span>
+    <span class="wr-en">{{ row.word.en }}</span>
+    {% if row.state == 'mastered' %}<span class="wr-tag">dominada</span>
+    {% elif row.state == 'due' %}<span class="wr-tag due">revisar</span>
+    {% elif row.state == 'learning' %}<span class="wr-tag learning">nível {{ row.level }}</span>
+    {% else %}<span class="wr-tag new">nova</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

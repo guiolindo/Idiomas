@@ -8,6 +8,7 @@ urlpatterns = [
     path("entrar/", views.IdiomasLoginView.as_view(), name="login"),
     path("sair/", views.IdiomasLogoutView.as_view(), name="logout"),
     path("criar-conta/", views.signup, name="signup"),
+    path("topico/<slug:slug>/", views.topic_detail, name="topic_detail"),
     path("estudar/<slug:slug>/", views.study, name="study"),
     path("api/progresso/<int:word_id>/", views.api_mark_progress, name="api_mark_progress"),
     path("api/imagem/", views.api_image, name="api_image"),

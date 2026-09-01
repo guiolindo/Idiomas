@@ -3,7 +3,10 @@
 {% block content %}
 
 <div class="home-greeting">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</div>
-<p class="home-sub">Caderno de bordo · {% now "j \d\e F \d\e Y" %}</p>
+<p class="home-sub">
+  Caderno de bordo · {% now "j \d\e F" %}
+  {% if answered_today %} · <span class="today-count">{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>{% endif %}
+</p>
 
 <div class="stats-card">
   <div class="stats-ring">
@@ -14,12 +17,13 @@
     <span class="ring-label">{{ overall_pct }}%</span>
   </div>
   <div class="stats-body">
-    <div class="stats-count"><b>{{ total_known }}</b> de {{ total_words }} palavras dominadas</div>
+    <div class="stats-count"><b>{{ total_studied }}</b> de {{ total_words }} palavras iniciadas</div>
     <div class="stats-streak">
+      <span class="pill">{{ total_known }} dominadas</span>
       {% if profile.streak_count %}
-        Sequência · {{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} <i class="flame">●</i>
+        <span class="dot">·</span> {{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} <i class="flame">●</i>
       {% else %}
-        Comece hoje sua sequência
+        <span class="dot">·</span> comece sua sequência hoje
       {% endif %}
     </div>
   </div>
@@ -65,14 +69,13 @@
 
 <div class="grid" id="topics">
   {% for tc in topic_cards %}
-  <a class="tile{% if tc.done %} done{% endif %}"
-     href="{% url 'study' tc.topic.slug %}"
+  <a class="tile{% if tc.done %} done{% elif tc.studied %} progress{% endif %}"
+     href="{% url 'topic_detail' tc.topic.slug %}"
      data-name="{{ tc.topic.name|lower }}"
-     data-state="{% if tc.done %}done{% elif tc.known > 0 %}progress{% else %}new{% endif %}">
-    <div class="index-num">Nº {{ forloop.counter|stringformat:"02d" }}</div>
+     data-state="{% if tc.done %}done{% elif tc.studied > 0 %}progress{% else %}new{% endif %}">
     <div class="emoji">{{ tc.topic.emoji }}</div>
     <div class="name">{{ tc.topic.name }}</div>
-    <div class="meta"><span>{{ tc.total }} palavras</span><span class="known">{{ tc.known }} dominadas</span></div>
+    <div class="meta"><span>{{ tc.studied }} / {{ tc.total }}</span>{% if tc.known %}<span class="known">{{ tc.known }} ✓</span>{% endif %}</div>
     <div class="bar"><div class="bar-fill" style="width:{{ tc.pct }}%"></div></div>
   </a>
   {% endfor %}

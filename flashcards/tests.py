@@ -110,8 +110,10 @@ class ProgressTests(TestCase):
     def test_home_counts_mastered_words(self):
         Progress.objects.create(user=self.user, word=self.word, level=SRS_MAX_LEVEL)
         resp = self.client.get(reverse("home"))
-        self.assertContains(resp, "de 2 palavras dominadas")
-        self.assertContains(resp, "<b>1</b>", html=False)
+        # Home mostra "iniciadas" (Progress existe) e "dominadas" (nivel 4)
+        # como duas metricas distintas — verificar ambas.
+        self.assertContains(resp, "de 2 palavras iniciadas")
+        self.assertContains(resp, "1 dominadas")
 
     def test_word_due_when_no_progress_or_overdue(self):
         due_word = self.topic.words.last()
