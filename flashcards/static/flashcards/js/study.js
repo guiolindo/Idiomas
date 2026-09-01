@@ -82,17 +82,33 @@
       ? `<a href="${page}" target="_blank" rel="noopener">${credit || 'fonte'}</a>`
       : (credit || '');
   }
+  // Escolhe uma foto aleatória entre as variantes cadastradas — assim a
+  // mesma palavra não mostra sempre a mesma imagem. Guarda o índice escolhido
+  // por sessão pra não repetir a mesma foto se a palavra voltar em Revisar.
+  const seenVariant = {};
+  function pickVariant(w){
+    const vs = w.photo_variants;
+    if(!vs || !vs.length){
+      return w.photo_url ? {url:w.photo_url, page:w.photo_page, credit:w.photo_credit} : null;
+    }
+    let idx = rand(vs.length);
+    // se já foi visto e tem mais de uma opção, tenta a próxima
+    if(vs.length > 1 && seenVariant[w.id] === idx) idx = (idx + 1) % vs.length;
+    seenVariant[w.id] = idx;
+    return vs[idx];
+  }
   async function showPhoto(w){
     const wrap = $('#photo-wrap'), img = $('#photo-img'), credit = $('#photo-credit'), cueEl = $('#cue');
     wrap.classList.add('on');
     cueEl.textContent = '';
     $('#cue-label').textContent = 'Que palavra é essa?';
-    // foto já veio pronta do servidor (populada pelo check_photos) — sem round-trip nenhum
-    if(w.photo_url){
-      img.src = w.photo_url; img.alt = w.en;
-      credit.innerHTML = w.photo_page
-        ? `<a href="${w.photo_page}" target="_blank" rel="noopener">${w.photo_credit || 'fonte'}</a>`
-        : (w.photo_credit || '');
+    // foto já veio pronta do servidor (populada pelo check_photos) — sem round-trip
+    const chosen = pickVariant(w);
+    if(chosen){
+      img.src = chosen.url; img.alt = w.en;
+      credit.innerHTML = chosen.page
+        ? `<a href="${chosen.page}" target="_blank" rel="noopener">${chosen.credit || 'fonte'}</a>`
+        : (chosen.credit || '');
       return;
     }
     // fallback: busca ao vivo (palavra ainda não passou pelo check_photos)

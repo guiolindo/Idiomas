@@ -37,9 +37,12 @@ class Word(models.Model):
                    "conceitos) onde uma foto não ajuda — o modo Foto nem "
                    "aparece pro aluno nesses casos.",
     )
-    photo_url = models.URLField("foto", max_length=500, blank=True, default="")
+    photo_url = models.URLField("foto (capa)", max_length=500, blank=True, default="")
     photo_page = models.URLField("página de origem da foto", max_length=500, blank=True, default="")
     photo_credit = models.CharField("crédito da foto", max_length=120, blank=True, default="")
+    # Alternativas de foto pra evitar mostrar sempre a mesma imagem. Formato:
+    # [{"url": "...", "page": "...", "credit": "..."}, ...]
+    photo_variants = models.JSONField("outras fotos disponíveis", default=list, blank=True)
 
     class Meta:
         ordering = ["order", "id"]

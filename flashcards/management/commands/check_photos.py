@@ -47,13 +47,17 @@ class Command(BaseCommand):
             url = result.get("url", "") if has_photo else ""
             page = result.get("page", "") if has_photo else ""
             credit = result.get("credit", "") if has_photo else ""
-            fields = (word.has_photo, word.photo_url, word.photo_page, word.photo_credit)
-            if fields != (has_photo, url, page, credit):
+            variants = result.get("variants", []) if has_photo else []
+            fields = (word.has_photo, word.photo_url, word.photo_page,
+                      word.photo_credit, word.photo_variants)
+            if fields != (has_photo, url, page, credit, variants):
                 word.has_photo = has_photo
                 word.photo_url = url
                 word.photo_page = page
                 word.photo_credit = credit
-                word.save(update_fields=["has_photo", "photo_url", "photo_page", "photo_credit"])
+                word.photo_variants = variants
+                word.save(update_fields=["has_photo", "photo_url", "photo_page",
+                                          "photo_credit", "photo_variants"])
                 changed += 1
             source = result.get("source", "-")
             self.stdout.write(f"[{i}/{total}] {word.pt} ({word.en}): {source if has_photo else 'sem foto'}")

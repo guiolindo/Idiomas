@@ -18,13 +18,16 @@ WIKI_HEADERS = {
 }
 
 
+PEXELS_PER_PAGE = 8  # buscamos várias pra depois sortear uma no cliente
+
+
 def _fetch_pexels(q: str) -> dict | None:
     if not PEXELS_API_KEY:
         return None
     try:
         resp = httpx.get(
             "https://api.pexels.com/v1/search",
-            params={"query": q, "per_page": 1, "orientation": "square"},
+            params={"query": q, "per_page": PEXELS_PER_PAGE, "orientation": "square"},
             headers={"Authorization": PEXELS_API_KEY},
             timeout=8,
         )
@@ -33,20 +36,30 @@ def _fetch_pexels(q: str) -> dict | None:
     if resp.status_code != 200:
         return None
     photos = resp.json().get("photos") or []
-    if not photos:
+    variants = []
+    for p in photos:
+        src = p.get("src", {})
+        u = src.get("large") or src.get("medium") or src.get("original")
+        if not u:
+            continue
+        variants.append({
+            "url": u,
+            "page": p.get("url", ""),
+            "credit": p.get("photographer", ""),
+        })
+    if not variants:
         return None
-    photo = photos[0]
-    src = photo.get("src", {})
-    url = src.get("large") or src.get("medium") or src.get("original")
-    if not url:
-        return None
+    first = variants[0]
     return {
         "found": True,
-        "url": url,
-        "page": photo.get("url", ""),
+        # url/page/credit continuam sendo a "capa" (pra compat com quem só
+        # lê o campo scalar), mas variants tem TODAS pra rotação no cliente.
+        "url": first["url"],
+        "page": first["page"],
         "title": q,
-        "credit": photo.get("photographer", ""),
+        "credit": first["credit"],
         "source": "pexels",
+        "variants": variants,
     }
 
 
@@ -68,13 +81,16 @@ def _fetch_wikipedia(q: str) -> dict | None:
     # "disambiguation" = página de lista de sentidos, não uma imagem
     # específica da palavra — melhor não mostrar nada do que mostrar errado.
     if thumb and data.get("type") != "disambiguation":
+        page = data.get("content_urls", {}).get("desktop", {}).get("page", "")
+        variants = [{"url": thumb["source"], "page": page, "credit": "Wikipedia"}]
         return {
             "found": True,
             "url": thumb["source"],
-            "page": data.get("content_urls", {}).get("desktop", {}).get("page", ""),
+            "page": page,
             "title": data.get("title", q),
             "credit": "Wikipedia",
             "source": "wikipedia",
+            "variants": variants,
         }
     return None
 

@@ -216,6 +216,7 @@ def study(request, slug):
             "photo_url": w.photo_url,
             "photo_page": w.photo_page,
             "photo_credit": w.photo_credit,
+            "photo_variants": w.photo_variants or [],
             "due": due,
             "last_wrong": p.last_wrong_answer if p else "",
         })
