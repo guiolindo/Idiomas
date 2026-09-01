@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="home-greeting">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</div>
-<p class="home-sub">Vamos ver onde você parou.</p>
+<p class="home-sub">Caderno de bordo · {% now "j \d\e F \d\e Y" %}</p>
 
 <div class="stats-card">
   <div class="stats-ring">
@@ -14,12 +14,12 @@
     <span class="ring-label">{{ overall_pct }}%</span>
   </div>
   <div class="stats-body">
-    <div class="stats-count">{{ total_known }} / {{ total_words }} palavras</div>
+    <div class="stats-count"><b>{{ total_known }}</b> de {{ total_words }} palavras dominadas</div>
     <div class="stats-streak">
       {% if profile.streak_count %}
-        {{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia seguido,dias seguidos" }} 🔥
+        Sequência · {{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} <i class="flame">●</i>
       {% else %}
-        Comece hoje a sua sequência 🔥
+        Comece hoje sua sequência
       {% endif %}
     </div>
   </div>
@@ -69,9 +69,10 @@
      href="{% url 'study' tc.topic.slug %}"
      data-name="{{ tc.topic.name|lower }}"
      data-state="{% if tc.done %}done{% elif tc.known > 0 %}progress{% else %}new{% endif %}">
+    <div class="index-num">Nº {{ forloop.counter|stringformat:"02d" }}</div>
     <div class="emoji">{{ tc.topic.emoji }}</div>
     <div class="name">{{ tc.topic.name }}</div>
-    <div class="meta"><span>{{ tc.total }} palavras</span><span class="known">{{ tc.known }} ✓</span></div>
+    <div class="meta"><span>{{ tc.total }} palavras</span><span class="known">{{ tc.known }} dominadas</span></div>
     <div class="bar"><div class="bar-fill" style="width:{{ tc.pct }}%"></div></div>
   </a>
   {% endfor %}
