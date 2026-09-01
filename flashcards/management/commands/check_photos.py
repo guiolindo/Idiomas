@@ -10,18 +10,36 @@ class Command(BaseCommand):
     help = (
         "Verifica, palavra por palavra (Pexels primeiro, Wikipedia de "
         "fallback), se existe uma foto que faça sentido, e atualiza "
-        "Word.has_photo/photo_url/photo_page/photo_credit de acordo (em vez "
-        "de adivinhar). A URL fica salva, então o cartão de estudo não "
-        "precisa buscar ao vivo depois."
+        "Word.has_photo/photo_url/photo_page/photo_credit. A URL fica salva, "
+        "então o cartão de estudo não precisa buscar ao vivo depois. Pra "
+        "não estourar a cota do Pexels (200/hora no plano free), use "
+        "--sleep=20 quando rodar em lote grande, ou --topic=slug pra rodar "
+        "só num tópico por vez."
     )
+
+    def add_arguments(self, parser):
+        parser.add_argument("--topic", default=None, help="Rodar só num tópico (slug).")
+        parser.add_argument("--limit", type=int, default=0, help="Máximo de palavras a checar (0 = todas).")
+        parser.add_argument("--only-missing", action="store_true",
+                            help="Pular palavras que já têm photo_url salva.")
+        parser.add_argument("--sleep", type=float, default=1.5,
+                            help="Segundos entre chamadas (default 1.5 — subir pra 20 se rodar >200 palavras).")
 
     def handle(self, *args, **options):
         if not PEXELS_ENABLED:
             self.stdout.write(self.style.WARNING(
                 "PEXELS_API_KEY não configurada — usando só o fallback da Wikipedia."
             ))
-        words = Word.objects.all().order_by("topic__order", "order")
-        total = words.count()
+        qs = Word.objects.all().order_by("topic__order", "order")
+        if options["topic"]:
+            qs = qs.filter(topic__slug=options["topic"])
+        if options["only_missing"]:
+            qs = qs.filter(photo_url="")
+        if options["limit"]:
+            qs = qs[:options["limit"]]
+        words = list(qs)
+        total = len(words)
+        self.stdout.write(f"Vou checar {total} palavras.")
         changed = 0
         for i, word in enumerate(words, start=1):
             result = fetch_photo(word.en.removeprefix("to "))
@@ -37,7 +55,9 @@ class Command(BaseCommand):
                 word.photo_credit = credit
                 word.save(update_fields=["has_photo", "photo_url", "photo_page", "photo_credit"])
                 changed += 1
-            self.stdout.write(f"[{i}/{total}] {word.pt} ({word.en}): {'foto' if has_photo else 'sem foto'}")
-            time.sleep(0.15)  # educado com a API da Wikipedia
+            source = result.get("source", "-")
+            self.stdout.write(f"[{i}/{total}] {word.pt} ({word.en}): {source if has_photo else 'sem foto'}")
+            if i < total:
+                time.sleep(options["sleep"])
 
         self.stdout.write(self.style.SUCCESS(f"Concluído. {changed} palavras atualizadas."))
