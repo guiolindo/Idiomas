@@ -2,6 +2,9 @@
 {% block title %}Caderno de Idiomas{% endblock %}
 {% block content %}
 
+<div class="home-greeting">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</div>
+<p class="home-sub">Vamos ver onde você parou.</p>
+
 <div class="stats-card">
   <div class="stats-ring">
     <svg viewBox="0 0 64 64" width="56" height="56">
@@ -21,6 +24,13 @@
     </div>
   </div>
 </div>
+
+{% if ai_feedback %}
+<div class="ai-panel">
+  <div class="ai-label">Seu coach</div>
+  <p>{{ ai_feedback }}</p>
+</div>
+{% endif %}
 
 {% if overdue_count %}
 <a class="continue-banner overdue" href="{% url 'study' overdue_topic.slug %}">

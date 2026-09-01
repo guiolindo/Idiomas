@@ -11,9 +11,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .ai_coach import AI_ENABLED, generate_feedback
 from .forms import SignupForm
 from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
-from .wikipedia import fetch_summary
+from .photos import fetch_photo
 
 
 def signup(request):
@@ -51,6 +52,15 @@ def _mastered_map(user):
     return out
 
 
+def _greeting(now):
+    hour = timezone.localtime(now).hour
+    if 5 <= hour < 12:
+        return "Bom dia"
+    if 12 <= hour < 18:
+        return "Boa tarde"
+    return "Boa noite"
+
+
 @login_required
 def home(request):
     now = timezone.now()
@@ -75,6 +85,25 @@ def home(request):
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
     overall_pct = round(total_mastered / total_words * 100) if total_words else 0
+
+    # Coach com IA: gera no máximo 1x por hora de atividade, e só se ainda
+    # não gerou nada pra essa leva de atividade (evita re-chamar a IA toda
+    # vez que a home é aberta). Sem chave configurada, AI_ENABLED é False e
+    # isso nunca dispara — o painel some do template.
+    ai_feedback = None
+    if AI_ENABLED:
+        should_generate = (
+            profile.last_activity_at
+            and now - profile.last_activity_at >= timedelta(hours=1)
+            and (not profile.ai_feedback_at or profile.ai_feedback_at < profile.last_activity_at)
+        )
+        if should_generate:
+            result = generate_feedback(request.user)
+            if result:
+                profile.ai_feedback = result["message"]
+                profile.ai_feedback_at = now
+                profile.save(update_fields=["ai_feedback", "ai_feedback_at"])
+        ai_feedback = profile.ai_feedback or None
 
     # última palavra estudada (pra "continuar de onde parou")
     last_progress = Progress.objects.filter(user=request.user).order_by("-updated_at").first()
@@ -105,6 +134,9 @@ def home(request):
         "continue_topic": continue_topic,
         "overdue_count": overdue_count,
         "overdue_topic": overdue_topic,
+        "ai_feedback": ai_feedback,
+        "greeting": _greeting(now),
+        "first_name": (request.user.first_name or request.user.email.split("@")[0]).capitalize(),
     })
 
 
@@ -126,6 +158,7 @@ def study(request, slug):
             "has_photo": w.has_photo,
             "photo_url": w.photo_url,
             "photo_page": w.photo_page,
+            "photo_credit": w.photo_credit,
             "due": due,
             "last_wrong": p.last_wrong_answer if p else "",
         })
@@ -160,6 +193,7 @@ def api_mark_progress(request, word_id):
     word = get_object_or_404(Word, id=word_id)
     progress, _ = Progress.objects.get_or_create(user=request.user, word=word)
     progress.apply_feedback(result, wrong_answer=wrong_answer)
+    Profile.objects.filter(user=request.user).update(last_activity_at=timezone.now())
     return JsonResponse({
         "ok": True,
         "level": progress.level,
@@ -176,11 +210,11 @@ def api_image(request):
     if not q:
         return JsonResponse({"found": False})
 
-    cache_key = f"wpsummary:{q.lower()}"
+    cache_key = f"photo:{q.lower()}"
     cached = cache.get(cache_key)
     if cached is not None:
         return JsonResponse(cached)
 
-    result = fetch_summary(q)
+    result = fetch_photo(q)
     cache.set(cache_key, result, 60 * 60 * 24 * 7)
     return JsonResponse(result)

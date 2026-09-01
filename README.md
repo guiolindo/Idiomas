@@ -18,9 +18,14 @@ serviço terceiro pra autenticação.
   escrever código.
 - **Dashboard**: anel de progresso geral, sequência de dias estudados,
   widget de revisões vencidas, busca e filtros por tópico.
-- **Estudo**: palavra em português ou foto real (cacheada do artigo da
-  Wikipedia). A opção "Foto" só aparece quando o tópico tem pelo menos
-  uma palavra fotografável — sem emoji em lugar nenhum.
+- **Estudo**: palavra em português ou foto real (Pexels, com a Wikipedia
+  de fallback — cacheada em `Word`). A opção "Foto" só aparece quando o
+  tópico tem pelo menos uma palavra fotografável — sem emoji em lugar
+  nenhum. O sistema decide sozinho se você acertou, quase ou errou a
+  partir do que você digitou — sem autoavaliação manual.
+- **Coach com IA** (opcional): de tempos em tempos, gera um resumo curto
+  do seu progresso via Gemini (com Groq de fallback). Desligado por
+  padrão — só liga com `GEMINI_API_KEY` e/ou `GROQ_API_KEY`.
 
 ## Estrutura
 
@@ -30,7 +35,8 @@ idiomas_site/          configurações do projeto (settings, urls)
 flashcards/             o app: models, views, templates, admin
   models.py              Topic, Word (has_photo, foto cacheada), Progress (SRS), Profile (streak)
   views.py               páginas + endpoints de API (progresso, imagem)
-  wikipedia.py            busca de foto na Wikipedia (usado pela view e pelo check_photos)
+  photos.py               busca de foto (Pexels + fallback Wikipedia — usado pela view e pelo check_photos)
+  ai_coach.py              feedback de progresso via Gemini/Groq (opcional, ver env vars abaixo)
   forms.py                cadastro (email como login)
   admin.py                painel de administração + exportação CSV
   templates/flashcards/
@@ -101,7 +107,10 @@ python manage.py check_photos
    `DATABASE_URL` sozinho).
 3. Defina as variáveis de ambiente do serviço (veja `.env.example`):
    `DJANGO_SECRET_KEY` (gere uma nova, aleatória), `DJANGO_DEBUG=False`,
-   `DJANGO_ALLOWED_HOSTS=seu-app.up.railway.app`.
+   `DJANGO_ALLOWED_HOSTS=seu-app.up.railway.app`. Opcionais:
+   `PEXELS_API_KEY` (fotos — grátis em pexels.com/api), `GEMINI_API_KEY`
+   e/ou `GROQ_API_KEY` (coach com IA — sem nenhuma das duas, essa parte
+   fica desligada e não aparece pro usuário).
 4. O `Procfile` já define o build/start (`release: migrate`,
    `web: gunicorn idiomas_site.wsgi`). O Railway detecta Python
    automaticamente pelo `requirements.txt` na raiz.

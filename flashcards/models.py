@@ -37,8 +37,9 @@ class Word(models.Model):
                    "conceitos) onde uma foto não ajuda — o modo Foto nem "
                    "aparece pro aluno nesses casos.",
     )
-    photo_url = models.URLField("foto (capa da Wikipedia)", max_length=500, blank=True, default="")
-    photo_page = models.URLField("página da foto na Wikipedia", max_length=500, blank=True, default="")
+    photo_url = models.URLField("foto", max_length=500, blank=True, default="")
+    photo_page = models.URLField("página de origem da foto", max_length=500, blank=True, default="")
+    photo_credit = models.CharField("crédito da foto", max_length=120, blank=True, default="")
 
     class Meta:
         ordering = ["order", "id"]
@@ -93,6 +94,14 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     streak_count = models.PositiveIntegerField(default=0)
     last_study_date = models.DateField(null=True, blank=True)
+
+    # Coach com IA: última vez que o aluno respondeu algo, e o feedback
+    # gerado a partir disso (gerado no máximo 1x por hora de atividade —
+    # ver flashcards/ai_coach.py). Fica vazio/desligado sem GEMINI_API_KEY
+    # ou GROQ_API_KEY configuradas.
+    last_activity_at = models.DateTimeField(null=True, blank=True)
+    ai_feedback = models.TextField(blank=True, default="")
+    ai_feedback_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Perfil de {self.user}"

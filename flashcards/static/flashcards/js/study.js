@@ -75,12 +75,12 @@
     cueEl.textContent = w.pt;
     $('#cue-label').textContent = 'Traduza';
   }
-  function paintPhoto(url, title, page){
-    const img = $('#photo-img'), credit = $('#photo-credit');
+  function paintPhoto(url, title, page, credit){
+    const img = $('#photo-img'), creditEl = $('#photo-credit');
     img.src = url; img.alt = title || '';
-    credit.innerHTML = page
-      ? `<a href="${page}" target="_blank" rel="noopener">Wikipedia</a>`
-      : '';
+    creditEl.innerHTML = page
+      ? `<a href="${page}" target="_blank" rel="noopener">${credit || 'fonte'}</a>`
+      : (credit || '');
   }
   async function showPhoto(w){
     const wrap = $('#photo-wrap'), img = $('#photo-img'), credit = $('#photo-credit'), cueEl = $('#cue');
@@ -90,7 +90,9 @@
     // foto já veio pronta do servidor (populada pelo check_photos) — sem round-trip nenhum
     if(w.photo_url){
       img.src = w.photo_url; img.alt = w.en;
-      credit.innerHTML = w.photo_page ? `<a href="${w.photo_page}" target="_blank" rel="noopener">Wikipedia</a>` : '';
+      credit.innerHTML = w.photo_page
+        ? `<a href="${w.photo_page}" target="_blank" rel="noopener">${w.photo_credit || 'fonte'}</a>`
+        : (w.photo_credit || '');
       return;
     }
     // fallback: busca ao vivo (palavra ainda não passou pelo check_photos)
@@ -100,7 +102,7 @@
     const result = await fetchPhotoLive(w.en.replace(/^to /,''));
     if(st.i !== requestedFor) return;
     if(!result){ showAsText(w); return; }
-    paintPhoto(result.url, result.title, result.page);
+    paintPhoto(result.url, result.title, result.page, result.credit);
   }
 
   function renderCard(){
@@ -133,32 +135,32 @@
   }
   function renderControls(){
     const wrap = $('#controls');
+    wrap.className = 'controls single';
     if(!st.revealed){
-      wrap.className = 'controls';
-      wrap.innerHTML = `<button class="btn" id="reveal-btn">Revelar</button><button class="btn primary" id="next-btn">Pular →</button>`;
+      wrap.innerHTML = `<button class="btn primary" id="reveal-btn">Conferir <kbd>Enter</kbd></button>`;
       $('#reveal-btn').addEventListener('click', reveal);
-      $('#next-btn').addEventListener('click', next);
     }else{
-      wrap.className = 'controls full';
-      wrap.innerHTML = `
-        <button class="btn miss" id="miss-btn">Errei <kbd>1</kbd></button>
-        <button class="btn gold" id="soso-btn">Quase <kbd>2</kbd></button>
-        <button class="btn primary" id="know-btn">Sabia <kbd>3</kbd></button>`;
-      $('#miss-btn').addEventListener('click', ()=>respond('miss'));
-      $('#soso-btn').addEventListener('click', ()=>respond('soso'));
-      $('#know-btn').addEventListener('click', ()=>respond('know'));
+      wrap.innerHTML = `<button class="btn primary" id="next-btn">Continuar <kbd>Enter</kbd></button>`;
+      $('#next-btn').addEventListener('click', next);
     }
   }
+  // O sistema decide o resultado a partir do que foi digitado — não existe
+  // mais autoavaliação manual (Errei/Quase/Sabia). matchAnswer já compara a
+  // resposta com tolerância a erro de digitação pequeno ("close").
   function reveal(){
     st.revealed = true;
     $('#answer').classList.add('on');
     const w = currentWord();
-    const v = matchAnswer($('#nb-input').value, w.en);
+    const typed = $('#nb-input').value.trim();
+    const v = matchAnswer(typed, w.en);
     const el = $('#verdict');
-    if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; }
-    else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; }
-    else if(v==='empty'){ el.textContent = 'Você não escreveu nada.'; el.className='verdict no'; }
-    else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; }
+    let result;
+    if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; result='know'; }
+    else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; result='soso'; }
+    else if(v==='empty'){ el.textContent = 'Você não escreveu nada.'; el.className='verdict no'; result='miss'; }
+    else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; result='miss'; }
+    if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
+    syncWord(w.id, result, result==='miss' ? typed : '');
     renderControls();
   }
   function syncWord(wordId, result, wrongAnswer){
@@ -167,18 +169,6 @@
       headers: { 'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}`,
     }).catch(()=>{});
-  }
-  function respond(result){
-    const w = currentWord();
-    if(!w) return;
-    const typed = $('#nb-input').value.trim();
-    if(result==='miss'){
-      if(!st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
-      syncWord(w.id, 'miss', typed);
-    }else{
-      syncWord(w.id, result, '');
-    }
-    next();
   }
   function next(){ st.i++; st.revealed = false; renderCard(); }
 
@@ -227,11 +217,6 @@
     if(e.target.tagName === 'INPUT') return;
     if(e.key===' '){ e.preventDefault(); st.revealed ? next() : reveal(); }
     if(e.key==='ArrowRight') next();
-    if(st.revealed){
-      if(e.key==='1') respond('miss');
-      if(e.key==='2') respond('soso');
-      if(e.key==='3') respond('know');
-    }
   });
 
   if(WORDS.length){
