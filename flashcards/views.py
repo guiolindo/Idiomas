@@ -60,6 +60,7 @@ class IdiomasPasswordResetView(PasswordResetView):
     isso aqui cobre o outro lado: volume de tentativas."""
     template_name = "flashcards/password_reset.html"
     email_template_name = "flashcards/password_reset_email.txt"
+    html_email_template_name = "flashcards/password_reset_email.html"
     subject_template_name = "flashcards/password_reset_subject.txt"
 
     MAX_ATTEMPTS = 5
