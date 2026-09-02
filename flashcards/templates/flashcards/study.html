@@ -11,12 +11,13 @@
 
 {% if not any_due %}
 <div class="done">
-  <div style="font-size:44px">✅</div>
-  <h3>Tudo em dia por aqui.</h3>
-  <p>Nenhuma palavra deste tópico está vencida agora. Volte mais tarde ou escolha outro tópico.</p>
+  <div class="done-label">Tudo em dia</div>
+  <h3>Nada vencido neste tópico agora.</h3>
+  <p class="done-sub">Volte mais tarde ou pratique tudo mesmo assim — não penaliza seu progresso.</p>
 </div>
 <div class="controls" style="margin-top:16px">
-  <a class="btn primary" href="{% url 'home' %}" style="grid-column:1/-1">Voltar aos tópicos</a>
+  <a class="btn" href="{% url 'topic_detail' topic.slug %}">Ver palavras do tópico</a>
+  <a class="btn primary" href="{% url 'study' topic.slug %}?tudo=1">Praticar tudo</a>
 </div>
 {% else %}
 
@@ -35,20 +36,28 @@
     <div class="credit" id="photo-credit"></div>
   </div>
   <div class="answer" id="answer">
-    <div class="en" id="answer-en">—</div>
+    <div class="en-row">
+      <div class="en" id="answer-en">—</div>
+      <button class="tts-btn" id="tts-btn" type="button" title="Ouvir pronúncia" aria-label="Ouvir pronúncia">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+      </button>
+    </div>
     <div class="pt-sub" id="answer-pt">—</div>
   </div>
 </div>
 
 <div class="notebook" id="notebook">
-  <label for="nb-input">Escreva a tradução</label>
+  <label for="nb-input">Escreva a tradução em inglês</label>
   <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
   <div class="last-wrong" id="last-wrong" hidden></div>
   <div class="verdict" id="verdict"></div>
 </div>
 
-<div class="controls single" id="controls">
-  <button class="btn primary" id="reveal-btn">Conferir <kbd>Enter</kbd></button>
+<div class="controls" id="controls">
+  <button class="btn" id="giveup-btn">Não lembro</button>
+  <button class="btn primary" id="reveal-btn" disabled>Conferir <kbd>Enter</kbd></button>
 </div>
 
 {% endif %}
@@ -64,6 +73,9 @@
   window.HOME_URL = "{% url 'home' %}";
   window.COACH_URL = "{% url 'api_session_coach' %}";
   window.TOPIC_NAME = "{{ topic.name|escapejs }}";
+  // Idioma alvo do TTS. Hoje o app só ensina inglês, mas o campo já
+  // aceita alteração pra suportar espanhol/francês no futuro.
+  window.TARGET_LANG = "en-US";
 </script>
 <script src="{% static 'flashcards/js/study.js' %}"></script>
 {% endblock %}

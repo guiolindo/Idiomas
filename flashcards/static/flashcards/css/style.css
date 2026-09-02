@@ -412,10 +412,22 @@ footer{
   border-top:1px dashed var(--line-2); width:100%; display:none;
 }
 .card .answer.on{ display:block }
+.card .answer .en-row{
+  display:flex; align-items:center; justify-content:center; gap:14px;
+}
 .card .answer .en{
   font-family:var(--display); font-weight:400; font-size:38px; color:var(--accent);
   letter-spacing:-.015em; line-height:1.05;
 }
+.tts-btn{
+  appearance:none; border:1px solid var(--line-2); background:var(--paper-2);
+  color:var(--accent); width:36px; height:36px; border-radius:50%;
+  display:inline-grid; place-items:center; cursor:pointer;
+  transition:transform .12s ease, background .12s, border-color .12s;
+}
+.tts-btn:hover{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); transform:scale(1.05); }
+.tts-btn:active{ transform:scale(.95); }
+.tts-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .card .answer .pt-sub{
   font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.14em;
   text-transform:uppercase; margin-top:6px;
@@ -660,4 +672,36 @@ footer{
 }
 .icon-btn:hover{ background:var(--paper-2); border-color:var(--ink-3) }
 
-@media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important } }
+/* ============ Global focus & accessibility ============ */
+:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, [role="tab"]:focus-visible{
+  outline:2px solid var(--accent); outline-offset:3px;
+}
+input:focus-visible{ outline:none; } /* já tem borda animada */
+
+/* Loading skeleton pra foto */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.card .photo-wrap img[src=""], .card .photo-wrap img:not([src]){
+  background:linear-gradient(90deg, var(--paper-2) 0%, var(--paper) 40%, var(--paper-2) 80%);
+  background-size:400px 100%;
+  animation:shimmer 1.4s infinite linear;
+}
+
+/* Smooth transitions em todos os cards */
+.card, .analysis-card, .level-card, .stats-card, .continue-banner, .tile, .btn {
+  transition-property:transform, border-color, background, box-shadow, color;
+  transition-duration:.15s;
+  transition-timing-function:ease;
+}
+
+/* Reduced motion — desliga tudo */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after {
+    transition:none !important; animation:none !important;
+  }
+}

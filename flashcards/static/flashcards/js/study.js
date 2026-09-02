@@ -180,6 +180,56 @@
     const hasText = $('#nb-input').value.trim().length > 0;
     btn.disabled = !hasText;
   }
+  // ============ TTS (Web Speech API) ============
+  // Sem servidor, sem arquivo permanente — o próprio navegador sintetiza
+  // a fala. Zero custo, zero storage. Falha silenciosa em navegadores
+  // que não suportam (raríssimo hoje).
+  const TARGET_LANG = window.TARGET_LANG || 'en-US';
+  let cachedVoice = null;
+  function pickVoice(){
+    if(cachedVoice) return cachedVoice;
+    if(!window.speechSynthesis) return null;
+    const voices = speechSynthesis.getVoices();
+    if(!voices.length) return null;
+    // Preferência: voz nativa do idioma alvo, priorizando "Google" ou
+    // "Microsoft" (qualidade neural) sobre a voz padrão do sistema.
+    const langPrefix = TARGET_LANG.split('-')[0];
+    const matches = voices.filter(v => v.lang.startsWith(langPrefix));
+    if(!matches.length) return null;
+    cachedVoice = matches.find(v => /google/i.test(v.name)) ||
+                  matches.find(v => /microsoft/i.test(v.name)) ||
+                  matches.find(v => v.lang === TARGET_LANG) ||
+                  matches[0];
+    return cachedVoice;
+  }
+  function speak(text){
+    if(!window.speechSynthesis || !text) return false;
+    try{
+      speechSynthesis.cancel();  // interrompe qualquer fala anterior
+      const u = new SpeechSynthesisUtterance(text.replace(/^to /i, ''));
+      u.lang = TARGET_LANG;
+      u.rate = 0.9;  // um pouco mais devagar pra aprendizado
+      const v = pickVoice();
+      if(v) u.voice = v;
+      speechSynthesis.speak(u);
+      return true;
+    }catch(_){ return false; }
+  }
+  // Vozes carregam assíncronas em alguns navegadores
+  if(window.speechSynthesis){
+    speechSynthesis.addEventListener('voiceschanged', ()=>{ cachedVoice = null; pickVoice(); });
+    pickVoice();
+  }
+  $('#tts-btn')?.addEventListener('click', ()=>{
+    const en = $('#answer-en')?.textContent;
+    if(en && en !== '—') speak(en);
+  });
+  // Esconde o botão TTS se o navegador não suportar
+  if(!window.speechSynthesis) {
+    const btn = $('#tts-btn');
+    if(btn) btn.style.display = 'none';
+  }
+
   // O sistema decide o resultado a partir do que foi digitado (recall
   // ativo) OU do botão "Não lembro" (giveup). Nunca revela a resposta
   // sem alguma dessas duas coisas — antes hitting Enter vazio ja mostrava.
@@ -207,6 +257,10 @@
     if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
     st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, typed, result});
     syncWord(w.id, result, result==='miss' ? typed : '');
+    // Auto-play da pronúncia quando revela — reforça a memória auditiva.
+    // Só toca se veio de miss/soso/close (aprendizado). Em 'know' também
+    // toca de leve, ajuda a fixar. Usuário pode clicar de novo pra repetir.
+    speak(w.en);
     renderControls();
   }
   function syncWord(wordId, result, wrongAnswer){
