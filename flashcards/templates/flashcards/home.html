@@ -1,4 +1,5 @@
 {% extends "flashcards/base.html" %}
+{% load idiomas_extras %}
 {% block title %}Caderno de Idiomas{% endblock %}
 {% block content %}
 
@@ -8,6 +9,29 @@
   {% if answered_today %} · <span class="today-count">{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>{% endif %}
 </p>
 
+{# ============ CARTÃO DE NÍVEL CEFR — o hero da página ============ #}
+<div class="level-card">
+  <div class="level-head">
+    <div class="level-code">{{ level.code }}</div>
+    <div class="level-meta">
+      <div class="level-name">{{ level.label }}</div>
+      <div class="level-desc">{{ level.detail }}</div>
+    </div>
+  </div>
+  <div class="level-progress">
+    <div class="level-bar"><div class="level-bar-fill" style="width:{{ level.progress_pct }}%"></div></div>
+    <div class="level-numbers">
+      <span><b>{{ level.mastered }}</b> palavras dominadas</span>
+      {% if level.next_code %}
+        <span class="level-to-next">faltam <b>{{ level.to_next }}</b> pra <b>{{ level.next_code }}</b></span>
+      {% else %}
+        <span class="level-to-next">nível máximo</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ============ Cartão de progresso geral (compacto) ============ #}
 <div class="stats-card">
   <div class="stats-ring">
     <svg viewBox="0 0 64 64" width="56" height="56">
@@ -29,11 +53,46 @@
   </div>
 </div>
 
-{% if ai_feedback %}
-<div class="ai-panel">
-  <div class="ai-label">Seu coach</div>
-  <p>{{ ai_feedback }}</p>
-</div>
+{# ============ Análise IA — 3 seções, sempre visível se AI habilitada ============ #}
+{% if ai_enabled %}
+  {% if ai_analysis.strengths or ai_analysis.focus or ai_analysis.recommendation %}
+  <div class="analysis-card">
+    <div class="analysis-head">
+      <div class="analysis-label">Análise do seu progresso</div>
+      {% if ai_generated_at %}
+        <div class="analysis-when">atualizado {{ ai_generated_at|quando }}</div>
+      {% endif %}
+    </div>
+    {% if ai_analysis.strengths %}
+    <div class="analysis-row">
+      <div class="analysis-tag strengths">Pontos fortes</div>
+      <p>{{ ai_analysis.strengths }}</p>
+    </div>
+    {% endif %}
+    {% if ai_analysis.focus %}
+    <div class="analysis-row">
+      <div class="analysis-tag focus">O que ajustar</div>
+      <p>{{ ai_analysis.focus }}</p>
+    </div>
+    {% endif %}
+    {% if ai_analysis.recommendation %}
+    <div class="analysis-row">
+      <div class="analysis-tag reco">Recomendação de hoje</div>
+      <p>{{ ai_analysis.recommendation }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% elif not answered_today and total_studied == 0 %}
+  <div class="analysis-card empty">
+    <div class="analysis-label">Análise do seu progresso</div>
+    <p class="analysis-empty">Estude pelo menos uma palavra pra receber sua primeira análise.</p>
+  </div>
+  {% else %}
+  <div class="analysis-card empty">
+    <div class="analysis-label">Análise do seu progresso</div>
+    <p class="analysis-empty">Sua próxima análise fica pronta uma hora depois da sua última sessão.</p>
+  </div>
+  {% endif %}
 {% endif %}
 
 {% if overdue_count %}

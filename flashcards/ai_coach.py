@@ -20,19 +20,31 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 AI_ENABLED = bool(GEMINI_API_KEY or GROQ_API_KEY)
 
 PROMPT_INSTRUCTIONS = """\
-Você é o coach de um app de flashcards que ensina inglês pra brasileiros \
-(português → inglês). Vou te passar um resumo em JSON do progresso recente \
-de um aluno. Responda SOMENTE um JSON válido, sem markdown e sem texto \
-antes ou depois, no formato:
+Você é um professor de inglês avaliando um aluno brasileiro que estuda \
+por um app de flashcards (português → inglês). Vou te passar um JSON \
+com o histórico dele: nível CEFR atual, palavras dominadas, revisões \
+vencidas, tópicos tocados, últimos erros específicos.
 
-{"message": "...", "focus_topic": "..."}
+Responda SOMENTE um JSON válido, sem markdown, no formato:
 
-- "message": 1-2 frases em português, tom direto e encorajador (não \
-piegas), falando com o aluno na segunda pessoa. Cite palavras ou tópicos \
-específicos do resumo quando fizer sentido — nada genérico tipo "continue \
-assim".
-- "focus_topic": o id de um tópico do resumo que vale a pena o aluno \
-revisar agora (ou "" se nenhum se destaca).
+{"strengths": "...", "focus": "...", "recommendation": "...", "focus_topic": ""}
+
+Tom: professional, específico, direto. Segunda pessoa ("você"). Português \
+brasileiro. NUNCA use frases motivacionais genéricas como "continue \
+assim", "bom trabalho", "você está indo bem". Só afirmações concretas \
+baseadas no resumo.
+
+Cada campo é uma frase (máximo duas), curta:
+- "strengths": o que dá pra afirmar que ele domina bem, citando categoria \
+ou padrão específico ("substantivos concretos", "vocabulário de família"). \
+Se não tiver evidência, seja honesto: "ainda pouco material pra afirmar".
+- "focus": o padrão de erro mais claro — cite palavras ou tipos ("os erros \
+foram grafia de verbos irregulares", "confunde 'much'/'many'"). Se não \
+houver erros no resumo, comente o gap de cobertura.
+- "recommendation": UMA ação concreta pra próxima sessão — tópico \
+específico, tipo de exercício, ou uma técnica ("hoje foca só nas 3 \
+vencidas de <tópico>", "revise verbos antes de novos substantivos").
+- "focus_topic": id do tópico que ele deveria estudar hoje (ou "").
 
 Resumo do aluno:
 """
@@ -60,23 +72,25 @@ Rodada:
 
 def _build_summary(user):
     from .models import Progress, SRS_MAX_LEVEL  # import local pra evitar ciclo
+    from .levels import compute_level
 
     now = timezone.now()
-    rows = list(
-        Progress.objects.filter(user=user)
-        .select_related("word", "word__topic")
-        .order_by("-updated_at")[:60]
-    )
+    all_progress = Progress.objects.filter(user=user).select_related("word", "word__topic")
+    total_mastered = all_progress.filter(level__gte=SRS_MAX_LEVEL).count()
+    level = compute_level(total_mastered)
+    rows = list(all_progress.order_by("-updated_at")[:80])
     recent_wrong = [
         {"pt": p.word.pt, "en": p.word.en, "topic": p.word.topic.name, "voce_escreveu": p.last_wrong_answer}
         for p in rows if p.last_wrong_answer
-    ][:10]
-    mastered = sum(1 for p in rows if p.level >= SRS_MAX_LEVEL)
+    ][:15]
     overdue = sum(1 for p in rows if p.next_review <= now)
     topics_touched = sorted({p.word.topic.name for p in rows})
     return {
+        "nivel_cefr_atual": level["code"],
+        "descritor_nivel": level["label"],
+        "palavras_dominadas_total": total_mastered,
+        "faltam_pro_proximo_nivel": level["to_next"],
         "palavras_estudadas_recentemente": len(rows),
-        "dominadas_nesse_recorte": mastered,
         "revisoes_vencidas_agora": overdue,
         "topicos_recentes": topics_touched,
         "ultimos_erros": recent_wrong,
@@ -133,36 +147,63 @@ def _call_groq(prompt):
         return None
 
 
-def _parse_reply(text):
+def _extract_json(text):
+    """Retorna dict parseado a partir de texto que pode vir com prosa/markdown."""
     if not text:
         return None
     text = text.strip()
-    # Remove cercas de markdown se vieram
     for prefix in ("```json", "```"):
         if text.startswith(prefix):
             text = text[len(prefix):].strip()
     if text.endswith("```"):
         text = text[:-3].strip()
     try:
-        data = json.loads(text)
+        return json.loads(text)
     except json.JSONDecodeError:
-        # fallback: extrai o primeiro {...} balanceado. Alguns modelos
-        # (Groq gpt-oss) mandam prosa antes do JSON. Simples e resiliente.
         start = text.find("{")
         end = text.rfind("}")
         if start == -1 or end == -1 or end <= start:
-            logger.warning("_parse_reply: sem JSON parseável: %r", text[:200])
+            logger.warning("_extract_json: sem JSON parseável: %r", text[:200])
             return None
         try:
-            data = json.loads(text[start:end + 1])
+            return json.loads(text[start:end + 1])
         except json.JSONDecodeError:
-            logger.warning("_parse_reply: JSON balanceado ainda inválido: %r", text[:200])
+            logger.warning("_extract_json: JSON balanceado ainda inválido: %r", text[:200])
             return None
+
+
+def _parse_reply(text):
+    """Análise geral (home): strengths + focus + recommendation."""
+    data = _extract_json(text)
+    if not data:
+        return None
+    strengths = (data.get("strengths") or "").strip()
+    focus = (data.get("focus") or "").strip()
+    recommendation = (data.get("recommendation") or "").strip()
+    if not any([strengths, focus, recommendation]):
+        # Compat com prompt antigo que devolvia "message"
+        message = (data.get("message") or "").strip()
+        if not message:
+            return None
+        return {"strengths": "", "focus": "", "recommendation": message,
+                "focus_topic": (data.get("focus_topic") or "").strip()}
+    return {
+        "strengths": strengths,
+        "focus": focus,
+        "recommendation": recommendation,
+        "focus_topic": (data.get("focus_topic") or "").strip(),
+    }
+
+
+def _parse_session_reply(text):
+    """Sessão (done screen): message curta e específica."""
+    data = _extract_json(text)
+    if not data:
+        return None
     message = (data.get("message") or "").strip()
     if not message:
-        logger.warning("_parse_reply: message vazio no JSON: %r", data)
         return None
-    return {"message": message, "focus_topic": (data.get("focus_topic") or "").strip()}
+    return {"message": message}
 
 
 def generate_feedback(user):
@@ -182,7 +223,4 @@ def generate_session_feedback(session_data):
         return None
     prompt = SESSION_PROMPT_INSTRUCTIONS + json.dumps(session_data, ensure_ascii=False)
     reply = _call_gemini(prompt) or _call_groq(prompt)
-    parsed = _parse_reply(reply)
-    if not parsed:
-        return None
-    return {"message": parsed["message"]}
+    return _parse_session_reply(reply)

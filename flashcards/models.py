@@ -103,8 +103,11 @@ class Profile(models.Model):
     # ver flashcards/ai_coach.py). Fica vazio/desligado sem GEMINI_API_KEY
     # ou GROQ_API_KEY configuradas.
     last_activity_at = models.DateTimeField(null=True, blank=True)
-    ai_feedback = models.TextField(blank=True, default="")
+    ai_feedback = models.TextField(blank=True, default="")   # legado (frase única)
     ai_feedback_at = models.DateTimeField(null=True, blank=True)
+    # Análise estruturada em 3 partes, gerada pelo prompt novo (strengths/
+    # focus/recommendation). JSON: {"strengths":"","focus":"","recommendation":"","focus_topic":""}
+    ai_analysis = models.JSONField(blank=True, default=dict)
 
     def __str__(self):
         return f"Perfil de {self.user}"

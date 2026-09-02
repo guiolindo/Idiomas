@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 
 from .ai_coach import AI_ENABLED, generate_feedback, generate_session_feedback
 from .forms import SignupForm
+from .levels import compute_level
 from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
 from .photos import fetch_photo
 
@@ -103,24 +104,30 @@ def home(request):
     # sempre é 0 até semanas depois de começar.
     overall_pct = round(total_studied / total_words * 100) if total_words else 0
 
-    # Coach com IA: gera no máximo 1x por hora de atividade, e só se ainda
-    # não gerou nada pra essa leva de atividade (evita re-chamar a IA toda
-    # vez que a home é aberta). Sem chave configurada, AI_ENABLED é False e
-    # isso nunca dispara — o painel some do template.
-    ai_feedback = None
-    if AI_ENABLED:
-        should_generate = (
-            profile.last_activity_at
-            and now - profile.last_activity_at >= timedelta(hours=1)
-            and (not profile.ai_feedback_at or profile.ai_feedback_at < profile.last_activity_at)
-        )
+    # Coach com IA: análise estruturada em 3 partes (strengths/focus/
+    # recommendation). Regras de quando gerar:
+    #   * na primeira vez que o aluno tem QUALQUER atividade e ainda não
+    #     tem análise → gera imediatamente (boas-vindas concretas).
+    #   * a partir daí, atualiza no máximo 1x por hora de atividade — e
+    #     só se houve atividade nova desde a última análise.
+    # Sem GEMINI/GROQ configuradas, AI_ENABLED = False e o painel some.
+    ai_analysis = profile.ai_analysis or None
+    if AI_ENABLED and profile.last_activity_at:
+        has_previous = bool(profile.ai_feedback_at)
+        activity_gap_ok = now - profile.last_activity_at >= timedelta(hours=1)
+        activity_is_new = not profile.ai_feedback_at or profile.ai_feedback_at < profile.last_activity_at
+        should_generate = (not has_previous and activity_is_new) or (activity_gap_ok and activity_is_new)
         if should_generate:
             result = generate_feedback(request.user)
             if result:
-                profile.ai_feedback = result["message"]
+                profile.ai_analysis = result
+                profile.ai_feedback = result.get("recommendation") or result.get("message", "")
                 profile.ai_feedback_at = now
-                profile.save(update_fields=["ai_feedback", "ai_feedback_at"])
-        ai_feedback = profile.ai_feedback or None
+                profile.save(update_fields=["ai_analysis", "ai_feedback", "ai_feedback_at"])
+                ai_analysis = result
+
+    # Nível CEFR computado a partir das palavras dominadas (nível 4 no SRS).
+    level = compute_level(total_mastered)
 
     # última palavra estudada (pra "continuar de onde parou")
     last_progress = Progress.objects.filter(user=request.user).order_by("-updated_at").first()
@@ -152,7 +159,10 @@ def home(request):
         "continue_topic": continue_topic,
         "overdue_count": overdue_count,
         "overdue_topic": overdue_topic,
-        "ai_feedback": ai_feedback,
+        "ai_analysis": ai_analysis,
+        "ai_enabled": AI_ENABLED,
+        "ai_generated_at": profile.ai_feedback_at,
+        "level": level,
         "greeting": _greeting(now),
         "first_name": (request.user.first_name or request.user.email.split("@")[0]).capitalize(),
         "answered_today": answered_today,

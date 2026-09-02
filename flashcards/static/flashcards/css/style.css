@@ -202,6 +202,76 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
   color:var(--ink); line-height:1.35; letter-spacing:-.005em;
 }
 
+/* ============ Nível CEFR — hero card ============ */
+.level-card{
+  position:relative;
+  background:var(--paper); border:1px solid var(--line);
+  border-radius:14px; padding:20px 22px 18px 26px;
+  margin-bottom:14px;
+  box-shadow:var(--shadow-card);
+}
+.level-card::before{
+  content:""; position:absolute; left:0; top:20px; bottom:20px; width:3px;
+  background:var(--accent); border-radius:2px;
+}
+.level-head{ display:flex; align-items:center; gap:20px; }
+.level-code{
+  font-family:var(--display); font-weight:400; font-size:60px; line-height:1;
+  letter-spacing:-.03em; color:var(--accent); min-width:84px;
+}
+.level-meta{ flex:1; min-width:0; }
+.level-name{
+  font-family:var(--serif); font-weight:500; font-size:19px; line-height:1.1;
+  font-variation-settings:"opsz" 24; color:var(--ink);
+}
+.level-desc{ font-size:13px; color:var(--ink-2); margin-top:4px; line-height:1.35; }
+.level-progress{ margin-top:16px; }
+.level-bar{ height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.level-bar-fill{ height:100%; background:var(--accent); border-radius:3px; transition:width .5s ease; }
+.level-numbers{
+  display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.02em;
+}
+.level-numbers b{ color:var(--ink); font-weight:600; }
+.level-to-next{ color:var(--ink-2); }
+.level-to-next b{ color:var(--accent); }
+
+/* ============ Análise IA (3 seções) ============ */
+.analysis-card{
+  background:var(--paper); border:1px solid var(--line);
+  border-radius:14px; padding:18px 20px 14px; margin-bottom:16px;
+  box-shadow:var(--shadow-card);
+}
+.analysis-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  margin-bottom:14px;
+}
+.analysis-label{
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-2);
+}
+.analysis-when{ font-family:var(--mono); font-size:10px; color:var(--ink-3); letter-spacing:.04em; }
+.analysis-row{ display:flex; gap:12px; margin-bottom:12px; align-items:flex-start; }
+.analysis-row:last-child{ margin-bottom:0; }
+.analysis-tag{
+  flex:none; min-width:100px;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); padding:5px 8px; border-radius:5px;
+  border:1px solid var(--line); background:var(--paper-2);
+  align-self:flex-start; margin-top:3px; text-align:center;
+}
+.analysis-tag.strengths{ color:var(--accent); background:var(--accent-soft); border-color:var(--accent-soft); }
+.analysis-tag.focus{ color:var(--gold); background:var(--gold-soft); border-color:var(--gold-soft); }
+.analysis-tag.reco{ color:var(--wrong); background:var(--wrong-soft); border-color:var(--wrong-soft); }
+.analysis-row p{
+  margin:0; font-family:var(--serif); font-size:15px; color:var(--ink); line-height:1.5;
+  font-variation-settings:"opsz" 24;
+}
+.analysis-card.empty{ padding:16px 20px; }
+.analysis-card.empty .analysis-empty{
+  margin:6px 0 0; font-family:var(--serif); font-style:italic; font-size:14px; color:var(--ink-2);
+}
+
 /* Banner de continuar — mais físico, com uma seta manuscrita */
 .continue-banner{
   display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit;
