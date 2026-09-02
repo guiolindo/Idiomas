@@ -83,19 +83,27 @@ def _build_summary(user):
     }
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def _call_gemini(prompt):
     if not GEMINI_API_KEY:
         return None
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+        f"gemini-3.5-flash:generateContent?key={GEMINI_API_KEY}"
     )
     body = {"contents": [{"parts": [{"text": prompt}]}]}
     try:
         resp = httpx.post(url, json=body, timeout=15)
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            logger.warning("Gemini %s: %s", resp.status_code, resp.text[:200])
+            return None
         return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except (httpx.HTTPError, KeyError, IndexError):
+    except (httpx.HTTPError, KeyError, IndexError) as e:
+        logger.warning("Gemini call failed: %s", e)
         return None
 
 
@@ -107,28 +115,52 @@ def _call_groq(prompt):
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
             json={
-                "model": "llama-3.1-8b-instant",
+                # gpt-oss-20b é o modelo generalista mais atual disponível no
+                # Groq free tier — llama 3.1 8b foi descontinuado, 3.3 70b não
+                # está mais disponível em algumas contas.
+                "model": "openai/gpt-oss-20b",
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.6,
             },
             timeout=15,
         )
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            logger.warning("Groq %s: %s", resp.status_code, resp.text[:200])
+            return None
         return resp.json()["choices"][0]["message"]["content"]
-    except (httpx.HTTPError, KeyError, IndexError):
+    except (httpx.HTTPError, KeyError, IndexError) as e:
+        logger.warning("Groq call failed: %s", e)
         return None
 
 
 def _parse_reply(text):
     if not text:
         return None
-    text = text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    text = text.strip()
+    # Remove cercas de markdown se vieram
+    for prefix in ("```json", "```"):
+        if text.startswith(prefix):
+            text = text[len(prefix):].strip()
+    if text.endswith("```"):
+        text = text[:-3].strip()
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
-        return None
+        # fallback: extrai o primeiro {...} balanceado. Alguns modelos
+        # (Groq gpt-oss) mandam prosa antes do JSON. Simples e resiliente.
+        start = text.find("{")
+        end = text.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            logger.warning("_parse_reply: sem JSON parseável: %r", text[:200])
+            return None
+        try:
+            data = json.loads(text[start:end + 1])
+        except json.JSONDecodeError:
+            logger.warning("_parse_reply: JSON balanceado ainda inválido: %r", text[:200])
+            return None
     message = (data.get("message") or "").strip()
     if not message:
+        logger.warning("_parse_reply: message vazio no JSON: %r", data)
         return None
     return {"message": message, "focus_topic": (data.get("focus_topic") or "").strip()}
 

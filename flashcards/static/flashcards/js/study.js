@@ -269,9 +269,10 @@
         body: JSON.stringify({topic: window.TOPIC_NAME, answers: st.sessionAnswers}),
       });
       const json = await res.json();
-      if(!json.enabled){ slot.hidden = true; return; }
-      if(!json.message){
-        $('#coach-msg').textContent = 'Sem comentário desta vez.';
+      if(!json.enabled || !json.message){
+        // Sem chave configurada, ou IA respondeu vazio/erro — melhor
+        // sumir com o painel do que mostrar "sem comentário".
+        slot.hidden = true;
         return;
       }
       $('#coach-msg').textContent = json.message;

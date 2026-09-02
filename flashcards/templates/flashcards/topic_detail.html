@@ -30,13 +30,12 @@
   {% endif %}
 {% endif %}
 
-<p class="word-list-note">Traduções ocultas — pra manter o recall ativo. Passe o mouse pra espiar uma se precisar.</p>
+<p class="word-list-note">Traduções ficam pro estudo — sem espiada.</p>
 <ul class="word-list">
   {% for row in rows %}
   <li class="word-row state-{{ row.state }}">
     <span class="wr-dot" title="{{ row.state }}"></span>
     <span class="wr-pt">{{ row.word.pt }}</span>
-    <span class="wr-en" title="{{ row.word.en }}">{{ row.word.en }}</span>
     {% if row.state == 'mastered' %}<span class="wr-tag">dominada</span>
     {% elif row.state == 'due' %}<span class="wr-tag due">revisar</span>
     {% elif row.state == 'learning' %}<span class="wr-tag learning">nível {{ row.level }}</span>

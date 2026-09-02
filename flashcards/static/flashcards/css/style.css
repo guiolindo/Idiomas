@@ -486,7 +486,7 @@ footer{
 }
 .word-list{ list-style:none; padding:0; margin:0; }
 .word-row{
-  display:grid; grid-template-columns:12px 1fr auto auto; gap:12px; align-items:baseline;
+  display:grid; grid-template-columns:12px 1fr auto; gap:12px; align-items:baseline;
   padding:12px 14px; background:var(--paper); border:1px solid var(--line);
   border-radius:8px; margin-bottom:6px;
 }
