@@ -1,4 +1,5 @@
 {% extends "flashcards/base.html" %}
+{% load idiomas_extras %}
 {% block title %}{{ topic.name }} · Caderno de Idiomas{% endblock %}
 {% block content %}
 
@@ -22,8 +23,13 @@
   {% endif %}
 {% else %}
   <div class="pending-caught-up">
-    Tudo em dia por aqui.
-    {% if counts.learning or counts.mastered %}<br>Quer praticar do zero mesmo assim?{% endif %}
+    <div class="pcu-line">Tudo em dia por aqui.</div>
+    {% if next_release %}
+      <div class="pcu-when">Próxima revisão vence <b>{{ next_release|quando }}</b> ({{ next_release|date:"j \d\e F" }}).</div>
+    {% endif %}
+    {% if counts.learning or counts.mastered %}
+      <div class="pcu-cta">Quer praticar do zero mesmo assim?</div>
+    {% endif %}
   </div>
   {% if counts.learning or counts.mastered %}
     <a class="btn primary btn-full" href="{% url 'study' topic.slug %}?tudo=1">Praticar tudo ({{ total }})</a>
@@ -36,12 +42,35 @@
   <li class="word-row state-{{ row.state }}">
     <span class="wr-dot" title="{{ row.state }}"></span>
     <span class="wr-pt">{{ row.word.pt }}</span>
-    {% if row.state == 'mastered' %}<span class="wr-tag">dominada</span>
-    {% elif row.state == 'due' %}<span class="wr-tag due">revisar</span>
-    {% elif row.state == 'learning' %}<span class="wr-tag learning">nível {{ row.level }}</span>
-    {% else %}<span class="wr-tag new">nova</span>{% endif %}
+    {% if row.state == 'mastered' %}
+      <span class="wr-tag">dominada</span>
+      {% if row.next_review %}<span class="wr-when">revisa {{ row.next_review|quando }}</span>{% endif %}
+    {% elif row.state == 'due' %}
+      <span class="wr-tag due">revisar</span>
+      <span class="wr-when">agora</span>
+    {% elif row.state == 'learning' %}
+      <span class="wr-tag learning">nível {{ row.level }}</span>
+      {% if row.next_review %}<span class="wr-when">volta {{ row.next_review|quando }}</span>{% endif %}
+    {% else %}
+      <span class="wr-tag new">nova</span>
+      <span class="wr-when">—</span>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>
+
+<details class="srs-help">
+  <summary>Como funciona a revisão?</summary>
+  <p>Cada palavra tem um <b>nível</b> de 0 a 4. Errou = volta pro nível 0. Acertou = sobe um nível.
+     Quanto mais alto o nível, mais tempo até a próxima revisão — assim você não fica repetindo palavra que já sabe.</p>
+  <ul>
+    <li><b>Nível 0</b> — volta em <b>1 dia</b></li>
+    <li><b>Nível 1</b> — em <b>3 dias</b></li>
+    <li><b>Nível 2</b> — em <b>1 semana</b></li>
+    <li><b>Nível 3</b> — em <b>2 semanas</b></li>
+    <li><b>Nível 4</b> — dominada, volta em <b>1 mês</b></li>
+  </ul>
+  <p>Se quiser praticar antes da hora, o botão <b>Praticar tudo</b> ignora as datas — o progresso continua sendo gravado normal.</p>
+</details>
 
 {% endblock %}

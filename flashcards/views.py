@@ -188,12 +188,19 @@ def topic_detail(request, slug):
             "level": p.level if p else 0,
             "next_review": p.next_review if p else None,
         })
+    # Menor data futura de revisão pra dar o "quando libera" no estado
+    # "tudo em dia" — se todas estão em revisão futura, o mais cedo que
+    # algo vence é essa data.
+    future_reviews = [r["next_review"] for r in rows if r["next_review"] and r["next_review"] > now]
+    next_release = min(future_reviews) if future_reviews else None
     return render(request, "flashcards/topic_detail.html", {
         "topic": topic,
         "rows": rows,
         "counts": counts,
         "total": len(rows),
         "any_due": counts["new"] + counts["due"] > 0,
+        "next_release": next_release,
+        "now": now,
     })
 
 
