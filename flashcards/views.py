@@ -201,13 +201,20 @@ def topic_detail(request, slug):
 def study(request, slug):
     topic = get_object_or_404(Topic, slug=slug)
     now = timezone.now()
+    # ?tudo=1 = modo "praticar tudo": ignora vencimento do SRS e inclui
+    # todas as palavras do tópico. Útil quando o aluno quer revisar antes
+    # da hora — sem penalizar o SRS (respostas continuam sendo gravadas
+    # normalmente, mas o vencimento futuro é respeitado no cálculo do
+    # próximo intervalo).
+    practice_all = request.GET.get("tudo") == "1"
     progress_map = {
         p.word_id: p for p in Progress.objects.filter(user=request.user, word__topic=topic)
     }
     words = []
     for w in topic.words.all():
         p = progress_map.get(w.id)
-        due = (p is None) or (p.next_review <= now)
+        actually_due = (p is None) or (p.next_review <= now)
+        due = actually_due or practice_all
         words.append({
             "id": w.id,
             "pt": w.pt,
@@ -227,6 +234,7 @@ def study(request, slug):
         # só mostra a opção "Foto" se pelo menos uma palavra do tópico tiver
         "topic_has_photo": any(w["has_photo"] for w in words),
         "any_due": any(w["due"] for w in words),
+        "practice_all": practice_all,
     })
 
 

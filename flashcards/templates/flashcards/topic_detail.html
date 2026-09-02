@@ -17,16 +17,26 @@
 
 {% if any_due %}
   <a class="btn primary btn-full" href="{% url 'study' topic.slug %}">Estudar agora ({{ counts.new|add:counts.due }})</a>
+  {% if counts.learning or counts.mastered %}
+    <a class="btn btn-full btn-secondary" href="{% url 'study' topic.slug %}?tudo=1">Praticar tudo ({{ total }})</a>
+  {% endif %}
 {% else %}
-  <div class="pending-caught-up">Nada vencido por aqui. Volte mais tarde ou escolha outro tópico.</div>
+  <div class="pending-caught-up">
+    Tudo em dia por aqui.
+    {% if counts.learning or counts.mastered %}<br>Quer praticar do zero mesmo assim?{% endif %}
+  </div>
+  {% if counts.learning or counts.mastered %}
+    <a class="btn primary btn-full" href="{% url 'study' topic.slug %}?tudo=1">Praticar tudo ({{ total }})</a>
+  {% endif %}
 {% endif %}
 
+<p class="word-list-note">Traduções ocultas — pra manter o recall ativo. Passe o mouse pra espiar uma se precisar.</p>
 <ul class="word-list">
   {% for row in rows %}
   <li class="word-row state-{{ row.state }}">
     <span class="wr-dot" title="{{ row.state }}"></span>
     <span class="wr-pt">{{ row.word.pt }}</span>
-    <span class="wr-en">{{ row.word.en }}</span>
+    <span class="wr-en" title="{{ row.word.en }}">{{ row.word.en }}</span>
     {% if row.state == 'mastered' %}<span class="wr-tag">dominada</span>
     {% elif row.state == 'due' %}<span class="wr-tag due">revisar</span>
     {% elif row.state == 'learning' %}<span class="wr-tag learning">nível {{ row.level }}</span>

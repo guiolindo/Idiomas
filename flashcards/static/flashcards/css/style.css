@@ -495,7 +495,21 @@ footer{
 .state-due .wr-dot{ background:var(--wrong); }
 .state-learning .wr-dot{ background:var(--gold); }
 .wr-pt{ font-family:var(--serif); font-weight:500; font-size:16px; color:var(--ink); font-variation-settings:"opsz" 24; }
-.wr-en{ font-family:var(--mono); font-size:12px; color:var(--ink-2); letter-spacing:.02em; }
+/* Tradução oculta por padrão pra proteger o recall ativo. Aparece só
+   em hover (curiosidade rápida) ou pra palavras já dominadas (não
+   estraga nada mostrar o que já foi aprendido). */
+.wr-en{
+  font-family:var(--mono); font-size:12px; color:var(--ink-2); letter-spacing:.02em;
+  filter:blur(6px); transition:filter .18s ease; cursor:help;
+}
+.wr-en:hover{ filter:blur(0); }
+.state-mastered .wr-en{ filter:none; cursor:default; }
+.word-list-note{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); margin:18px 0 8px; text-align:center;
+}
+.btn-secondary{ background:var(--paper-2); }
+.btn-full + .btn-full{ margin-top:8px; }
 .wr-tag{
   font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ink-3); padding:2px 6px; border-radius:4px; border:1px solid var(--line);
