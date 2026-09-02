@@ -38,6 +38,26 @@ Resumo do aluno:
 """
 
 
+SESSION_PROMPT_INSTRUCTIONS = """\
+Você é o coach de um app de flashcards que ensina inglês pra brasileiros \
+(português → inglês). O aluno acabou de terminar UMA rodada de estudo. \
+Vou te passar as respostas dessa rodada. Responda SOMENTE um JSON válido, \
+sem markdown, no formato:
+
+{"message": "..."}
+
+- "message": 1 a 3 frases curtas em português brasileiro, tom direto e \
+específico. Comente o que aconteceu NESSA rodada em particular: cite \
+palavras específicas que o aluno errou, aponte padrão se existir \
+(ex: "os três erros foram verbos"), e dê uma dica prática se fizer \
+sentido. Nunca diga só "bom trabalho" ou frases motivacionais vazias — \
+se não tiver nada útil a dizer, comente uma coisa concreta que aconteceu. \
+Fale com o aluno na segunda pessoa.
+
+Rodada:
+"""
+
+
 def _build_summary(user):
     from .models import Progress, SRS_MAX_LEVEL  # import local pra evitar ciclo
 
@@ -120,3 +140,17 @@ def generate_feedback(user):
     prompt = PROMPT_INSTRUCTIONS + json.dumps(_build_summary(user), ensure_ascii=False)
     reply = _call_gemini(prompt) or _call_groq(prompt)
     return _parse_reply(reply)
+
+
+def generate_session_feedback(session_data):
+    """Comentário específico sobre uma rodada de estudo que acabou de terminar.
+    session_data: {"topic": "...", "answers": [{"pt","en","typed","result"}]}
+    Retorna {"message": "..."} ou None."""
+    if not AI_ENABLED:
+        return None
+    prompt = SESSION_PROMPT_INSTRUCTIONS + json.dumps(session_data, ensure_ascii=False)
+    reply = _call_gemini(prompt) or _call_groq(prompt)
+    parsed = _parse_reply(reply)
+    if not parsed:
+        return None
+    return {"message": parsed["message"]}

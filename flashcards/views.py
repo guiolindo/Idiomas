@@ -11,7 +11,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .ai_coach import AI_ENABLED, generate_feedback
+from .ai_coach import AI_ENABLED, generate_feedback, generate_session_feedback
 from .forms import SignupForm
 from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
 from .photos import fetch_photo
@@ -258,6 +258,40 @@ def api_mark_progress(request, word_id):
         "mastered": progress.mastered,
         "next_review": progress.next_review.isoformat(),
     })
+
+
+@login_required
+@require_POST
+def api_session_coach(request):
+    """Recebe o resumo de uma rodada de estudo que acabou de terminar e
+    devolve um comentário curto e específico da IA. Chamado pelo study.js
+    no done screen. Sem chaves de IA configuradas, devolve {"enabled": False}."""
+    if not AI_ENABLED:
+        return JsonResponse({"enabled": False})
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "json inválido"}, status=400)
+    answers = data.get("answers") or []
+    if not isinstance(answers, list) or not answers:
+        return JsonResponse({"error": "answers ausente"}, status=400)
+    # sanitiza: só campos previstos, limita tamanho
+    clean_answers = [
+        {
+            "pt": str(a.get("pt", ""))[:60],
+            "en": str(a.get("en", ""))[:60],
+            "typed": str(a.get("typed", ""))[:60],
+            "result": a.get("result") if a.get("result") in ("miss", "soso", "know") else "miss",
+        }
+        for a in answers[:30]
+    ]
+    result = generate_session_feedback({
+        "topic": str(data.get("topic", ""))[:60],
+        "answers": clean_answers,
+    })
+    if not result:
+        return JsonResponse({"enabled": True, "message": ""})
+    return JsonResponse({"enabled": True, "message": result["message"]})
 
 
 @login_required

@@ -49,7 +49,7 @@
 
   const ALL_WORDS = window.WORDS || []; // [{id,pt,en,has_photo,photo_url,photo_page,due,last_wrong}]
   const WORDS = ALL_WORDS.filter(w => w.due); // só o que está vencido ou é novo entra na sessão
-  const st = { queue: [], i: 0, revealed: false, sessionMissed: [] };
+  const st = { queue: [], i: 0, revealed: false, sessionMissed: [], sessionAnswers: [] };
 
   function buildQueue(){
     const idxs = WORDS.map((_,i)=>i);
@@ -151,31 +151,56 @@
   }
   function renderControls(){
     const wrap = $('#controls');
-    wrap.className = 'controls single';
     if(!st.revealed){
-      wrap.innerHTML = `<button class="btn primary" id="reveal-btn">Conferir <kbd>Enter</kbd></button>`;
-      $('#reveal-btn').addEventListener('click', reveal);
+      // Dois caminhos, propositais: "Conferir" (só quando escreveu algo,
+      // pra proteger o recall ativo) e "Não lembro" (assume miss sem
+      // fingir esforço). Antes o Conferir vazio revelava a resposta —
+      // quebra o objetivo do app.
+      wrap.className = 'controls';
+      wrap.innerHTML = `
+        <button class="btn" id="giveup-btn">Não lembro</button>
+        <button class="btn primary" id="reveal-btn" disabled>Conferir <kbd>Enter</kbd></button>`;
+      $('#giveup-btn').addEventListener('click', ()=>reveal({giveup:true}));
+      $('#reveal-btn').addEventListener('click', ()=>reveal());
+      updateConferirState();
     }else{
+      wrap.className = 'controls single';
       wrap.innerHTML = `<button class="btn primary" id="next-btn">Continuar <kbd>Enter</kbd></button>`;
       $('#next-btn').addEventListener('click', next);
     }
   }
-  // O sistema decide o resultado a partir do que foi digitado — não existe
-  // mais autoavaliação manual (Errei/Quase/Sabia). matchAnswer já compara a
-  // resposta com tolerância a erro de digitação pequeno ("close").
-  function reveal(){
+  function updateConferirState(){
+    const btn = $('#reveal-btn');
+    if(!btn) return;
+    const hasText = $('#nb-input').value.trim().length > 0;
+    btn.disabled = !hasText;
+  }
+  // O sistema decide o resultado a partir do que foi digitado (recall
+  // ativo) OU do botão "Não lembro" (giveup). Nunca revela a resposta
+  // sem alguma dessas duas coisas — antes hitting Enter vazio ja mostrava.
+  function reveal(opts){
+    opts = opts || {};
+    const typed = $('#nb-input').value.trim();
+    // Botão Conferir só existe se digitou algo (o listener atualiza
+    // .disabled). Chamado sem giveup e sem texto = ignorar (não revelar).
+    if(!opts.giveup && !typed) return;
     st.revealed = true;
     $('#answer').classList.add('on');
     const w = currentWord();
-    const typed = $('#nb-input').value.trim();
-    const v = matchAnswer(typed, w.en);
     const el = $('#verdict');
     let result;
-    if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; result='know'; }
-    else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; result='soso'; }
-    else if(v==='empty'){ el.textContent = 'Você não escreveu nada.'; el.className='verdict no'; result='miss'; }
-    else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; result='miss'; }
+    if(opts.giveup){
+      el.textContent = '↻ Sem problema — memoriza aí pra próxima.';
+      el.className = 'verdict no';
+      result = 'miss';
+    }else{
+      const v = matchAnswer(typed, w.en);
+      if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; result='know'; }
+      else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; result='soso'; }
+      else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; result='miss'; }
+    }
     if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
+    st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, typed, result});
     syncWord(w.id, result, result==='miss' ? typed : '');
     renderControls();
   }
@@ -194,12 +219,15 @@
     const rightCount = total - missedCount;
     const pct = total ? Math.round(rightCount / total * 100) : 0;
     const wrap = $('#card');
-    // Sem emoji, tudo em papel — mesma linguagem da tela de estudo.
     wrap.innerHTML = `
       <div class="done">
         <div class="done-label">Rodada completa</div>
         <div class="done-score"><b>${rightCount}</b> <span class="done-slash">/</span> ${total} <span class="done-pct">${pct}%</span></div>
         <p class="done-sub">${missedCount ? `${missedCount} ${missedCount===1?'palavra pra revisar':'palavras pra revisar'} agora.` : 'Perfeito. Volte amanhã pra próxima rodada.'}</p>
+        <div class="coach-slot" id="coach-slot" hidden>
+          <div class="coach-label">Seu coach</div>
+          <p class="coach-msg" id="coach-msg"></p>
+        </div>
       </div>
     `;
     const c = $('#controls');
@@ -215,6 +243,30 @@
       });
     }
     $('#notebook').style.display = 'none';
+    requestCoach();
+  }
+  async function requestCoach(){
+    if(!st.sessionAnswers.length) return;
+    const slot = $('#coach-slot');
+    if(!slot) return;
+    slot.hidden = false;
+    $('#coach-msg').innerHTML = '<span class="photo-status">pensando…</span>';
+    try{
+      const res = await fetch(window.COACH_URL, {
+        method: 'POST',
+        headers: {'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/json'},
+        body: JSON.stringify({topic: window.TOPIC_NAME, answers: st.sessionAnswers}),
+      });
+      const json = await res.json();
+      if(!json.enabled){ slot.hidden = true; return; }
+      if(!json.message){
+        $('#coach-msg').textContent = 'Sem comentário desta vez.';
+        return;
+      }
+      $('#coach-msg').textContent = json.message;
+    }catch(_){
+      slot.hidden = true;
+    }
   }
 
   function initModebar(){
@@ -230,13 +282,21 @@
     });
   }
 
+  $('#nb-input')?.addEventListener('input', updateConferirState);
   $('#nb-input')?.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter'){ st.revealed ? next() : reveal(); }
+    if(e.key==='Enter'){
+      if(st.revealed){ next(); return; }
+      const typed = e.target.value.trim();
+      if(typed) reveal();
+      // Enter vazio: nada acontece (protege recall ativo)
+    }
   });
   document.addEventListener('keydown', (e)=>{
     if(e.target.tagName === 'INPUT') return;
-    if(e.key===' '){ e.preventDefault(); st.revealed ? next() : reveal(); }
-    if(e.key==='ArrowRight') next();
+    // Fora do input: espaço só avança se já revelou. Nunca revela nada
+    // sem input digitado.
+    if(e.key===' ' && st.revealed){ e.preventDefault(); next(); }
+    if(e.key==='ArrowRight' && st.revealed) next();
   });
 
   if(WORDS.length){

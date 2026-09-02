@@ -12,6 +12,7 @@ urlpatterns = [
     path("estudar/<slug:slug>/", views.study, name="study"),
     path("api/progresso/<int:word_id>/", views.api_mark_progress, name="api_mark_progress"),
     path("api/imagem/", views.api_image, name="api_image"),
+    path("api/coach/sessao/", views.api_session_coach, name="api_session_coach"),
 
     path(
         "senha/esqueci/",

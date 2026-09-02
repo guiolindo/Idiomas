@@ -62,6 +62,8 @@
   window.MARK_URL_BASE = "/api/progresso/";
   window.IMAGE_URL = "{% url 'api_image' %}";
   window.HOME_URL = "{% url 'home' %}";
+  window.COACH_URL = "{% url 'api_session_coach' %}";
+  window.TOPIC_NAME = "{{ topic.name|escapejs }}";
 </script>
 <script src="{% static 'flashcards/js/study.js' %}"></script>
 {% endblock %}
