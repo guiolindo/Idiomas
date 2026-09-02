@@ -175,12 +175,32 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
-# E-mail (usado pra "esqueci minha senha"). Em dev, os e-mails só aparecem
-# no console do servidor. Em produção, defina EMAIL_BACKEND pra um
-# provedor real (ex: django-anymail + Resend/Mailgun/SendGrid — todos têm
-# camada gratuita) via variável de ambiente.
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Caderno de Idiomas <noreply@idiomas.local>')
+# E-mail (usado pra "esqueci minha senha"). Em dev, sem RESEND_API_KEY, os
+# e-mails só aparecem no console do servidor — nenhuma configuração extra
+# necessária pra rodar local. Em produção, definindo RESEND_API_KEY o app
+# troca sozinho pro SMTP relay do Resend (smtp.resend.com) — sem precisar
+# de biblioteca extra, é só um backend SMTP padrão do Django.
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+if RESEND_API_KEY:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.resend.com'
+    EMAIL_PORT = 465
+    EMAIL_USE_SSL = True
+    EMAIL_HOST_USER = 'resend'
+    EMAIL_HOST_PASSWORD = RESEND_API_KEY
+else:
+    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+
+# Sandbox do Resend (onboarding@resend.dev) funciona sem verificar domínio
+# próprio, mas só entrega pro e-mail da conta Resend. Pra mandar pra
+# qualquer aluno, defina DEFAULT_FROM_EMAIL com um domínio verificado no
+# Resend via variável de ambiente.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Caderno de Idiomas <onboarding@resend.dev>')
+
+# Token de redefinição de senha expira em 1h (padrão do Django é 3 dias —
+# longo demais pra um link que pode ficar esquecido numa caixa de entrada
+# ou ser reenviado sem querer).
+PASSWORD_RESET_TIMEOUT = 60 * 60
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -1,9 +1,10 @@
 import json
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.core.cache import cache
 from django.db.models import Count
 from django.http import JsonResponse, HttpResponseNotAllowed
@@ -40,6 +41,41 @@ class IdiomasLoginView(LoginView):
 
 class IdiomasLogoutView(LogoutView):
     next_page = "login"
+
+
+def _client_ip(request):
+    # Railway/Render ficam atrás de proxy — o IP real vem no header, não
+    # em REMOTE_ADDR (que seria o IP interno do proxy).
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+class IdiomasPasswordResetView(PasswordResetView):
+    """Recuperação de senha com rate limit por IP — sem isso, qualquer um
+    pode martelar o formulário e spammar e-mail de reset pra qualquer
+    endereço, ou tentar enumerar contas por tempo de resposta. Django já
+    não revela se o e-mail existe (sempre redireciona pro mesmo "done"),
+    isso aqui cobre o outro lado: volume de tentativas."""
+    template_name = "flashcards/password_reset.html"
+    email_template_name = "flashcards/password_reset_email.txt"
+    subject_template_name = "flashcards/password_reset_subject.txt"
+
+    MAX_ATTEMPTS = 5
+    WINDOW_SECONDS = 3600  # 1 hora
+
+    def post(self, request, *args, **kwargs):
+        ip = _client_ip(request)
+        cache_key = f"pwreset:throttle:{ip}"
+        count = cache.get(cache_key, 0)
+        if count >= self.MAX_ATTEMPTS:
+            # Mesma resposta de sucesso — não revela que foi bloqueado,
+            # pra não dar pista útil a quem está tentando abusar.
+            messages.info(request, "Se esse e-mail tiver uma conta, o link já foi enviado.")
+            return redirect("password_reset_done")
+        cache.set(cache_key, count + 1, timeout=self.WINDOW_SECONDS)
+        return super().post(request, *args, **kwargs)
 
 
 def _mastered_map(user):

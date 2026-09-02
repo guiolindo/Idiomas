@@ -208,7 +208,7 @@
       speechSynthesis.cancel();  // interrompe qualquer fala anterior
       const u = new SpeechSynthesisUtterance(text.replace(/^to /i, ''));
       u.lang = TARGET_LANG;
-      u.rate = 0.9;  // um pouco mais devagar pra aprendizado
+      u.rate = 0.78;  // devagar o suficiente pra separar as sílabas com clareza
       const v = pickVoice();
       if(v) u.voice = v;
       speechSynthesis.speak(u);

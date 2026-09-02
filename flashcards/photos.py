@@ -121,6 +121,42 @@ GENERIC_SCENES = {
     "store display", "store shelf", "market stall",
 }
 
+# Pexels tem muita foto "editorial" — bonita pra ilustração de blog, péssima
+# pra flashcard didático (o objeto vira pretexto pra composição artística
+# em vez de ser mostrado com clareza). Esses termos no alt são sinal forte
+# de que a foto não vai servir pra ensinar a palavra.
+ARTSY_NEGATIVE_TERMS = {
+    "abstract", "artistic", "moody", "dimly", "vintage", "rustic",
+    "silhouette", "monochrome", "sketch", "drawing", "illustration",
+    "painted", "graffiti", "reflection", "reflecting", "shadow", "shadows",
+    "frozen", "spiral", "surreal", "blur", "blurred", "bokeh", "dramatic",
+    "conceptual", "minimalist", "aesthetic", "textured wall", "grunge",
+    "faded", "sepia", "double exposure", "calligraphy", "still life",
+    "eerie", "abandoned", "unrecognizable", "misted", "editorial",
+}
+
+# Palavras que, aparecendo como o SUJEITO da foto (logo no início do alt),
+# indicam que uma pessoa é o assunto principal — não o objeto que estamos
+# procurando. Uma foto de "mulher usando chapéu" não ensina "chapéu" tão
+# bem quanto uma foto do chapéu isolado. Exceção: PERSON_SUBJECT_TERMS
+# abaixo, onde a pessoa É o ponto (profissões, família, emoções).
+PERSON_LEAD_WORDS = {
+    "woman", "man", "person", "girl", "boy", "model", "lady", "guy",
+    "kid", "child", "children", "people", "couple", "friends", "portrait",
+}
+
+# Termos cujo conceito EXIGE uma pessoa na foto — aqui o PERSON_LEAD_WORDS
+# não deve penalizar.
+PERSON_SUBJECT_TERMS = {
+    "doctor", "teacher", "nurse", "chef", "waiter", "firefighter",
+    "police officer", "carpenter", "electrician", "plumber", "farmer",
+    "baker", "gardener", "mechanic", "photographer", "dentist",
+    "veterinarian", "architect", "designer", "family", "friend", "friends",
+    "friendship", "love", "wedding", "mother", "father", "son", "daughter",
+    "brother", "sister", "grandmother", "grandfather", "baby", "child",
+    "man", "woman", "boy", "girl", "person",
+}
+
 
 PEXELS_PER_PAGE = 15  # mais candidatos = mais chances de achar uma boa
 
@@ -194,6 +230,23 @@ def _score_candidate(alt: str, en_word: str) -> int:
         if bad in alt_lower:
             score -= 20
 
+    # 4. Fotografia "editorial/artística" — objeto vira pretexto pra
+    # composição bonita em vez de ser mostrado com clareza didática.
+    artsy_hits = sum(1 for term in ARTSY_NEGATIVE_TERMS if term in alt_lower)
+    if artsy_hits:
+        score -= min(artsy_hits * 22, 66)
+
+    # 5. Pessoa é o sujeito da foto, não o objeto pedido — a não ser que o
+    # próprio conceito exija uma pessoa (profissão, família, emoção).
+    # Checa se alguma palavra-de-pessoa aparece ANTES do termo buscado —
+    # não só como primeira palavra (evita falso-negativo tipo "Elegant
+    # woman in hat...", onde "elegant" precede "woman").
+    if en_clean not in PERSON_SUBJECT_TERMS and position not in (-1, 999):
+        clean_words = [w.rstrip(",.") for w in words]
+        person_idx = next((i for i, w in enumerate(clean_words) if w in PERSON_LEAD_WORDS), None)
+        if person_idx is not None and person_idx < position:
+            score -= 25
+
     return score
 
 
@@ -213,6 +266,13 @@ def _pexels_search(query: str) -> list[dict]:
     return resp.json().get("photos") or []
 
 
+# Piso de aceitação. Score positivo mas baixo (ex: 15) normalmente
+# significa "a palavra aparece, mas a foto é fraca" (pessoa como sujeito,
+# posição ambígua, nada de bônus de especificidade) — melhor cair pro
+# fallback do que mostrar uma foto que não ensina nada.
+MIN_ACCEPT_SCORE = 20
+
+
 def _rank_photos(photos: list[dict], q_original: str) -> list[dict]:
     """Ranqueia e filtra os candidatos crus."""
     scored = []
@@ -223,7 +283,7 @@ def _rank_photos(photos: list[dict], q_original: str) -> list[dict]:
         if not url:
             continue
         score = _score_candidate(alt, q_original)
-        if score <= 0:
+        if score < MIN_ACCEPT_SCORE:
             continue
         scored.append({
             "score": score,

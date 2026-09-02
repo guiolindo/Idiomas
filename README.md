@@ -110,7 +110,9 @@ python manage.py check_photos
    `DJANGO_ALLOWED_HOSTS=seu-app.up.railway.app`. Opcionais:
    `PEXELS_API_KEY` (fotos — grátis em pexels.com/api), `GEMINI_API_KEY`
    e/ou `GROQ_API_KEY` (coach com IA — sem nenhuma das duas, essa parte
-   fica desligada e não aparece pro usuário).
+   fica desligada e não aparece pro usuário), `RESEND_API_KEY` (e-mail de
+   "esqueci minha senha" de verdade — sem ela, esses e-mails só aparecem
+   no log do servidor, não chegam pro aluno).
 4. O `Procfile` já define o build/start (`release: migrate`,
    `web: gunicorn idiomas_site.wsgi`). O Railway detecta Python
    automaticamente pelo `requirements.txt` na raiz.
