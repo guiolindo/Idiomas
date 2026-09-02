@@ -50,6 +50,11 @@
   const ALL_WORDS = window.WORDS || []; // [{id,pt,en,has_photo,photo_url,photo_page,due,last_wrong}]
   const WORDS = ALL_WORDS.filter(w => w.due); // só o que está vencido ou é novo entra na sessão
   const st = { queue: [], i: 0, revealed: false, sessionMissed: [], sessionAnswers: [] };
+  // guarda o HTML original do card e do notebook — o done screen substitui
+  // o innerHTML do card, então precisamos restaurar antes de rodar uma
+  // rodada de revisão (senão renderCard atualiza elementos que não existem
+  // mais e a tela quebra).
+  const ORIGINAL_CARD_HTML = $('#card')?.innerHTML || '';
 
   function buildQueue(){
     const idxs = WORDS.map((_,i)=>i);
@@ -238,7 +243,13 @@
       $('#review-btn').addEventListener('click', ()=>{
         const missedSet = new Set(st.sessionMissed);
         st.queue = WORDS.map((w,i)=>i).filter(i=>missedSet.has(WORDS[i].id));
-        st.sessionMissed = []; st.i = 0; st.revealed = false;
+        st.sessionMissed = []; st.sessionAnswers = []; st.i = 0; st.revealed = false;
+        // restaura o card e o input antes de renderizar a próxima rodada
+        $('#card').innerHTML = ORIGINAL_CARD_HTML;
+        $('#notebook').style.display = '';
+        // re-liga o listener de input (o elemento foi substituído)
+        $('#nb-input')?.addEventListener('input', updateConferirState);
+        $('#nb-input')?.addEventListener('keydown', onInputKeydown);
         renderCard();
       });
     }
@@ -282,15 +293,16 @@
     });
   }
 
-  $('#nb-input')?.addEventListener('input', updateConferirState);
-  $('#nb-input')?.addEventListener('keydown', (e)=>{
+  function onInputKeydown(e){
     if(e.key==='Enter'){
       if(st.revealed){ next(); return; }
       const typed = e.target.value.trim();
       if(typed) reveal();
       // Enter vazio: nada acontece (protege recall ativo)
     }
-  });
+  }
+  $('#nb-input')?.addEventListener('input', updateConferirState);
+  $('#nb-input')?.addEventListener('keydown', onInputKeydown);
   document.addEventListener('keydown', (e)=>{
     if(e.target.tagName === 'INPUT') return;
     // Fora do input: espaço só avança se já revelou. Nunca revela nada
