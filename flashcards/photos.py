@@ -15,6 +15,7 @@ barato, sem custo de API extra, e o alt do Pexels é escrito por humanos
 Gemini multimodal, mas é opcional (custa quota).
 """
 import os
+import re
 
 import httpx
 
@@ -158,6 +159,27 @@ PERSON_SUBJECT_TERMS = {
 }
 
 
+# Palavras com sentido duplo onde o Pexels frequentemente devolve o
+# sentido ERRADO com score alto (a palavra bate certinho no alt, mas é
+# o sentido técnico/animal, não o que o app quer ensinar). Descoberto
+# testando manualmente: "nose" trazia cone de avião ("jet nose cone"),
+# "tongue" trazia língua de cachorro ("bulldog with tongue out").
+WORD_NEGATIVE_TERMS = {
+    "nose": {"jet", "aircraft", "airplane", "plane", "cone", "vehicle", "car"},
+    "tongue": {
+        "dog", "cat", "bulldog", "puppy", "animal", "pet", "cow", "lizard",
+        "husky", "labrador", "retriever", "poodle", "terrier", "shepherd",
+        "kitten", "canine", "feline", "breed",
+    },
+    "tooth": {"gear", "cog", "saw blade", "zipper"},
+    "arm": {"chair"},  # "armchair"/braço de cadeira, não braço humano
+    "back": {"backpack", "background", "book"},
+    "heart": {
+        "heart-shaped", "symbol", "emoji", "balloon", "chocolate", "rose",
+        "valentine", "candy", "gift", "roses",
+    },
+}
+
 PEXELS_PER_PAGE = 15  # mais candidatos = mais chances de achar uma boa
 
 
@@ -187,21 +209,19 @@ def _score_candidate(alt: str, en_word: str) -> int:
     words = alt_lower.split()
     score = 0
 
-    # 1. Palavra aparece? Onde?
+    # 1. Palavra aparece? Onde? — comparação de PALAVRA INTEIRA, não
+    # substring. "head" não pode bater dentro de "black-headed", nem
+    # "mouth" dentro de "mouthpieces" (bugs reais encontrados: "cabeça"
+    # trazia foto de gaivota preta — "black-headed gull" — e "boca"
+    # trazia bocal de saxofone — "mouthpieces").
     hit = False
     position = -1
     for term in key_terms:
-        idx = alt_lower.find(term)
-        if idx == -1:
+        term_pat = re.compile(r"^" + re.escape(term) + r"s?[,.;:!?]?$")
+        pos = next((i for i, w in enumerate(words) if term_pat.match(w)), None)
+        if pos is None:
             continue
-        # Conta a posição da palavra dentro do array de palavras.
-        # Palavra que aparece no início = provavelmente o assunto.
-        # Palavra que aparece no meio/fim = provavelmente um detalhe.
-        try:
-            position = next(i for i, w in enumerate(words)
-                            if w == term or w.startswith(term + "s") or w.rstrip(",.").rstrip("s") == term)
-        except StopIteration:
-            position = 999
+        position = pos
         score += 40
         hit = True
         if position == 0:
@@ -229,6 +249,12 @@ def _score_candidate(alt: str, en_word: str) -> int:
     for bad in GENERIC_SCENES:
         if bad in alt_lower:
             score -= 20
+
+    # 3b. Termos negativos específicos da palavra — mesmo sentido errado
+    # (nose=avião não nariz, tongue=cachorro não humano).
+    for bad in WORD_NEGATIVE_TERMS.get(en_clean, ()):
+        if bad in alt_lower:
+            score -= 60
 
     # 4. Fotografia "editorial/artística" — objeto vira pretexto pra
     # composição bonita em vez de ser mostrado com clareza didática.
@@ -329,8 +355,46 @@ def _fetch_pexels(q_original: str) -> dict | None:
     }
 
 
+# Palavra em inglês pura costuma virar artigo genérico da Wikipedia cuja
+# imagem de capa não tem nada a ver com o corpo humano (ex: "Head" →
+# suricato, porque a página fala de "cabeça" em vários sentidos e o
+# resumo pega uma imagem de exemplo aleatória). "Human X" resolve pra um
+# artigo de anatomia específico com imagem melhor na maioria dos casos.
+WIKI_QUERY_OVERRIDES = {
+    "head": "Human head",
+    "eye": "Human eye",
+    "mouth": "Human mouth",
+    "ear": "Human ear",
+    "tooth": "Human tooth",
+    "hand": "Human hand",
+    "finger": "Human finger",
+    "arm": "Human arm",
+    "leg": "Human leg",
+    "foot": "Human foot",
+    "heart": "Human heart",
+    "back": "Human back",
+    "belly": "Abdomen",
+}
+
+# Nem "Human X" resolve bem pra essas — testamos manualmente e a imagem de
+# capa da Wikipedia continua sem relação clara com a palavra (ex: "nose"
+# aparecia decorada em traje tradicional). Melhor não mostrar foto
+# nenhuma do que uma errada — o app já lida bem com has_photo=False.
+WIKI_BLOCKLIST = {"nose"}
+
+# Palavras onde o Pexels estruturalmente não tem foto correta — testamos
+# TODOS os candidatos retornados e nenhum mostra o órgão/parte do corpo
+# (stock photo de "heart" é 100% joia/chocolate/Dia dos Namorados; "tongue"
+# é quase sempre foto de cachorro). Pula Pexels e vai direto pra Wikipedia,
+# que tem diagrama anatômico de verdade.
+PEXELS_SKIP_WORDS = {"heart", "tongue"}
+
+
 def _fetch_wikipedia(q: str) -> dict | None:
-    title = q.strip().replace(" ", "_")
+    q_clean = q.strip().lower()
+    if q_clean in WIKI_BLOCKLIST:
+        return None
+    title = WIKI_QUERY_OVERRIDES.get(q_clean, q).strip().replace(" ", "_")
     if not title:
         return None
     try:
@@ -364,6 +428,8 @@ def fetch_photo(q: str) -> dict:
     q = q.strip()
     if not q:
         return {"found": False}
+    if q.lower() in PEXELS_SKIP_WORDS:
+        return _fetch_wikipedia(q) or {"found": False}
     return _fetch_pexels(q) or _fetch_wikipedia(q) or {"found": False}
 
 
