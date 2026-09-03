@@ -3,17 +3,17 @@ import time
 from django.core.management.base import BaseCommand
 
 from flashcards.models import Word
-from flashcards.photos import PEXELS_ENABLED, fetch_photo, validate_with_vision
+from flashcards.photos import GEMINI_API_KEY, PEXELS_ENABLED, fetch_and_validate_photo, fetch_photo
 
 
 class Command(BaseCommand):
     help = (
-        "Popula Word.photo_url/photo_variants pra cada palavra. Ordem: Pexels "
-        "com ranking por alt text (padrão) e Wikipedia como fallback. Use "
-        "--strict pra validar cada foto com Gemini Vision antes de salvar "
-        "(mais lento, gasta quota, mas rejeita fotos onde o assunto não é "
-        "claramente o solicitado). Rate limit Pexels free: 200/hora — em "
-        "lotes grandes use --sleep=20."
+        "Popula Word.photo_url/photo_variants pra cada palavra, validando cada "
+        "candidato com Gemini Vision antes de aceitar (padrão, com GEMINI_API_KEY "
+        "configurada) — é a forma que escala pra milhares de palavras, em vez de "
+        "curar exceção por exceção no código. Sem GEMINI_API_KEY, cai pro "
+        "ranking por alt-text (mais rápido, menos confiável). Rate limit Pexels "
+        "free: 200/hora — em lotes grandes use --sleep maior."
     )
 
     def add_arguments(self, parser):
@@ -22,18 +22,26 @@ class Command(BaseCommand):
         parser.add_argument("--only-missing", action="store_true",
                             help="Pular palavras que já têm photo_url salva.")
         parser.add_argument("--sleep", type=float, default=1.5,
-                            help="Segundos entre chamadas (default 1.5).")
-        parser.add_argument("--strict", action="store_true",
-                            help="Valida cada foto candidata com Gemini Vision. Mais lento e "
-                                 "gasta quota, mas rejeita fotos onde o assunto não é claro.")
-        parser.add_argument("--min-score", type=int, default=6,
-                            help="Score mínimo do Gemini pra aceitar (0-10, default 6). Só com --strict.")
+                            help="Segundos entre palavras (default 1.5). Com Vision ligado, "
+                                 "cada palavra já leva ~2-6s por causa das chamadas de imagem.")
+        parser.add_argument("--no-vision", action="store_true",
+                            help="Desliga a validação com Gemini Vision (mais rápido e sem "
+                                 "gastar quota, mas volta a confiar só no texto alternativo — "
+                                 "sujeito aos mesmos erros de sempre).")
 
     def handle(self, *args, **options):
         if not PEXELS_ENABLED:
             self.stdout.write(self.style.WARNING(
                 "PEXELS_API_KEY não configurada — usando só o fallback da Wikipedia."
             ))
+        use_vision = bool(GEMINI_API_KEY) and not options["no_vision"]
+        if not use_vision:
+            self.stdout.write(self.style.WARNING(
+                "Rodando SEM validação visual (GEMINI_API_KEY ausente ou --no-vision). "
+                "Fotos vão confiar só no texto alternativo do Pexels — mais rápido, "
+                "mais sujeito a erro de sentido ambíguo."
+            ))
+
         qs = Word.objects.all().order_by("topic__order", "order")
         if options["topic"]:
             qs = qs.filter(topic__slug=options["topic"])
@@ -43,47 +51,27 @@ class Command(BaseCommand):
             qs = qs[:options["limit"]]
         words = list(qs)
         total = len(words)
-        strict = options["strict"]
-        min_score = options["min_score"]
-        self.stdout.write(f"Vou checar {total} palavras{' (strict/vision)' if strict else ''}.")
+        self.stdout.write(f"Vou checar {total} palavras{' (com Vision)' if use_vision else ''}.")
         changed = 0
-        rejected = 0
+        rejected_by_vision = 0
+
         for i, word in enumerate(words, start=1):
-            result = fetch_photo(word.en.removeprefix("to "))
+            en = word.en.removeprefix("to ")
+            result = fetch_and_validate_photo(en) if use_vision else fetch_photo(en)
+
             has_photo = result.get("found", False)
             url = result.get("url", "") if has_photo else ""
             page = result.get("page", "") if has_photo else ""
             credit = result.get("credit", "") if has_photo else ""
             variants = result.get("variants", []) if has_photo else []
-            score = result.get("top_score", 0) if has_photo else 0
-            alt_hint = result.get("top_alt", "") if has_photo else ""
             source = result.get("source", "-") if has_photo else "sem foto"
-
-            # Validação visual opcional
             vision_note = ""
-            if has_photo and strict and url:
-                v = validate_with_vision(url, word.en.removeprefix("to "))
-                if v is None:
-                    vision_note = " (vision indisponível)"
-                elif not v["ok"] or v["score"] < min_score:
-                    # Tenta próxima variante que passe
-                    accepted = None
-                    for var in variants[1:]:
-                        vn = validate_with_vision(var["url"], word.en.removeprefix("to "))
-                        if vn and vn["ok"] and vn["score"] >= min_score:
-                            accepted = var
-                            vision_note = f" (vision→variante {vn['score']}/10)"
-                            break
-                    if accepted:
-                        url = accepted["url"]; page = accepted["page"]; credit = accepted["credit"]
-                    else:
-                        # nenhuma passou → rejeita a foto toda, mostra texto
-                        has_photo = False
-                        url = ""; page = ""; credit = ""; variants = []
-                        vision_note = f" REJEITADA por vision ({v['reason'][:60]})"
-                        rejected += 1
+            if result.get("vision_checked"):
+                if has_photo:
+                    vision_note = " [vision ok]"
                 else:
-                    vision_note = f" (vision {v['score']}/10)"
+                    rejected_by_vision += 1
+                    vision_note = f" [vision rejeitou: {result.get('vision_reason', '')[:50]}]"
 
             fields = (word.has_photo, word.photo_url, word.photo_page,
                       word.photo_credit, word.photo_variants)
@@ -96,13 +84,11 @@ class Command(BaseCommand):
                 word.save(update_fields=["has_photo", "photo_url", "photo_page",
                                           "photo_credit", "photo_variants"])
                 changed += 1
-            score_hint = f" [alt-score {score}]" if score else ""
-            alt_snippet = f' "{alt_hint[:40]}"' if alt_hint else ""
-            self.stdout.write(f"[{i}/{total}] {word.pt} ({word.en}): {source}{score_hint}{alt_snippet}{vision_note}")
+            self.stdout.write(f"[{i}/{total}] {word.pt} ({en}): {source}{vision_note}")
             if i < total:
                 time.sleep(options["sleep"])
 
         msg = f"Concluído. {changed} palavras atualizadas."
-        if strict:
-            msg += f" {rejected} rejeitadas pelo Gemini Vision."
+        if use_vision:
+            msg += f" {rejected_by_vision} rejeitadas pelo Vision (ficaram sem foto em vez de errada)."
         self.stdout.write(self.style.SUCCESS(msg))

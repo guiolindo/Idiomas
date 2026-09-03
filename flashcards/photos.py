@@ -314,6 +314,10 @@ def _rank_photos(photos: list[dict], q_original: str) -> list[dict]:
         scored.append({
             "score": score,
             "url": url,
+            # versão pequena só pra mandar pro Gemini Vision — classificar
+            # "isso é uma maçã?" não precisa de imagem em alta resolução,
+            # e imagem menor = MUITO menos tokens gastos por chamada.
+            "small_url": src.get("small") or src.get("medium") or url,
             "page": p.get("url", ""),
             "credit": p.get("photographer", ""),
             "alt": alt,
@@ -340,7 +344,10 @@ def _fetch_pexels(q_original: str) -> dict | None:
     if not scored:
         return None
 
-    variants = [{"url": s["url"], "page": s["page"], "credit": s["credit"]} for s in scored[:8]]
+    variants = [
+        {"url": s["url"], "small_url": s["small_url"], "page": s["page"], "credit": s["credit"]}
+        for s in scored[:8]
+    ]
     best = scored[0]
     return {
         "found": True,
@@ -433,9 +440,83 @@ def fetch_photo(q: str) -> dict:
     return _fetch_pexels(q) or _fetch_wikipedia(q) or {"found": False}
 
 
-# ---------- Validação opcional com Gemini Vision ----------
-# Uso: durante check_photos --strict, chama isso pra verificar se a foto
-# realmente mostra o objeto. Custa quota de Gemini, então é opt-in.
+# Acima desse score de texto, a foto já é confiável o bastante (palavra
+# é a primeira do alt, sem termo negativo, foto específica) — gastar uma
+# chamada de Vision nela é desperdício de quota pra praticamente nenhum
+# ganho de confiança. Só os casos AMBÍGUOS (score baixo, mas ainda acima
+# do piso de aceitação) precisam de uma segunda opinião visual. Isso é o
+# que faz a validação escalar pra milhares de palavras sem estourar
+# limite de token: a maioria das palavras comuns (dog, apple, chair...)
+# nunca chega a chamar o Vision.
+VISION_TRUST_THRESHOLD = 50
+
+
+def fetch_and_validate_photo(q: str, max_checks: int = 2) -> dict:
+    """Versão em escala do fetch_photo: em vez de curar exceção por exceção
+    pra cada palavra problemática (o que não escala pra milhares de
+    palavras), usa o Gemini Vision pra CONFERIR os casos ambíguos antes de
+    aceitar. Dois cortes de custo mantêm isso barato mesmo em lote grande:
+
+    1. Threshold de confiança: se o ranking por alt-text já é forte
+       (>= VISION_TRUST_THRESHOLD), aceita direto sem gastar Vision —
+       cobre a maioria das palavras comuns.
+    2. Imagem pequena (src.small do Pexels, ~130px) em vez da foto em
+       alta resolução — classificar "isso é uma maçã?" não precisa de
+       nitidez, e imagem pequena = poucos tokens por chamada.
+
+    Sem GEMINI_API_KEY, cai pro comportamento antigo (só ranking por
+    alt-text) — funciona, só sem a camada de confiança extra.
+
+    Retorna o mesmo formato de fetch_photo(), mais "vision_checked" (bool)
+    e "vision_reason" quando aplicável.
+    """
+    en_word = q.strip().removeprefix("to ").strip()
+    base = fetch_photo(q)
+    if not GEMINI_API_KEY or not base.get("found"):
+        return base
+
+    # base veio direto da Wikipedia = o Pexels não teve NADA acima do piso
+    # de aceitação (_fetch_pexels já devolveu None). Wikipedia tem sua
+    # própria curadoria editorial — confia sem gastar Vision numa fonte
+    # que já filtrou bastante sozinha.
+    if base.get("source") != "pexels":
+        return {**base, "vision_checked": False}
+
+    # Corte 1: ranking por texto já é forte o bastante — nem chama o Vision.
+    if base.get("top_score", 0) >= VISION_TRUST_THRESHOLD:
+        return {**base, "vision_checked": False}
+
+    # Caso ambíguo — confere os melhores candidatos do Pexels com Vision.
+    candidates = base.get("variants") or [{"url": base["url"], "small_url": base["url"],
+                                            "page": base["page"], "credit": base["credit"]}]
+    for i, cand in enumerate(candidates[:max_checks]):
+        check_url = cand.get("small_url") or cand["url"]
+        v = validate_with_vision(check_url, en_word)
+        if v and v["ok"] and v["score"] >= 6:
+            return {
+                **base,
+                "url": cand["url"], "page": cand["page"], "credit": cand["credit"],
+                "variants": [cand] + [c for j, c in enumerate(candidates) if j != i],
+                "vision_checked": True,
+                "vision_reason": v["reason"],
+            }
+
+    # Nenhum candidato do Pexels passou no Vision — tenta a Wikipedia como
+    # segunda opinião antes de desistir de vez.
+    wiki = _fetch_wikipedia(q)
+    if wiki and wiki.get("found"):
+        v = validate_with_vision(wiki["url"], en_word)
+        if v is None or (v["ok"] and v["score"] >= 5):
+            # Vision indisponível (timeout/erro) ainda aceita a Wikipedia —
+            # ela é mais confiável que um Pexels não confirmado.
+            return {**wiki, "vision_checked": v is not None, "vision_reason": v["reason"] if v else ""}
+
+    return {"found": False, "vision_checked": True, "vision_reason": "nenhum candidato confirmado pelo Vision"}
+
+
+# ---------- Validação com Gemini Vision (usada por fetch_and_validate_photo) ----------
+# Chamada só nos casos ambíguos (ver VISION_TRUST_THRESHOLD acima) — não
+# em toda palavra, pra manter o custo baixo em lotes grandes.
 
 def validate_with_vision(image_url: str, en_word: str) -> dict | None:
     """Pergunta ao Gemini se a imagem realmente mostra a palavra como
@@ -461,8 +542,12 @@ def validate_with_vision(image_url: str, en_word: str) -> dict | None:
         img_b64 = base64.b64encode(img_resp.content).decode("ascii")
         mime = img_resp.headers.get("content-type", "image/jpeg").split(";")[0]
 
+        # flash-lite em vez de flash "cheio": classificar "isso é uma foto
+        # de X?" é uma tarefa simples que não precisa do modelo mais caro —
+        # é a diferença entre validar 2500 palavras custar caro ou custar
+        # centavos.
         resp = httpx.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={GEMINI_API_KEY}",
             json={
                 "contents": [{
                     "parts": [
