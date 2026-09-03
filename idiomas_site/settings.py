@@ -178,16 +178,16 @@ LOGOUT_REDIRECT_URL = 'login'
 # E-mail (usado pra "esqueci minha senha"). Em dev, sem RESEND_API_KEY, os
 # e-mails só aparecem no console do servidor — nenhuma configuração extra
 # necessária pra rodar local. Em produção, definindo RESEND_API_KEY o app
-# troca sozinho pro SMTP relay do Resend (smtp.resend.com) — sem precisar
-# de biblioteca extra, é só um backend SMTP padrão do Django.
+# troca sozinho pra API HTTP do Resend (flashcards.email_backend.ResendAPIBackend).
+#
+# Não usamos o backend SMTP do Django aqui: em produção (Railway) a conexão
+# com smtp.resend.com:465 travava (nem conectava nem dava erro) até o worker
+# do gunicorn matar a requisição à força — o usuário via um "Internal Server
+# Error" cru, sem traceback nenhum, porque o processo morria antes do Django
+# conseguir responder. A API HTTP do Resend evita esse socket problemático.
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 if RESEND_API_KEY:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.resend.com'
-    EMAIL_PORT = 465
-    EMAIL_USE_SSL = True
-    EMAIL_HOST_USER = 'resend'
-    EMAIL_HOST_PASSWORD = RESEND_API_KEY
+    EMAIL_BACKEND = 'flashcards.email_backend.ResendAPIBackend'
 else:
     EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 
