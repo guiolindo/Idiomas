@@ -17,20 +17,71 @@
 </div>
 
 {% if any_due %}
+  <div class="mode-picker" role="radiogroup" aria-label="Modo de estudo">
+    <div class="tp-label">Como quer treinar hoje?</div>
+    <div class="mode-options">
+      <label class="mode-opt on">
+        <input type="radio" name="modo" value="escrita" checked>
+        <span class="mode-name">Escrita</span>
+        <span class="mode-desc">Vê em português, escreve em inglês</span>
+      </label>
+      <label class="mode-opt">
+        <input type="radio" name="modo" value="ditado">
+        <span class="mode-name">Ditado</span>
+        <span class="mode-desc">Ouve em inglês, escreve em português</span>
+      </label>
+      <label class="mode-opt" id="mode-voz">
+        <input type="radio" name="modo" value="voz">
+        <span class="mode-name">Voz</span>
+        <span class="mode-desc">Vê em português, fala em inglês</span>
+      </label>
+    </div>
+  </div>
+
   <div class="time-picker" role="group" aria-label="Quanto tempo você tem">
-    <div class="tp-label">Quanto tempo você tem hoje?</div>
+    <div class="tp-label">Quanto tempo você tem?</div>
     <div class="tp-options">
-      <a class="tp-opt" href="{% url 'study' topic.slug %}?tempo=curto">
+      <a class="tp-opt" href="?tempo=curto" data-tempo="curto">
         <span class="tp-min">3 min</span><span class="tp-count">5 cartões</span>
       </a>
-      <a class="tp-opt" href="{% url 'study' topic.slug %}?tempo=medio">
+      <a class="tp-opt" href="?tempo=medio" data-tempo="medio">
         <span class="tp-min">10 min</span><span class="tp-count">15 cartões</span>
       </a>
-      <a class="tp-opt primary" href="{% url 'study' topic.slug %}?tempo=longo">
+      <a class="tp-opt primary" href="?tempo=longo" data-tempo="longo">
         <span class="tp-min">20 min</span><span class="tp-count">até 35 cartões</span>
       </a>
     </div>
   </div>
+
+  <script>
+    // Ao clicar num tempo, monta a URL com o modo selecionado. Voz é
+    // escondida em navegadores sem SpeechRecognition — usuário evita
+    // frustração de entrar num modo que não vai funcionar.
+    (function(){
+      var studyBase = "{% url 'study' topic.slug %}";
+      var supportsVoice = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+      var vozOpt = document.getElementById('mode-voz');
+      if(!supportsVoice && vozOpt){ vozOpt.hidden = true; }
+
+      var radios = document.querySelectorAll('input[name="modo"]');
+      radios.forEach(function(r){
+        r.addEventListener('change', function(){
+          document.querySelectorAll('.mode-opt').forEach(function(l){ l.classList.remove('on'); });
+          r.closest('.mode-opt').classList.add('on');
+        });
+      });
+      document.querySelectorAll('.tp-opt').forEach(function(a){
+        a.addEventListener('click', function(e){
+          e.preventDefault();
+          var checked = document.querySelector('input[name="modo"]:checked');
+          var modo = checked ? checked.value : 'escrita';
+          var tempo = a.dataset.tempo;
+          window.location.href = studyBase + '?modo=' + modo + '&tempo=' + tempo;
+        });
+      });
+    })();
+  </script>
+
   {% if counts.learning or counts.mastered %}
     <a class="btn btn-full btn-secondary" href="{% url 'study' topic.slug %}?tudo=1">Praticar tudo ({{ total }})</a>
   {% endif %}
@@ -49,7 +100,7 @@
   {% endif %}
 {% endif %}
 
-<p class="word-list-note">Traduções ficam pro estudo — sem espiada.</p>
+<h3 class="section-h">Palavras deste tópico</h3>
 <ul class="word-list">
   {% for row in rows %}
   <li class="word-row state-{{ row.state }}">

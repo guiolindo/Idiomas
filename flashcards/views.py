@@ -336,6 +336,17 @@ def topic_detail(request, slug):
 SESSION_CAPS = {"curto": 5, "medio": 15, "longo": 35}
 DEFAULT_SESSION_LENGTH = "longo"  # sem escolha explícita, mantém o teto antigo
 
+# Modalidades de estudo — cada uma exercita um canal diferente. O usuário
+# escolhe no início, e a UI se adapta. Antes ditado era uma "aba" dentro
+# do estudo, o que confundia (parecia sub-opção de leitura, mas na
+# verdade é outro tipo de exercício por completo — treina audição).
+STUDY_MODES = {
+    "escrita": {"label": "Escrita", "desc": "Vê em português, escreve em inglês"},
+    "ditado":  {"label": "Ditado",  "desc": "Ouve em inglês, escreve em português"},
+    "voz":     {"label": "Voz",     "desc": "Vê em português, fala em inglês"},
+}
+DEFAULT_STUDY_MODE = "escrita"
+
 
 @login_required
 def study(request, slug):
@@ -377,6 +388,10 @@ def study(request, slug):
         session_length = DEFAULT_SESSION_LENGTH
     session_cap = SESSION_CAPS[session_length]
 
+    study_mode = request.GET.get("modo", DEFAULT_STUDY_MODE)
+    if study_mode not in STUDY_MODES:
+        study_mode = DEFAULT_STUDY_MODE
+
     total_due = sum(1 for w in words if w["due"])
     session_capped = False
     if not practice_all and total_due > session_cap:
@@ -409,6 +424,7 @@ def study(request, slug):
         "total_due": total_due,
         "session_cap": session_cap,
         "session_length": session_length,
+        "study_mode": study_mode,
     })
 
 
@@ -491,6 +507,18 @@ def api_session_coach(request):
     if not result:
         return JsonResponse({"enabled": True, "message": ""})
     return JsonResponse({"enabled": True, "message": result["message"]})
+
+
+def help_page(request):
+    return render(request, "flashcards/help.html")
+
+
+def about_page(request):
+    return render(request, "flashcards/about.html")
+
+
+def terms_page(request):
+    return render(request, "flashcards/terms.html")
 
 
 @login_required

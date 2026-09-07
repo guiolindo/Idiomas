@@ -923,6 +923,126 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 }
 .challenge-intro b{ color:var(--gold); font-weight:600; }
 
+/* ==== Menu de conta (dropdown do header) ==== */
+.account-menu{ position:relative; }
+.account-drop{
+  position:absolute; top:calc(100% + 8px); right:0; min-width:220px;
+  background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 8px 24px rgba(26,30,40,.15);
+  padding:6px; z-index:50;
+  display:flex; flex-direction:column;
+}
+.account-drop[hidden]{ display:none }
+.account-hd{
+  font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--ink-3);
+  padding:10px 12px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-bottom:1px dashed var(--line); margin-bottom:4px;
+}
+.account-drop a, .account-signout{
+  display:block; padding:9px 12px; color:var(--ink); text-decoration:none;
+  font-size:14px; border-radius:6px; background:none; border:0; text-align:left;
+  cursor:pointer; font-family:inherit; width:100%;
+}
+.account-drop a:hover, .account-signout:hover{ background:var(--paper-2); color:var(--accent); }
+.account-sep{ height:1px; background:var(--line); margin:6px 4px; }
+.account-signout{ color:var(--wrong); font-weight:500; }
+
+/* ==== Rodapé de verdade ==== */
+.site-footer{
+  margin-top:60px; padding:24px 20px 40px;
+  border-top:1px solid var(--line);
+  background:transparent;
+}
+.footer-inner{
+  max-width:640px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; flex-wrap:wrap;
+}
+.footer-brand{
+  font-family:var(--display); font-size:15px; color:var(--ink-2);
+}
+.footer-brand em{ font-style:italic; color:var(--accent); }
+.footer-links{ display:flex; gap:20px; flex-wrap:wrap; }
+.footer-links a{
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); text-decoration:none;
+}
+.footer-links a:hover{ color:var(--accent); }
+
+/* ==== Páginas de documento (Ajuda, Sobre, Termos) ==== */
+.doc-page{ max-width:640px; }
+.doc-title{
+  font-family:var(--display); font-weight:400; font-size:36px; letter-spacing:-.02em;
+  color:var(--ink); margin:12px 0 6px;
+}
+.doc-lead{
+  font-size:15px; line-height:1.55; color:var(--ink-2); margin:0 0 28px;
+  max-width:56ch;
+}
+.doc-section{ margin:28px 0; }
+.doc-section h2{
+  font-family:var(--display); font-weight:500; font-size:19px; letter-spacing:-.005em;
+  color:var(--ink); margin:0 0 8px;
+}
+.doc-section p, .doc-section li{
+  font-size:14px; line-height:1.65; color:var(--ink-2); margin:0 0 10px;
+  max-width:60ch;
+}
+.doc-section b{ color:var(--ink); font-weight:600; }
+.doc-section a{ color:var(--accent); }
+.doc-section ul{ padding-left:20px; margin:0 0 10px; }
+.doc-section li{ margin-bottom:6px; }
+.doc-back{
+  margin-top:36px; padding-top:20px; border-top:1px dashed var(--line);
+}
+.doc-back a{
+  font-family:var(--mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); text-decoration:none;
+}
+.doc-back a:hover{ color:var(--accent); }
+
+/* ==== Escolha de modo (topic detail) ==== */
+.mode-picker{ margin:18px 0 14px; }
+.mode-options{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;
+}
+.mode-opt{
+  display:flex; flex-direction:column; gap:2px;
+  padding:14px 12px; border:1px solid var(--line); border-radius:8px;
+  background:var(--paper); cursor:pointer;
+  transition:all .15s ease;
+}
+.mode-opt input{ position:absolute; opacity:0; pointer-events:none; }
+.mode-opt:hover{ border-color:var(--ink-3); }
+.mode-opt.on{
+  border-color:var(--accent); background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent) inset;
+}
+.mode-name{
+  font-family:var(--display); font-size:17px; font-weight:500; color:var(--ink);
+  letter-spacing:-.005em;
+}
+.mode-opt.on .mode-name{ color:var(--accent); }
+.mode-desc{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; color:var(--ink-3);
+  line-height:1.4;
+}
+
+/* Badge de modo dentro do estudo (quando não tem modebar) */
+.mode-badge{
+  display:inline-block; margin:0 0 12px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--accent); background:var(--accent-soft);
+  border:1px solid var(--accent); border-radius:99px;
+  padding:5px 12px;
+}
+
+/* Section header simples */
+.section-h{
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-3); margin:24px 0 10px; font-weight:500;
+}
+
 /* Reduced motion — desliga tudo */
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after {

@@ -27,15 +27,19 @@
 </div>
 {% endif %}
 
-<div class="modebar" role="tablist" aria-label="Modo de estímulo">
+{% if study_mode == 'escrita' and topic_has_photo %}
+{# Dentro do modo Escrita, o aluno ainda pode alternar entre ver a
+   palavra em português ou ver uma foto do conceito. Ditado e Voz
+   NÃO aparecem aqui — são modos separados, escolhidos antes da sessão. #}
+<div class="modebar" role="tablist" aria-label="Estímulo dentro do modo Escrita">
   <button type="button" data-cue="pt" class="on" role="tab">Palavra em PT</button>
-  {% if topic_has_photo %}<button type="button" data-cue="foto" role="tab">Foto</button>{% endif %}
-  <button type="button" data-cue="ditado" role="tab" title="O app fala em inglês, você escreve a tradução em português">
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:4px">
-      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-    </svg>Ditado
-  </button>
+  <button type="button" data-cue="foto" role="tab">Foto</button>
 </div>
+{% else %}
+<div class="mode-badge">
+  {% if study_mode == 'ditado' %}Modo Ditado{% elif study_mode == 'voz' %}Modo Voz{% else %}Modo Escrita{% endif %}
+</div>
+{% endif %}
 
 <div class="card" id="card">
   <div class="leech-badge" id="leech-badge" hidden>⚠︎ palavra que tem te travado — respira e pensa duas vezes</div>
@@ -99,6 +103,10 @@
   // Idioma alvo do TTS. Hoje o app só ensina inglês, mas o campo já
   // aceita alteração pra suportar espanhol/francês no futuro.
   window.TARGET_LANG = "en-US";
+  // Modo de estudo escolhido antes da sessão. Determina como o cartão
+  // é apresentado e como a resposta é validada. O JS força o estado
+  // inicial conforme o modo e trata alguns como não-alteráveis.
+  window.STUDY_MODE = "{{ study_mode|escapejs }}";
 </script>
 <script src="{% static 'flashcards/js/study.js' %}"></script>
 {% endblock %}

@@ -45,6 +45,16 @@
   // nesse caso a aba "Foto" nem existe no HTML, então ignoramos qualquer
   // preferência antiga de outro tópico que ainda apontasse pra ela.
   if(!window.TOPIC_HAS_PHOTO && prefs.cue === 'foto') prefs.cue = 'pt';
+  // Modo de estudo (escolhido antes da sessão) trava algumas prefs:
+  //   ditado → cue sempre 'ditado' (não alterna PT/Foto)
+  //   voz    → cue livre entre PT/Foto, mas voice=true fixo
+  //   escrita → PT/Foto alternável, voice=false
+  // Isso evita que o localStorage de uma sessão anterior misture com o
+  // modo atual (ex: entrar em "Voz" com prefs.cue='ditado' salvo).
+  const STUDY_MODE = window.STUDY_MODE || 'escrita';
+  if(STUDY_MODE === 'ditado') prefs.cue = 'ditado';
+  else if(STUDY_MODE === 'voz'){ prefs.voice = true; if(prefs.cue === 'ditado') prefs.cue = 'pt'; }
+  else { prefs.voice = false; if(prefs.cue === 'ditado') prefs.cue = 'pt'; }
   function savePrefs(){ localStorage.setItem(LS_KEY, JSON.stringify(prefs)); }
 
   const ALL_WORDS = window.WORDS || []; // [{id,pt,en,has_photo,photo_url,photo_page,due,last_wrong}]
@@ -276,39 +286,28 @@
   const inputEl = $('#nb-input');
 
   function applyVoiceMode(){
-    if(!voiceToggle) return;
-    // Voz + ditado juntos não faz sentido — ditado testa entendimento em
-    // português. Se está em ditado, força voz desligada e esconde o toggle
-    // pra não confundir.
-    const isDictation = prefs.cue === 'ditado';
-    voiceToggle.hidden = !SpeechRec || isDictation;
-    if(isDictation) prefs.voice = false;
-
-    voiceToggle.setAttribute('aria-pressed', prefs.voice ? 'true' : 'false');
-    voiceToggle.classList.toggle('on', prefs.voice);
+    // O modo (escrita/ditado/voz) foi escolhido antes da sessão. Aqui só
+    // aplica o UI que corresponde. Sem toggle no meio da sessão — se quiser
+    // trocar de modo, volta pro tópico e escolhe de novo (evita confusão
+    // com prefs mistos entre modos).
+    if(voiceToggle){ voiceToggle.hidden = true; }
     if(prefs.voice){
-      voicePanel.hidden = false;
-      inputEl.hidden = true;
-      $('#nb-label').textContent = 'Fale a tradução em inglês';
+      if(voicePanel){ voicePanel.hidden = false; }
+      if(inputEl){ inputEl.hidden = true; }
+      const lab = $('#nb-label'); if(lab) lab.textContent = 'Fale a tradução em inglês';
     }else{
-      voicePanel.hidden = true;
-      inputEl.hidden = false;
-      $('#nb-label').textContent = isDictation
+      if(voicePanel){ voicePanel.hidden = true; }
+      if(inputEl){ inputEl.hidden = false; }
+      const lab = $('#nb-label');
+      if(lab) lab.textContent = prefs.cue === 'ditado'
         ? 'Escreva a tradução em português'
         : 'Escreva a tradução em inglês';
       if(recognition && recognizing){ try{ recognition.stop(); }catch(_){} }
     }
     updateConferirState();
   }
-  if(SpeechRec && voiceToggle){
-    voiceToggle.addEventListener('click', ()=>{
-      prefs.voice = !prefs.voice;
-      savePrefs();
-      applyVoiceMode();
-    });
-  }
-  // Roda sempre — mesmo sem SpeechRec, precisa atualizar o label do notebook
-  // se o modo salvo for ditado (label passa a ser "em português").
+  // Roda uma vez no boot pra estado inicial da UI (label do notebook,
+  // painel de voz visível/oculto conforme o modo escolhido).
   applyVoiceMode();
 
   function startRecognition(){
@@ -479,13 +478,12 @@
   }
 
   function initModebar(){
+    // Só existe no modo Escrita e só quando o tópico tem fotos. Alterna
+    // entre ver a palavra em português (cue='pt') e ver uma foto do
+    // conceito (cue='foto') dentro do MESMO modo.
     $$('.modebar button').forEach(b=>{
       b.classList.toggle('on', b.dataset.cue===prefs.cue);
       b.addEventListener('click', (e)=>{
-        // Botão do modebar rouba foco e a página rola pro topo em telas
-        // pequenas — bloqueia. Também previne default por segurança
-        // (button dentro de container clicável pode ter comportamento
-        // estranho em alguns navegadores).
         e.preventDefault();
         b.blur();
         if(prefs.cue === b.dataset.cue) return;
@@ -493,7 +491,6 @@
         b.classList.add('on');
         prefs.cue = b.dataset.cue;
         savePrefs();
-        applyVoiceMode();
         renderCard();
       });
     });

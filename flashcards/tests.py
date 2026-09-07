@@ -325,6 +325,50 @@ class LeechListTests(TestCase):
         self.assertContains(resp, "4 erros seguidos")
 
 
+class StaticPagesTests(TestCase):
+    """Ajuda/Sobre/Termos são páginas públicas — não exigem login."""
+    def test_help_page_loads(self):
+        resp = self.client.get(reverse("help"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "revisão espaçada")
+
+    def test_about_page_loads(self):
+        resp = self.client.get(reverse("about"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Princípios")
+
+    def test_terms_page_loads(self):
+        resp = self.client.get(reverse("terms"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "sua conta")
+
+
+class StudyModeTests(TestCase):
+    """study aceita ?modo= com escrita/ditado/voz — inválido cai pra escrita."""
+    def setUp(self):
+        self.topic = make_topic()
+        self.user = User.objects.create_user(username="m@t.com", email="m@t.com", password="x1234567")
+        self.client.login(username="m@t.com", password="x1234567")
+
+    def test_default_mode_is_escrita(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]))
+        self.assertContains(resp, 'STUDY_MODE = "escrita"')
+
+    def test_mode_ditado(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=ditado")
+        self.assertContains(resp, 'STUDY_MODE = "ditado"')
+        self.assertContains(resp, "Modo Ditado")
+
+    def test_mode_voz(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=voz")
+        self.assertContains(resp, 'STUDY_MODE = "voz"')
+        self.assertContains(resp, "Modo Voz")
+
+    def test_invalid_mode_falls_back_to_escrita(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=xpto")
+        self.assertContains(resp, 'STUDY_MODE = "escrita"')
+
+
 class WordOfTheDayTests(TestCase):
     def setUp(self):
         make_topic(words=(("um","one"),("dois","two"),("tres","three")))

@@ -1,0 +1,80 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Termos de uso · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="doc-page">
+  <h1 class="doc-title">Termos de uso</h1>
+  <p class="doc-lead">
+    Termos curtos e diretos. Sem letra miúda.
+  </p>
+
+  <section class="doc-section">
+    <h2>1. O que este app é</h2>
+    <p>
+      Caderno de Idiomas é um aplicativo pessoal de estudo de vocabulário, gratuito, sem anúncios e sem cobrança. Você usa por conta e risco pra fins de aprendizado.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>2. Sua conta</h2>
+    <p>
+      Você cria uma conta com e-mail e senha. Somos responsáveis por manter sua senha protegida (armazenada com hash) e usar HTTPS em todas as páginas. Você é responsável por escolher uma senha razoável e não compartilhá-la.
+    </p>
+    <p>
+      Se esquecer a senha, o link de recuperação chega no e-mail cadastrado e expira em 1 hora.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>3. O que salvamos</h2>
+    <ul>
+      <li>Seu e-mail (pra login e recuperação de senha)</li>
+      <li>Seu progresso nas palavras (níveis, datas, erros recentes)</li>
+      <li>Sua sequência de dias estudados</li>
+      <li>Análises geradas pela IA a partir do seu progresso</li>
+    </ul>
+    <p>
+      Não coletamos localização, cookies de rastreamento, nem compartilhamos seus dados com terceiros pra publicidade.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>4. Serviços de terceiros</h2>
+    <p>
+      Pra funcionar, o app usa:
+    </p>
+    <ul>
+      <li><b>Gemini (Google)</b> e <b>Groq</b> — recebem um resumo anonimizado do seu progresso pra gerar feedback</li>
+      <li><b>Pexels</b> e <b>Wikipedia</b> — servem as fotos ilustrativas das palavras</li>
+      <li><b>Resend</b> — envia os e-mails de recuperação de senha</li>
+      <li><b>Web Speech API</b> — o reconhecimento de voz (opcional) processa áudio pelos servidores do fornecedor do seu navegador</li>
+    </ul>
+  </section>
+
+  <section class="doc-section">
+    <h2>5. Conteúdo</h2>
+    <p>
+      As palavras e traduções são disponibilizadas pra estudo. As fotos são exibidas com o crédito da fonte original e servidas diretamente por seus provedores — pertencem aos autores respectivos.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>6. Encerramento de conta</h2>
+    <p>
+      Você pode pedir a exclusão da sua conta e de todos os dados associados a qualquer momento, por e-mail ao autor. O app é feito por uma pessoa — a resposta pode não ser instantânea, mas será atendida.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>7. Limitações</h2>
+    <p>
+      O app é oferecido "como está". Podemos ter tempo de inatividade, mudar features, ou descontinuar o serviço no futuro — nesse caso, avisamos com antecedência razoável e liberamos exportação dos dados.
+    </p>
+  </section>
+
+  <p class="doc-back">
+    <a href="{% url 'home' %}">← Voltar aos tópicos</a>
+  </p>
+</div>
+
+{% endblock %}

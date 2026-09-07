@@ -1,0 +1,92 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Ajuda · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="doc-page">
+  <h1 class="doc-title">Ajuda</h1>
+  <p class="doc-lead">Respostas diretas pras perguntas que fazem mais sentido pra quem tá usando o app.</p>
+
+  <section class="doc-section">
+    <h2>Como funciona a revisão espaçada?</h2>
+    <p>
+      Cada palavra que você estuda entra numa das 5 caixas (nível 0 a 4). Errou volta pra caixa 0 e reaparece <b>amanhã</b>. Acertou sobe uma caixa e demora mais pra voltar: 1, 3, 7, 15 ou 30 dias. É o método de Leitner — funciona porque força você a rever a palavra <b>antes</b> de esquecer, sem gastar tempo com o que você já sabe.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Qual a diferença entre "Errei", "Quase" e "Sabia"?</h2>
+    <ul>
+      <li><b>Errei</b> — não fazia ideia. A palavra volta amanhã do nível 0.</li>
+      <li><b>Quase</b> — sabia com esforço ou errou uma letra. Volta amanhã mas mantém o nível.</li>
+      <li><b>Sabia</b> — respondeu com confiança. Sobe de nível, demora mais pra voltar.</li>
+    </ul>
+    <p>Escrever com uma letra trocada em palavra longa é detectado como "Quase" automaticamente — não te pune por deslize de digitação.</p>
+  </section>
+
+  <section class="doc-section">
+    <h2>O que significa "palavra travada"?</h2>
+    <p>
+      Uma palavra que você errou <b>3 ou mais vezes seguidas</b>. Elas continuam no ciclo normal, mas ganham um aviso pra você reconhecer o padrão. A página <a href="{% url 'leech_list' %}">Palavras travadas</a> lista todas em um lugar só, com dicas pra desbloquear.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Por que só apareceram 5 palavras se eu tenho mais vencidas?</h2>
+    <p>
+      Você escolheu "3 min" antes de começar. Cada opção de tempo entrega um número diferente de cartões (5, 15 ou 35). O resto fica pra próxima sessão — todas continuam vencidas, ordenadas por urgência. É melhor 5 hoje que 35 abandonadas no meio.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Diferença entre os modos de estudo</h2>
+    <ul>
+      <li><b>Escrita</b> — vê a palavra em português (ou uma foto), escreve em inglês. É o padrão. Treina produção escrita.</li>
+      <li><b>Ditado</b> — ouve a palavra em inglês, escreve o que significa em português. Treina compreensão auditiva.</li>
+      <li><b>Voz</b> — vê a palavra em português, fala em inglês. Treina produção oral. Só funciona em Chrome/Edge (Firefox e Safari têm suporte irregular).</li>
+    </ul>
+  </section>
+
+  <section class="doc-section">
+    <h2>O reconhecimento de voz é confiável?</h2>
+    <p>
+      Usa o reconhecimento nativo do navegador (Web Speech API). No Chrome/Edge, roda no servidor do Google — mesma engine do Google Assistant. Pega bem sotaque brasileiro. O app aceita as top 3 alternativas que o reconhecedor devolve, então se ele "ouviu" errado uma delas, ainda tem chance de bater.
+    </p>
+    <p>
+      O que ele <b>não</b> faz: te dar nota de pronúncia estilo "78%, melhora o 'th'". Isso precisaria de serviço pago.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>O "Desafio relâmpago" afeta minhas revisões?</h2>
+    <p>
+      Não. Desafio é modo livre — 12 palavras aleatórias de tópicos misturados, sem gravar nada no seu SRS. Serve pra quebrar rotina e ter uma exposição ampla ao vocabulário. Erros ali não te fazem "voltar" no progresso normal.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Como funciona o coach de IA?</h2>
+    <p>
+      Toda vez que você termina uma rodada de estudo, um resumo do que aconteceu é enviado pra uma IA (Gemini ou Groq como fallback). Ela devolve uma análise em 3 partes — pontos fortes, o que ajustar, recomendação de próximo passo — considerando também as palavras que estão te travando. A análise aparece na home até você fazer a próxima rodada.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Esqueci minha senha</h2>
+    <p>
+      Na tela de login, clique em "Esqueceu a senha?". Se o e-mail tiver conta, um link chega em até 1 minuto. O link expira em <b>1 hora</b> por segurança.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Preciso pagar alguma coisa?</h2>
+    <p>
+      Não. O app é gratuito e sem anúncios. Ele existe porque foi feito pra uma pessoa específica ganhar vocabulário — o autor abriu pra qualquer um que quiser usar.
+    </p>
+  </section>
+
+  <p class="doc-back">
+    <a href="{% url 'home' %}">← Voltar aos tópicos</a>
+  </p>
+</div>
+
+{% endblock %}
