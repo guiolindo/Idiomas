@@ -327,6 +327,68 @@ class LeechListTests(TestCase):
         self.assertContains(resp, "4 erros seguidos")
 
 
+class NextTopicTests(TestCase):
+    """A home decide qual tópico os cards de modo abrem. A ordem tem que
+    ser NATURAL — não pode ficar preso no último tópico estudado quando
+    já dominou tudo. Cenário reportado: usuário dominou Pessoas e
+    família mas os cards continuavam abrindo lá em vez de Partes do
+    corpo."""
+    def setUp(self):
+        # 3 tópicos em ordem, com 2 palavras cada
+        self.t1 = make_topic(slug="t1", name="Um", words=(("a", "a"), ("b", "b")))
+        self.t1.order = 1; self.t1.save()
+        self.t2 = make_topic(slug="t2", name="Dois", words=(("c", "c"), ("d", "d")))
+        self.t2.order = 2; self.t2.save()
+        self.t3 = make_topic(slug="t3", name="Três", words=(("e", "e"), ("f", "f")))
+        self.t3.order = 3; self.t3.save()
+        self.user = User.objects.create_user(username="n@t.com", email="n@t.com", password="x1234567")
+        Profile.objects.create(user=self.user)
+        self.client.login(username="n@t.com", password="x1234567")
+
+    def test_new_user_starts_at_first_topic(self):
+        resp = self.client.get(reverse("home"))
+        # CTA hero aponta pro Um (primeiro nunca iniciado)
+        self.assertContains(resp, ">Um<")
+
+    def test_advances_to_next_topic_when_previous_dominated(self):
+        """Cenário do usuário: dominei Um todo, quero que a home aponte
+        pro Dois automaticamente."""
+        for w in self.t1.words.all():
+            Progress.objects.create(user=self.user, word=w, level=SRS_MAX_LEVEL,
+                                     next_review=timezone.now() + timedelta(days=30))
+        resp = self.client.get(reverse("home"))
+        # Não deve mais apontar pro Um dominado, e sim pro Dois
+        self.assertContains(resp, ">Dois<")
+        self.assertContains(resp, "hora de avançar")
+
+    def test_overdue_wins_over_new_topic(self):
+        """Se Um tem palavra vencida, ele volta a ser recomendado — SRS
+        clássico manda antes de avanço."""
+        w = self.t1.words.first()
+        Progress.objects.create(user=self.user, word=w, level=1,
+                                 next_review=timezone.now() - timedelta(days=1))
+        resp = self.client.get(reverse("home"))
+        self.assertContains(resp, ">Um<")
+        self.assertContains(resp, "Recomendado agora")
+
+    def test_in_progress_wins_over_untouched(self):
+        """Se comecei Um mas não terminei, e nem toquei em Dois, a home
+        aponta pra Um (terminar antes de abrir novo)."""
+        w = self.t1.words.first()
+        Progress.objects.create(user=self.user, word=w, level=2,
+                                 next_review=timezone.now() + timedelta(days=10))
+        resp = self.client.get(reverse("home"))
+        self.assertContains(resp, ">Um<")
+
+    def test_mode_cards_show_topic_name(self):
+        """Cada card de modo mostra qual tópico vai abrir — a pessoa não
+        clica no escuro."""
+        resp = self.client.get(reverse("home"))
+        # 4 cards de modo + Escrita/Ditado/Transcrição/Voz — todos com "Um"
+        # no eyebrow.
+        self.assertContains(resp, "Modo · Um", count=4)
+
+
 class HealthzTests(TestCase):
     """Health check pra sondagem externa — 200 ok se app + DB vivos."""
     def test_healthz_returns_ok(self):

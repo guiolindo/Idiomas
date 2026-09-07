@@ -101,6 +101,32 @@ def _greeting(now):
     return "Boa noite"
 
 
+def _next_topic(topics, mastered_map, studied_ids, overdue_topic):
+    """Decide qual tópico a home sugere clicar. Sempre progride pra novos
+    tópicos quando os anteriores estão dominados — antes o sistema ficava
+    preso no último tópico estudado."""
+    # 1. Se há vencidas em algum tópico, começa pelo mais crítico
+    if overdue_topic is not None:
+        return overdue_topic
+    # 2. Tópico "em progresso" (tem palavra iniciada mas não é dominado)
+    #    mais antigo por order — termina o que começou antes de abrir novo
+    for t in topics:
+        word_ids = {w.id for w in t.words.all()}
+        if not word_ids:
+            continue
+        started_here = studied_ids & word_ids
+        mastered_here = mastered_map.get(t.id, set()) & word_ids
+        if started_here and mastered_here != word_ids:
+            return t
+    # 3. Primeiro tópico nunca iniciado por order — avanço natural
+    for t in topics:
+        word_ids = {w.id for w in t.words.all()}
+        if word_ids and not (studied_ids & word_ids):
+            return t
+    # 4. Fallback: primeiro tópico existente
+    return topics[0] if topics else None
+
+
 def _display_name(user):
     """Nome bonito pra cumprimentar. Prefere first_name; senão pega a
     parte antes do @ do e-mail, mas só a primeira "palavra" (o segmento
@@ -208,12 +234,19 @@ def home(request):
     # botão discreto na home leva pra dashboard focada.
     leech_count = Progress.objects.filter(user=request.user, is_leech=True).count()
 
-    # Tópico "próxima ação": prioridade — tópico com vencidas, senão o
-    # continue_topic (última atividade), senão starter (novo user), senão
-    # o primeiro tópico. Usado nos cards de modo (Escrita/Ditado/Voz) pra
-    # já apontar pra onde estudar — evita "clico em Ditado e caio em outra
-    # tela pedindo tópico".
-    action_topic = overdue_topic or continue_topic or starter_topic or (topics[0] if topics else None)
+    # Tópico "próxima ação": lógica de progressão natural.
+    # Antes: overdue → continue → starter → topics[0].
+    #   Problema: se o usuário domina Pessoas e família e não tem vencidas,
+    #   'continue_topic' fica preso em Pessoas e família pra sempre. O
+    #   sistema nunca sugere Partes do corpo, Roupas, etc — usuário tem
+    #   que ir manualmente no índice.
+    # Agora: prioridade que sempre progride
+    #   1. Tópico com mais vencidas (SRS clássico) — nunca deixa esquecer
+    #   2. Tópico em progresso mais antigo por ordem (terminar o que
+    #      começou antes de abrir novo)
+    #   3. Primeiro tópico NUNCA iniciado por ordem (avanço natural)
+    #   4. Fallback: primeiro tópico
+    action_topic = _next_topic(topics, mastered_map, studied_ids, overdue_topic)
 
     return render(request, "flashcards/home.html", {
         "topic_cards": topic_cards,
