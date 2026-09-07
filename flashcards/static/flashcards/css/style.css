@@ -1424,6 +1424,113 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 .empty-search{ text-align:center; color:var(--graphite); padding:24px 0; font-style:italic; font-size:14px; }
 .empty-search[hidden]{ display:none; }
 
+/* ==== Análise IA (v4) — sempre visível, layout de boletim editorial ==== */
+.analysis-panel{
+  margin:0 0 24px; padding:20px 22px 22px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:6px 14px 14px 6px;
+  box-shadow:var(--shadow-card);
+  position:relative;
+}
+.analysis-panel::before{
+  content:""; position:absolute; left:11px; top:16px; bottom:16px; width:1.5px;
+  background:var(--margin); opacity:.55;
+}
+.ap-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  padding-bottom:10px; margin-bottom:14px;
+  border-bottom:1px dashed var(--line);
+}
+.ap-title{
+  font-family:var(--display); font-weight:400; font-size:19px; letter-spacing:-.005em;
+  color:var(--ink); margin:0;
+}
+.ap-when{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--graphite);
+}
+.ap-row{
+  display:grid; grid-template-columns:24px 1fr; gap:10px;
+  margin-bottom:14px;
+}
+.ap-row:last-child{ margin-bottom:0; }
+.ap-mark{
+  font-family:var(--display); font-size:20px; line-height:1;
+  color:var(--graphite); text-align:center;
+}
+.ap-strength .ap-mark{ color:var(--accent); }
+.ap-focus .ap-mark{ color:var(--gold-ink); }
+.ap-reco .ap-mark{ color:var(--wrong); font-style:italic; }
+.ap-eyebrow{
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--graphite); margin-bottom:4px;
+}
+.ap-text{
+  margin:0; font-family:var(--serif); font-size:15px; line-height:1.55;
+  color:var(--ink); max-width:56ch;
+}
+.analysis-panel.empty{ padding:16px 20px 18px; }
+.analysis-panel.empty .ap-empty{
+  margin:0; font-family:var(--serif); font-size:14px; color:var(--graphite);
+  font-style:italic;
+}
+
+/* ==== Fim de rodada — resumo local + skeleton do coach ==== */
+.local-summary{
+  margin:22px auto 8px; max-width:440px; text-align:left;
+  padding:14px 16px; background:var(--paper-2); border:1px dashed var(--line-2);
+  border-radius:8px;
+}
+.local-summary.ok{
+  border-color:var(--accent); background:var(--accent-soft);
+  text-align:center;
+}
+.local-summary .ls-label{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--graphite); margin-bottom:8px;
+}
+.local-summary.ok .ls-label{ color:var(--accent); }
+.local-summary .ls-words{
+  display:flex; flex-wrap:wrap; gap:8px 14px;
+}
+.missed-word{
+  font-family:var(--serif); font-size:14px; color:var(--ink);
+}
+.missed-word em{ color:var(--wrong); font-style:italic; }
+
+/* Skeleton animado pro coach — 3 barrinhas pulsando enquanto a IA
+   processa. Feedback visual imediato em vez de "pensando…" texto morto. */
+.coach-skeleton{
+  display:inline-flex; gap:6px; align-items:center;
+}
+.coach-skeleton span{
+  display:block; height:8px; border-radius:4px;
+  background:linear-gradient(90deg, var(--line-2), var(--line), var(--line-2));
+  background-size:200% 100%;
+  animation:coach-shimmer 1.4s ease-in-out infinite;
+}
+.coach-skeleton span:nth-child(1){ width:70px; animation-delay:0s; }
+.coach-skeleton span:nth-child(2){ width:110px; animation-delay:.15s; }
+.coach-skeleton span:nth-child(3){ width:60px; animation-delay:.3s; }
+@keyframes coach-shimmer{
+  0%,100%{ background-position:200% 50%; opacity:.7; }
+  50%{ background-position:-200% 50%; opacity:1; }
+}
+
+/* Voz: alternativas do reconhecedor + fallback pra digitação */
+.voice-alts{
+  display:block; margin-top:4px;
+  font-family:var(--mono); font-size:11px; color:var(--graphite);
+  font-style:italic;
+}
+.fallback-btn{
+  appearance:none; background:transparent; border:0; padding:0;
+  color:var(--accent); text-decoration:underline; text-underline-offset:3px;
+  cursor:pointer; font:inherit; font-size:12px;
+}
+.fallback-btn:hover{ color:var(--wrong); }
+
 /* Reduced motion — desliga tudo */
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after {

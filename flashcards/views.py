@@ -561,13 +561,21 @@ def api_session_coach(request):
         {
             "pt": str(a.get("pt", ""))[:60],
             "en": str(a.get("en", ""))[:60],
-            "typed": str(a.get("typed", ""))[:60],
+            # Genérico: pode ser texto digitado (escrita/ditado/transcricao)
+            # ou transcrição da voz (voz). O prompt sabe interpretar
+            # conforme o "mode" da sessão.
+            "answer": str(a.get("answer") or a.get("typed") or "")[:60],
             "result": a.get("result") if a.get("result") in ("miss", "soso", "know") else "miss",
         }
         for a in answers[:30]
     ]
+    # Modo da sessão — o coach precisa saber pra usar o verbo certo
+    # ("falou" no modo voz, "digitou" na escrita, etc). Sem isso, ele
+    # assumia "digitou" sempre e ficava esquisito em voz/ditado.
+    mode = data.get("mode") if data.get("mode") in ("escrita", "ditado", "transcricao", "voz") else "escrita"
     result = generate_session_feedback({
         "topic": str(data.get("topic", ""))[:60],
+        "mode": mode,
         "answers": clean_answers,
     })
     # Também atualiza a análise geral (strengths/focus/recommendation)

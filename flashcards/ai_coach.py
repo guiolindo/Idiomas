@@ -70,6 +70,20 @@ sentido. Nunca diga só "bom trabalho" ou frases motivacionais vazias — \
 se não tiver nada útil a dizer, comente uma coisa concreta que aconteceu. \
 Fale com o aluno na segunda pessoa.
 
+IMPORTANTE: o campo "mode" no JSON diz COMO o aluno respondeu — a \
+linguagem que você usa muda:
+- "escrita": aluno viu PT e ESCREVEU em inglês → use "escreveu", "digitou"
+- "ditado": aluno OUVIU em inglês e ESCREVEU a tradução em português → \
+  use "ouviu e traduziu", cite se erro foi de entendimento ou de \
+  português; a "answer" é em PORTUGUÊS
+- "transcricao": aluno OUVIU em inglês e ESCREVEU em inglês (spelling) → \
+  use "escreveu o que ouviu", "grafou"; erros aqui são de ortografia \
+  auditiva
+- "voz": aluno FALOU em inglês (reconhecimento por voz do navegador) → \
+  use "falou", "pronunciou", "disse"; NUNCA diga "escreveu"; erros \
+  podem ser de pronúncia OU de reconhecimento — considere isso ao \
+  comentar
+
 Rodada:
 """
 

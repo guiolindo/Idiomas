@@ -98,19 +98,48 @@
 </p>
 {% endif %}
 
-{# ============ Análise IA colapsada ============ #}
+{# ============ Análise IA sempre visível — layout de boletim ============ #}
 {% if ai_enabled and ai_analysis.strengths or ai_analysis.focus or ai_analysis.recommendation %}
-<details class="ai-details">
-  <summary>
-    <span>Análise do seu progresso</span>
-    {% if ai_generated_at %}<span class="ai-when">{{ ai_generated_at|quando }}</span>{% endif %}
-  </summary>
-  <div class="ai-body">
-    {% if ai_analysis.strengths %}<p><b>Fortes:</b> {{ ai_analysis.strengths }}</p>{% endif %}
-    {% if ai_analysis.focus %}<p><b>Foco:</b> {{ ai_analysis.focus }}</p>{% endif %}
-    {% if ai_analysis.recommendation %}<p><b>Recomendação:</b> {{ ai_analysis.recommendation }}</p>{% endif %}
+<section class="analysis-panel">
+  <header class="ap-head">
+    <h2 class="ap-title">Análise do seu progresso</h2>
+    {% if ai_generated_at %}<span class="ap-when">atualizado {{ ai_generated_at|quando }}</span>{% endif %}
+  </header>
+  {% if ai_analysis.strengths %}
+  <div class="ap-row ap-strength">
+    <span class="ap-mark" aria-hidden="true">◆</span>
+    <div class="ap-body">
+      <div class="ap-eyebrow">Pontos fortes</div>
+      <p class="ap-text">{{ ai_analysis.strengths }}</p>
+    </div>
   </div>
-</details>
+  {% endif %}
+  {% if ai_analysis.focus %}
+  <div class="ap-row ap-focus">
+    <span class="ap-mark" aria-hidden="true">◇</span>
+    <div class="ap-body">
+      <div class="ap-eyebrow">Foco agora</div>
+      <p class="ap-text">{{ ai_analysis.focus }}</p>
+    </div>
+  </div>
+  {% endif %}
+  {% if ai_analysis.recommendation %}
+  <div class="ap-row ap-reco">
+    <span class="ap-mark" aria-hidden="true">→</span>
+    <div class="ap-body">
+      <div class="ap-eyebrow">Recomendação</div>
+      <p class="ap-text">{{ ai_analysis.recommendation }}</p>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% elif ai_enabled and not is_new_user %}
+<section class="analysis-panel empty">
+  <header class="ap-head">
+    <h2 class="ap-title">Análise do seu progresso</h2>
+  </header>
+  <p class="ap-empty">Sua próxima análise chega quando você terminar uma rodada de estudo.</p>
+</section>
 {% endif %}
 
 {# ============ Índice de tópicos — colapsado por padrão, aparece quando quer ============ #}

@@ -245,6 +245,7 @@
     if(prefs.voice){
       const heard = $('#voice-heard'); if(heard) heard.textContent = '';
       const hint = $('#voice-hint'); if(hint) hint.textContent = 'Clique no microfone e diga a palavra em inglês';
+      voiceFailCount = 0;
     }else{
       // preventScroll evita o pulo pro topo/pro input quando trocamos de
       // aba (modebar) ou re-renderizamos por qualquer motivo. O cursor
@@ -368,6 +369,28 @@
   // painel de voz visível/oculto conforme o modo escolhido).
   applyVoiceMode();
 
+  // Grammar hints: JSGF list com todas as palavras em inglês do tópico —
+  // o reconhecedor sabe QUAIS palavras esperar e prefere elas nas
+  // alternativas. Isso aumenta MUITO a precisão pra sotaques (o servidor
+  // do Google já usa essa dica pra pesar candidatos). Funciona em Chrome.
+  const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+  let grammar = null;
+  if(SpeechGrammarList && ALL_WORDS.length){
+    const vocab = ALL_WORDS.map(w => (w.en || '').replace(/^to /i, '').trim())
+      .filter(Boolean)
+      .map(s => s.replace(/[^a-zA-Z0-9\s'-]/g, ''))
+      .filter(Boolean);
+    if(vocab.length){
+      const rule = `#JSGF V1.0; grammar words; public <word> = ${vocab.join(' | ')} ;`;
+      try{ grammar = new SpeechGrammarList(); grammar.addFromString(rule, 1); }catch(_){}
+    }
+  }
+
+  // Contador de falhas consecutivas por palavra — depois de 2 tentativas
+  // de voz sem match, oferecemos fallback pra digitação (o pior é ficar
+  // preso na palavra).
+  let voiceFailCount = 0;
+
   function startRecognition(){
     if(!SpeechRec) return;
     if(recognizing) return;
@@ -375,7 +398,10 @@
       recognition = new SpeechRec();
       recognition.lang = TARGET_LANG;
       recognition.interimResults = false;
-      recognition.maxAlternatives = 3;
+      // maxAlternatives 8 (era 3) — mais candidatos pra o matchAnswer
+      // filtrar o certo. Custo praticamente zero.
+      recognition.maxAlternatives = 8;
+      if(grammar) recognition.grammars = grammar;
       recognition.onstart = ()=>{
         recognizing = true;
         $('#mic-btn')?.classList.add('rec');
@@ -389,28 +415,49 @@
         recognizing = false;
         $('#mic-btn')?.classList.remove('rec');
         const msg = ev.error === 'not-allowed'
-          ? 'permissão de microfone negada'
+          ? 'permissão de microfone negada — clique no cadeado da barra e libere'
           : ev.error === 'no-speech'
             ? 'não ouvi nada — tente de novo'
-            : 'não deu — tente de novo';
+            : ev.error === 'audio-capture'
+              ? 'não achei o microfone'
+              : 'não deu — tente de novo';
         $('#voice-hint').textContent = msg;
+        voiceFailCount++;
+        maybeOfferKeyboardFallback();
       };
       recognition.onresult = (ev)=>{
-        // Pega a melhor transcrição das alternativas — priorizando o
-        // match mais próximo do que era esperado, se o alvo já é conhecido.
+        // Passa pelas 8 alternativas do reconhecedor, tenta achar a que
+        // dá match 'ok' com o alvo. Se nenhuma bater 'ok', tenta 'close'
+        // (o matchAnswer tolera pequenas variações). Se nenhuma tolera,
+        // usa a de maior confiança (índice 0) — o reveal vai marcar como
+        // miss/close honestamente.
         const w = currentWord();
-        let best = ev.results[0][0].transcript || '';
+        const alts = [];
         for(let i=0;i<ev.results[0].length;i++){
-          const alt = ev.results[0][i].transcript;
-          if(matchAnswer(alt, w.en) === 'ok'){ best = alt; break; }
+          alts.push(ev.results[0][i].transcript || '');
         }
-        $('#voice-heard').textContent = `"${best}"`;
-        // Coloca no input pra o reveal() e o updateConferirState funcionarem
-        // igual ao fluxo digitado — mesmo caminho de validação.
+        let best = alts[0];
+        let bestKind = 'no';
+        for(const alt of alts){
+          const m = matchAnswer(alt, w.en);
+          if(m === 'ok'){ best = alt; bestKind = 'ok'; break; }
+          if(m === 'close' && bestKind !== 'close'){ best = alt; bestKind = 'close'; }
+        }
+        // Mostra as top alternativas discretamente pra o aluno perceber
+        // que o reconhecedor ouviu algo (transparência do processo).
+        const alternatives = alts.slice(1, 4).filter(a => a && a !== best).slice(0, 2);
+        const altText = alternatives.length
+          ? `<span class="voice-alts">(também ouvi: ${alternatives.map(a=>`"${a}"`).join(', ')})</span>`
+          : '';
+        $('#voice-heard').innerHTML = `"${best}" ${altText}`;
         inputEl.value = best;
         updateConferirState();
-        // Auto-conferir depois de falar (não faz sentido pedir 2 confirmações)
-        setTimeout(()=>reveal(), 100);
+        if(bestKind === 'no') voiceFailCount++;
+        else voiceFailCount = 0;
+        setTimeout(()=>{
+          reveal();
+          maybeOfferKeyboardFallback();
+        }, 100);
       };
     }
     try{
@@ -420,6 +467,21 @@
     }catch(_){
       // já rodando — ignora
     }
+  }
+
+  function maybeOfferKeyboardFallback(){
+    // 2 falhas seguidas: oferece caminho digitado. Nao força, oferece.
+    if(voiceFailCount < 2) return;
+    const hintEl = $('#voice-hint');
+    if(!hintEl) return;
+    if(hintEl.querySelector('.fallback-btn')) return;  // já oferecido
+    hintEl.innerHTML = `Não estou reconhecendo bem. <button type="button" class="fallback-btn" id="fb-typed">Digitar em vez de falar nesta palavra</button>`;
+    $('#fb-typed')?.addEventListener('click', ()=>{
+      $('#voice-panel').hidden = true;
+      inputEl.hidden = false;
+      inputEl.focus({preventScroll:true});
+      voiceFailCount = 0;
+    });
   }
   $('#mic-btn')?.addEventListener('click', startRecognition);
 
@@ -466,7 +528,10 @@
       }
     }
     if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
-    st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, typed, result});
+    // "answer" é o texto que a pessoa produziu — pode ser digitado ou
+    // reconhecido por voz. O coach usa junto com STUDY_MODE pra saber
+    // o verbo certo ("falou" vs "escreveu").
+    st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, answer:typed, result});
     syncWord(w.id, result, result==='miss' ? typed : '');
     // Auto-play da pronúncia quando revela — reforça a memória auditiva.
     // Só toca se veio de miss/soso/close (aprendizado). Em 'know' também
@@ -495,14 +560,25 @@
     const total = WORDS.length;
     const rightCount = total - missedCount;
     const pct = total ? Math.round(rightCount / total * 100) : 0;
+    // Feedback LOCAL — aparece instantaneamente antes da IA responder.
+    // Antes a pessoa via só "pensando…" por 5-10s sem sinal nenhum.
+    const missedList = st.sessionAnswers
+      .filter(a => a.result === 'miss')
+      .slice(0, 5)
+      .map(a => `<span class="missed-word">${escapeHtml(a.pt)} <em>→</em> ${escapeHtml(a.en)}</span>`)
+      .join('');
+    const localSummary = missedCount
+      ? `<div class="local-summary"><div class="ls-label">Erradas nessa rodada</div><div class="ls-words">${missedList}</div></div>`
+      : `<div class="local-summary ok"><div class="ls-label">Zero erros</div></div>`;
     const wrap = $('#card');
     wrap.innerHTML = `
       <div class="round-done">
         <div class="done-label">Rodada completa</div>
         <div class="done-score"><b>${rightCount}</b> <span class="done-slash">/</span> ${total} <span class="done-pct">${pct}%</span></div>
         <p class="done-sub">${missedCount ? `${missedCount} ${missedCount===1?'palavra pra revisar':'palavras pra revisar'} agora.` : 'Perfeito. Volte amanhã pra próxima rodada.'}</p>
+        ${localSummary}
         <div class="coach-slot" id="coach-slot" hidden>
-          <div class="coach-label">Seu coach</div>
+          <div class="coach-label">Coach</div>
           <p class="coach-msg" id="coach-msg"></p>
         </div>
       </div>
@@ -533,12 +609,14 @@
     const slot = $('#coach-slot');
     if(!slot) return;
     slot.hidden = false;
-    $('#coach-msg').innerHTML = '<span class="photo-status">pensando…</span>';
+    // Skeleton — barras animadas em vez de "pensando…" texto morto. Dá
+    // sinal visual de que algo tá acontecendo sem prometer conteúdo.
+    $('#coach-msg').innerHTML = '<span class="coach-skeleton"><span></span><span></span><span></span></span>';
     try{
       const res = await fetch(window.COACH_URL, {
         method: 'POST',
         headers: {'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/json'},
-        body: JSON.stringify({topic: window.TOPIC_NAME, answers: st.sessionAnswers}),
+        body: JSON.stringify({topic: window.TOPIC_NAME, mode: STUDY_MODE, answers: st.sessionAnswers}),
       });
       const json = await res.json();
       if(!json.enabled || !json.message){
