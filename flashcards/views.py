@@ -16,7 +16,7 @@ from django.views.decorators.http import require_POST
 
 from .ai_coach import AI_ENABLED, generate_feedback, generate_session_feedback
 from .forms import SignupForm
-from .levels import compute_level
+from .levels import compute_level, compute_coverage
 from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
 from .photos import fetch_photo
 
@@ -196,6 +196,10 @@ def home(request):
 
     # Nível CEFR computado a partir das palavras dominadas (nível 4 no SRS).
     level = compute_level(total_mastered)
+    # Métrica honesta (SLA): cobertura das top-500 mais frequentes do
+    # inglês real. Substitui o "nível A1 estimado por total de palavras
+    # dominadas" que a revisão de pedagogia chamou de ilusão de progresso.
+    coverage = compute_coverage(request.user, SRS_MAX_LEVEL)
 
     # última palavra estudada (pra "continuar de onde parou")
     last_progress = Progress.objects.filter(user=request.user).order_by("-updated_at").first()
@@ -262,6 +266,7 @@ def home(request):
         "ai_enabled": AI_ENABLED,
         "ai_generated_at": profile.ai_feedback_at,
         "level": level,
+        "coverage": coverage,
         "greeting": _greeting(now),
         "first_name": _display_name(request.user),
         "answered_today": answered_today,
@@ -336,6 +341,98 @@ def challenge(request):
         "words_json": words_json,
         "total": len(picked),
         "topic_has_photo": any(w.has_photo for w in picked),
+    })
+
+
+MIXED_SIZE = 15
+
+
+@login_required
+def mixed(request):
+    """Modo Misturar: vencidas/novas de VÁRIOS tópicos embaralhados numa
+    rodada. Combate o efeito de interferência por agrupamento semântico
+    (Tinkham 1997, Waring 1997 — itens do mesmo campo semântico exigem
+    47-97% mais repetições pra serem aprendidos que itens não relacionados).
+
+    Prioridade das palavras escolhidas:
+      1. Vencidas (SRS diz que é hora de revisar)
+      2. Nunca vistas de tópicos NÃO iniciados (introduz variedade)
+    Máx 15 por rodada. Afeta SRS normalmente — não é desafio."""
+    now = timezone.now()
+    # Vencidas (Progress cujo next_review <= agora, ordenado pelo mais atrasado)
+    overdue_qs = (
+        Progress.objects.filter(user=request.user, next_review__lte=now)
+        .select_related("word", "word__topic")
+        .order_by("next_review", "level")
+    )
+    picked_words = []
+    seen_topics = set()
+    seen_word_ids = set()
+    # Puxa até 12 vencidas, no máx 2 do MESMO tópico consecutivo (força mistura)
+    for p in overdue_qs[:60]:
+        if len(picked_words) >= 12:
+            break
+        # Limita 2 palavras seguidas do mesmo tópico
+        recent_topics = [w.topic_id for w in picked_words[-2:]]
+        if recent_topics.count(p.word.topic_id) >= 2:
+            continue
+        if p.word_id in seen_word_ids:
+            continue
+        picked_words.append(p.word)
+        seen_word_ids.add(p.word_id)
+        seen_topics.add(p.word.topic_id)
+    # Completa com nunca vistas de tópicos não iniciados (variedade)
+    if len(picked_words) < MIXED_SIZE:
+        studied_ids = set(Progress.objects.filter(user=request.user).values_list("word_id", flat=True))
+        untouched = list(
+            Word.objects.select_related("topic")
+            .exclude(id__in=studied_ids)
+            .order_by("topic__order", "?")
+        )
+        # Pega 1 de cada tópico até completar
+        added_topics = set(seen_topics)
+        for w in untouched:
+            if len(picked_words) >= MIXED_SIZE:
+                break
+            if w.topic_id in added_topics:
+                continue
+            if w.id in seen_word_ids:
+                continue
+            picked_words.append(w)
+            seen_word_ids.add(w.id)
+            added_topics.add(w.topic_id)
+
+    if not picked_words:
+        return render(request, "flashcards/mixed.html", {"empty": True})
+
+    # Shuffle final pra intercalar de vez
+    random.shuffle(picked_words)
+
+    words_json = json.dumps([
+        {
+            "id": w.id,
+            "pt": w.pt,
+            "en": w.en,
+            "has_photo": w.has_photo,
+            "photo_url": w.photo_url,
+            "photo_page": w.photo_page,
+            "photo_credit": w.photo_credit,
+            "photo_variants": w.photo_variants or [],
+            "due": True,
+            "is_leech": False,
+            "last_wrong": "",
+            "distractors": [],
+            "topic_name": w.topic.name,
+        }
+        for w in picked_words
+    ])
+    _bump_streak(request.user)
+    topics_covered = sorted({w.topic.name for w in picked_words})
+    return render(request, "flashcards/mixed.html", {
+        "words_json": words_json,
+        "total": len(picked_words),
+        "topic_has_photo": any(w.has_photo for w in picked_words),
+        "topics_covered": topics_covered,
     })
 
 

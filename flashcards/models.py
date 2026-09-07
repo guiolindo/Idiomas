@@ -43,6 +43,19 @@ class Word(models.Model):
     # Alternativas de foto pra evitar mostrar sempre a mesma imagem. Formato:
     # [{"url": "...", "page": "...", "credit": "..."}, ...]
     photo_variants = models.JSONField("outras fotos disponíveis", default=list, blank=True)
+    # Banda de frequência da palavra no inglês real (COCA/BNC):
+    #   1 = top 500 (95% de cobertura de fala informal)
+    #   2 = top 501-1500 (~85% cobertura escrita)
+    #   3 = top 1501-3000 (~90% cobertura escrita)
+    #   0 = fora das 3000 mais frequentes (vocabulário especializado)
+    # A ideia é substituir "nível A1 por número de palavras dominadas"
+    # (que a revisão de SLA chamou de "ilusão de progresso — mesma XP do
+    # Duolingo") por métrica honesta: "78% das top-500". Popular via
+    # management command com a lista de referência.
+    frequency_band = models.PositiveSmallIntegerField(
+        "banda de frequência", default=0, db_index=True,
+        help_text="1=top-500, 2=top-1500, 3=top-3000, 0=fora"
+    )
 
     class Meta:
         ordering = ["order", "id"]

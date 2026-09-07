@@ -110,10 +110,11 @@ class ProgressTests(TestCase):
     def test_home_counts_mastered_words(self):
         Progress.objects.create(user=self.user, word=self.word, level=SRS_MAX_LEVEL)
         resp = self.client.get(reverse("home"))
-        # Home reformatada (v3 — ação primeiro): nível CEFR na meta,
-        # análise IA colapsada. Confirma que a página carrega e mostra
-        # o nível calculado a partir das dominadas.
-        self.assertContains(resp, "nível A1")
+        # Home v4 — nível CEFR-por-vocabulário removido (era ilusão de
+        # progresso, ver revisão SLA). Confirma que a página carrega e
+        # que a linha meta mostra a atividade do dia.
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Recomendado agora")
 
     def test_word_due_when_no_progress_or_overdue(self):
         due_word = self.topic.words.last()

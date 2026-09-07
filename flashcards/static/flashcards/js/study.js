@@ -702,24 +702,45 @@
     const slot = $('#coach-slot');
     if(!slot) return;
     slot.hidden = false;
-    // Skeleton — barras animadas em vez de "pensando…" texto morto. Dá
-    // sinal visual de que algo tá acontecendo sem prometer conteúdo.
     $('#coach-msg').innerHTML = '<span class="coach-skeleton"><span></span><span></span><span></span></span>';
+    // Progressao de estado do skeleton: aos 8s adiciona texto suave,
+    // aos 20s troca por mensagem honesta em vez de barra infinita.
+    // Antes o skeleton ficava pulsando 10-30s sem sinal — pareceu bug.
+    const t1 = setTimeout(() => {
+      const msg = $('#coach-msg');
+      if(msg && msg.querySelector('.coach-skeleton')){
+        msg.insertAdjacentHTML('beforeend',
+          '<div class="coach-wait">o coach está analisando sua rodada…</div>');
+      }
+    }, 8000);
+    const t2 = setTimeout(() => {
+      const msg = $('#coach-msg');
+      if(msg){
+        msg.innerHTML = '<span class="coach-slow">Sua análise leva mais alguns segundos e aparece na home quando ficar pronta. Pode fechar aqui.</span>';
+      }
+    }, 20000);
+    // Timeout total: 40s. Depois disso, some com o painel (a IA vai
+    // atualizar a analise da home quando conseguir, isso e mais util
+    // que ficar segurando o aluno na tela).
+    const controller = new AbortController();
+    const abort = setTimeout(() => controller.abort(), 40000);
     try{
       const res = await fetch(window.COACH_URL, {
         method: 'POST',
         headers: {'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/json'},
         body: JSON.stringify({topic: window.TOPIC_NAME, mode: STUDY_MODE, answers: st.sessionAnswers}),
+        signal: controller.signal,
       });
       const json = await res.json();
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(abort);
       if(!json.enabled || !json.message){
-        // Sem chave configurada, ou IA respondeu vazio/erro — melhor
-        // sumir com o painel do que mostrar "sem comentário".
         slot.hidden = true;
         return;
       }
       $('#coach-msg').textContent = json.message;
     }catch(_){
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(abort);
+      // Falha silenciosa — a analise atualizada estara na home.
       slot.hidden = true;
     }
   }

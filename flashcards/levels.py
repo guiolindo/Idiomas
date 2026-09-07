@@ -29,6 +29,53 @@ LEVELS = [
 ]
 
 
+def compute_coverage(user, srs_max_level: int) -> dict:
+    """Métrica pedagogicamente honesta: cobertura por banda de frequência.
+
+    Substitui o "nível A1 por número de palavras dominadas" (que a revisão
+    de SLA chamou de ilusão de progresso — mesma XP do Duolingo).
+
+    Retorna dict com:
+      - top500_pct: % das top-500 do inglês real que o aluno domina
+      - top500_mastered / top500_total
+      - reading_coverage_estimate: estimativa de cobertura textual real
+      - level_label: rótulo qualitativo derivado da cobertura das top-500
+
+    Interpretação (Nation 2013):
+      - top-500 → ~85% de cobertura de fala informal
+      - top-1500 → ~95% de fala + ~85% de escrita
+      - top-3000 → ~95% de leitura informal, ~90% escrita
+    """
+    from .models import Word, Progress
+    top500_total = Word.objects.filter(frequency_band=1).count()
+    top500_mastered = Progress.objects.filter(
+        user=user, word__frequency_band=1, level__gte=srs_max_level,
+    ).count()
+    top500_pct = round(top500_mastered / top500_total * 100) if top500_total else 0
+
+    # Estimativa GROSSEIRA de cobertura textual: se domina X% das top-500,
+    # entende cerca de X% * 0.85 dos tokens de fala informal (Nation 2013).
+    # Não é medida científica — só um número honesto pra dar noção.
+    reading_coverage_estimate = round(top500_pct * 0.85)
+
+    if top500_pct < 20:
+        label = "Início — construindo base"
+    elif top500_pct < 50:
+        label = "Base parcial"
+    elif top500_pct < 80:
+        label = "Base sólida das mais frequentes"
+    else:
+        label = "Base completa das 500 mais frequentes"
+
+    return {
+        "top500_pct": top500_pct,
+        "top500_mastered": top500_mastered,
+        "top500_total": top500_total,
+        "reading_coverage_estimate": reading_coverage_estimate,
+        "level_label": label,
+    }
+
+
 def compute_level(mastered_count: int) -> dict:
     """Devolve descritor completo do nível atual + progresso pro próximo."""
     mastered_count = max(0, int(mastered_count or 0))

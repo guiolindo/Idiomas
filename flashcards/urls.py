@@ -11,6 +11,7 @@ urlpatterns = [
     path("topico/<slug:slug>/", views.topic_detail, name="topic_detail"),
     path("estudar/<slug:slug>/", views.study, name="study"),
     path("desafio/", views.challenge, name="challenge"),
+    path("misturar/", views.mixed, name="mixed"),
     path("travadas/", views.leech_list, name="leech_list"),
     path("ajuda/", views.help_page, name="help"),
     path("sobre/", views.about_page, name="about"),

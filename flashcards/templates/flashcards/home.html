@@ -15,14 +15,41 @@
       <span class="dot">·</span>
       <span>{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>
     {% endif %}
-    <span class="dot">·</span>
-    <span>nível {{ level.code }}</span>
+    {% if coverage.top500_total %}
+      <span class="dot">·</span>
+      <span title="Nível informal, baseado nas 500 palavras mais frequentes do inglês real (COCA/BNC)">
+        {{ coverage.top500_pct }}% das <b>500 mais frequentes</b>
+      </span>
+    {% endif %}
     {% if profile.streak_count %}
       <span class="dot">·</span>
       <span>{{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} seguido{{ profile.streak_count|pluralize }}</span>
     {% endif %}
   </p>
 </header>
+
+{# ============ Nível baseado em ESTUDO REAL — cobertura por banda ============ #}
+{% if coverage.top500_total %}
+<section class="coverage-card">
+  <div class="cov-head">
+    <div class="cov-label">Seu nível — <b>{{ coverage.level_label }}</b></div>
+    <a href="{% url 'help' %}#nivel" class="cov-explain">como calculamos?</a>
+  </div>
+  <div class="cov-bar-wrap">
+    <div class="cov-bar"><div class="cov-fill" style="width:{{ coverage.top500_pct }}%"></div></div>
+    <div class="cov-numbers">
+      <span><b>{{ coverage.top500_mastered }}</b> de {{ coverage.top500_total }} palavras top-500 dominadas</span>
+      <span class="cov-pct">{{ coverage.top500_pct }}%</span>
+    </div>
+  </div>
+  <p class="cov-hint">
+    As 500 palavras mais frequentes do inglês cobrem ~85% da fala cotidiana informal (Nation 2013).
+    {% if coverage.reading_coverage_estimate >= 20 %}
+      Você entende cerca de <b>{{ coverage.reading_coverage_estimate }}%</b> dos tokens de uma conversa real com o vocabulário dominado até aqui.
+    {% endif %}
+  </p>
+</section>
+{% endif %}
 
 {# ============ Ação primária — 1 botão grande, gordo, claro ============ #}
 {% if action_topic %}
@@ -73,6 +100,11 @@
       <div class="action-sub">Vê em português, fala em inglês</div>
     </a>
   {% endif %}
+  <a class="action-card action-mixed" href="{% url 'mixed' %}">
+    <div class="action-eyebrow">Extra</div>
+    <div class="action-title">Misturar</div>
+    <div class="action-sub">Palavras de vários tópicos misturadas · afeta suas revisões</div>
+  </a>
   <a class="action-card action-challenge" href="{% url 'challenge' %}">
     <div class="action-eyebrow">Extra</div>
     <div class="action-title">Desafio relâmpago</div>
