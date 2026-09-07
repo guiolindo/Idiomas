@@ -27,12 +27,15 @@
 </div>
 {% endif %}
 
-{% if topic_has_photo %}
 <div class="modebar" role="tablist" aria-label="Modo de estímulo">
   <button data-cue="pt" class="on" role="tab">Palavra em PT</button>
-  <button data-cue="foto" role="tab">Foto</button>
+  {% if topic_has_photo %}<button data-cue="foto" role="tab">Foto</button>{% endif %}
+  <button data-cue="ditado" role="tab" title="O app fala em inglês, você digita o que ouviu">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:4px">
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+    </svg>Ditado
+  </button>
 </div>
-{% endif %}
 
 <div class="card" id="card">
   <div class="leech-badge" id="leech-badge" hidden>⚠︎ palavra que tem te travado — respira e pensa duas vezes</div>
@@ -56,8 +59,21 @@
 </div>
 
 <div class="notebook" id="notebook">
-  <label for="nb-input">Escreva a tradução em inglês</label>
+  <div class="nb-head">
+    <label for="nb-input" id="nb-label">Escreva a tradução em inglês</label>
+    <button type="button" class="voice-toggle" id="voice-toggle" hidden aria-pressed="false" title="Responder falando em vez de digitar">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
+      <span>Falar</span>
+    </button>
+  </div>
   <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
+  <div class="voice-panel" id="voice-panel" hidden>
+    <button type="button" class="mic-btn" id="mic-btn" title="Segure pra falar">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
+    </button>
+    <div class="voice-hint" id="voice-hint">Clique no microfone e diga a palavra em inglês</div>
+    <div class="voice-heard" id="voice-heard"></div>
+  </div>
   <div class="last-wrong" id="last-wrong" hidden></div>
   <div class="verdict" id="verdict"></div>
 </div>

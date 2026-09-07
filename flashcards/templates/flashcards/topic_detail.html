@@ -17,7 +17,20 @@
 </div>
 
 {% if any_due %}
-  <a class="btn primary btn-full" href="{% url 'study' topic.slug %}">Estudar agora ({{ counts.new|add:counts.due }})</a>
+  <div class="time-picker" role="group" aria-label="Quanto tempo você tem">
+    <div class="tp-label">Quanto tempo você tem hoje?</div>
+    <div class="tp-options">
+      <a class="tp-opt" href="{% url 'study' topic.slug %}?tempo=curto">
+        <span class="tp-min">3 min</span><span class="tp-count">5 cartões</span>
+      </a>
+      <a class="tp-opt" href="{% url 'study' topic.slug %}?tempo=medio">
+        <span class="tp-min">10 min</span><span class="tp-count">15 cartões</span>
+      </a>
+      <a class="tp-opt primary" href="{% url 'study' topic.slug %}?tempo=longo">
+        <span class="tp-min">20 min</span><span class="tp-count">até 35 cartões</span>
+      </a>
+    </div>
+  </div>
   {% if counts.learning or counts.mastered %}
     <a class="btn btn-full btn-secondary" href="{% url 'study' topic.slug %}?tudo=1">Praticar tudo ({{ total }})</a>
   {% endif %}

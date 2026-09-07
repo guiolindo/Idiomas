@@ -142,26 +142,13 @@ def home(request):
     overall_pct = round(total_studied / total_words * 100) if total_words else 0
 
     # Coach com IA: análise estruturada em 3 partes (strengths/focus/
-    # recommendation). Regras de quando gerar:
-    #   * na primeira vez que o aluno tem QUALQUER atividade e ainda não
-    #     tem análise → gera imediatamente (boas-vindas concretas).
-    #   * a partir daí, atualiza no máximo 1x por hora de atividade — e
-    #     só se houve atividade nova desde a última análise.
-    # Sem GEMINI/GROQ configuradas, AI_ENABLED = False e o painel some.
+    # recommendation). A home *não* regenera nada — só mostra o que já
+    # foi salvo. A geração acontece no fim da sessão (api_session_coach),
+    # que é o momento em que o aluno acabou de fazer algo e a análise
+    # tem material novo pra referenciar. Antes a home tentava regenerar
+    # a cada 1h aberta — gastava quota, produzia análise "morta" (sem
+    # atividade nova), e ficava desalinhada do momento de estudo.
     ai_analysis = profile.ai_analysis or None
-    if AI_ENABLED and profile.last_activity_at:
-        has_previous = bool(profile.ai_feedback_at)
-        activity_gap_ok = now - profile.last_activity_at >= timedelta(hours=1)
-        activity_is_new = not profile.ai_feedback_at or profile.ai_feedback_at < profile.last_activity_at
-        should_generate = (not has_previous and activity_is_new) or (activity_gap_ok and activity_is_new)
-        if should_generate:
-            result = generate_feedback(request.user)
-            if result:
-                profile.ai_analysis = result
-                profile.ai_feedback = result.get("recommendation") or result.get("message", "")
-                profile.ai_feedback_at = now
-                profile.save(update_fields=["ai_analysis", "ai_feedback", "ai_feedback_at"])
-                ai_analysis = result
 
     # Nível CEFR computado a partir das palavras dominadas (nível 4 no SRS).
     level = compute_level(total_mastered)
@@ -186,6 +173,13 @@ def home(request):
         if top:
             overdue_topic = Topic.objects.get(id=top["word__topic"])
 
+    # Onboarding do dia 1: usuário sem nenhuma palavra estudada vê a home
+    # como um grid vazio sem indicação clara do próximo passo. Sugerimos um
+    # tópico curto pra começar (primeiro na ordem, tipicamente "básico") pra
+    # transformar "abro e não sei onde clicar" em "abro e clico aí".
+    is_new_user = total_studied == 0
+    starter_topic = topics[0] if is_new_user and topics else None
+
     return render(request, "flashcards/home.html", {
         "topic_cards": topic_cards,
         "total_words": total_words,
@@ -203,6 +197,8 @@ def home(request):
         "greeting": _greeting(now),
         "first_name": (request.user.first_name or request.user.email.split("@")[0]).capitalize(),
         "answered_today": answered_today,
+        "is_new_user": is_new_user,
+        "starter_topic": starter_topic,
     })
 
 
@@ -251,14 +247,14 @@ def topic_detail(request, slug):
     })
 
 
-# Máximo de cartões por rodada de estudo (modo normal, respeitando SRS).
-# Sem esse teto, quem passa 5 dias sem entrar volta e encontra 200+
-# vencidas — sessão gigante, o aluno cansa e abandona. O resto fica pra
-# amanhã e não perde nada: são todas revisões atrasadas de qualquer forma,
-# ordenadas por urgência (mais atrasadas + nível mais baixo primeiro).
-# "Praticar tudo" (?tudo=1) ignora esse cap: se o aluno pediu pra revisar
-# o tópico inteiro fora da hora, respeita a vontade dele.
-DAILY_SESSION_CAP = 35
+# Tetos de sessão por escolha de tempo. Adaptação temporal: o aluno diz
+# quanto tempo tem (3, 10 ou 20 min ≈ curto/médio/longo) e o app dimensiona
+# a rodada. Sem essa opção, quem tem 3 minutos livres entra, vê 35 cartões,
+# desiste e não cria hábito. Com ela, "só 3 min hoje" continua contando —
+# é a diferença entre estudar todo dia e estudar quando "sobra tempo".
+# "Praticar tudo" (?tudo=1) ignora completamente esses tetos.
+SESSION_CAPS = {"curto": 5, "medio": 15, "longo": 35}
+DEFAULT_SESSION_LENGTH = "longo"  # sem escolha explícita, mantém o teto antigo
 
 
 @login_required
@@ -296,16 +292,21 @@ def study(request, slug):
             "_priority_level": p.level if p else 0,
         })
 
+    session_length = request.GET.get("tempo", DEFAULT_SESSION_LENGTH)
+    if session_length not in SESSION_CAPS:
+        session_length = DEFAULT_SESSION_LENGTH
+    session_cap = SESSION_CAPS[session_length]
+
     total_due = sum(1 for w in words if w["due"])
     session_capped = False
-    if not practice_all and total_due > DAILY_SESSION_CAP:
+    if not practice_all and total_due > session_cap:
         # Prioriza: mais atrasado primeiro, empate desempatado por menor nível
         # (palavras mais frágeis do SRS antes das quase-dominadas).
         due_sorted = sorted(
             (w for w in words if w["due"]),
             key=lambda w: (w["_priority_next_review"], w["_priority_level"]),
         )
-        keep_ids = {w["id"] for w in due_sorted[:DAILY_SESSION_CAP]}
+        keep_ids = {w["id"] for w in due_sorted[:session_cap]}
         for w in words:
             if w["due"] and w["id"] not in keep_ids:
                 w["due"] = False
@@ -326,7 +327,8 @@ def study(request, slug):
         "practice_all": practice_all,
         "session_capped": session_capped,
         "total_due": total_due,
-        "session_cap": DAILY_SESSION_CAP,
+        "session_cap": session_cap,
+        "session_length": session_length,
     })
 
 
@@ -389,6 +391,18 @@ def api_session_coach(request):
         "topic": str(data.get("topic", ""))[:60],
         "answers": clean_answers,
     })
+    # Também atualiza a análise geral (strengths/focus/recommendation)
+    # aqui, no fim da sessão, em vez de deixar a home regenerar depois
+    # sem contexto novo. Se a chamada falhar, mantém a análise anterior
+    # (não sobrescreve com vazio).
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile:
+        analysis = generate_feedback(request.user)
+        if analysis:
+            profile.ai_analysis = analysis
+            profile.ai_feedback = analysis.get("recommendation") or analysis.get("message", "")
+            profile.ai_feedback_at = timezone.now()
+            profile.save(update_fields=["ai_analysis", "ai_feedback", "ai_feedback_at"])
     if not result:
         return JsonResponse({"enabled": True, "message": ""})
     return JsonResponse({"enabled": True, "message": result["message"]})

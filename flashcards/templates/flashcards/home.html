@@ -82,17 +82,27 @@
     </div>
     {% endif %}
   </div>
-  {% elif not answered_today and total_studied == 0 %}
-  <div class="analysis-card empty">
-    <div class="analysis-label">Análise do seu progresso</div>
-    <p class="analysis-empty">Estude pelo menos uma palavra pra receber sua primeira análise.</p>
-  </div>
+  {% elif total_studied == 0 %}
+  {# usuário novo — o welcome-hero acima já dá o próximo passo, não precisa duplicar #}
   {% else %}
   <div class="analysis-card empty">
     <div class="analysis-label">Análise do seu progresso</div>
-    <p class="analysis-empty">Sua próxima análise fica pronta uma hora depois da sua última sessão.</p>
+    <p class="analysis-empty">Sua próxima análise chega quando você terminar uma rodada de estudo.</p>
   </div>
   {% endif %}
+{% endif %}
+
+{% if is_new_user and starter_topic %}
+<div class="welcome-hero">
+  <div class="wh-label">Bem-vindo</div>
+  <h2>Comece por <b>{{ starter_topic.name }}</b> — 3 minutinhos já valem.</h2>
+  <p>
+    A ideia é simples: você vê uma palavra em português, tenta escrever em inglês, e o app decide quando reforçar. Errar faz parte — quem erra vê a palavra voltar amanhã. Sem pressão.
+  </p>
+  <a class="wh-cta" href="{% url 'study' starter_topic.slug %}?tempo=curto">
+    Começar agora — 5 cartões →
+  </a>
+</div>
 {% endif %}
 
 {% if overdue_count %}

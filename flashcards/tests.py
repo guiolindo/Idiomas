@@ -209,36 +209,61 @@ class LeechTests(TestCase):
         self.assertFalse(p.is_leech)
 
 
-class DailySessionCapTests(TestCase):
-    """Sessão normal (respeitando SRS) tem teto — evita cair de gaveta em
-    quem passa dias sem estudar. 'Praticar tudo' (?tudo=1) ignora o cap."""
+class SessionLengthTests(TestCase):
+    """Adaptação temporal: aluno escolhe curto/medio/longo (5/15/35) na
+    entrada e o cap dimensiona a sessão. 'Praticar tudo' ignora tudo."""
     def setUp(self):
-        # 40 palavras: acima do cap de 35
+        # 40 palavras: acima do maior cap
         words = tuple((f"pt{i}", f"en{i}") for i in range(40))
         self.topic = make_topic(words=words)
         self.user = User.objects.create_user(username="c@t.com", email="c@t.com", password="x1234567")
         self.client.login(username="c@t.com", password="x1234567")
 
-    def test_cap_notice_appears_when_due_over_cap(self):
-        # Nenhum Progress = todas 40 estão "vencidas" (novas)
+    def test_default_uses_long_cap(self):
         resp = self.client.get(reverse("study", args=[self.topic.slug]))
-        self.assertContains(resp, "Rodada de hoje")
-        # confere no JSON serializado: só 35 vêm com due=True
         due_count = resp.content.decode().count('"due": true')
         self.assertEqual(due_count, 35)
 
-    def test_cap_ignored_when_practicing_all(self):
-        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?tudo=1")
+    def test_short_session_uses_five_cards(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?tempo=curto")
+        due_count = resp.content.decode().count('"due": true')
+        self.assertEqual(due_count, 5)
+        self.assertContains(resp, "Rodada de hoje")
+
+    def test_medium_session_uses_fifteen(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?tempo=medio")
+        due_count = resp.content.decode().count('"due": true')
+        self.assertEqual(due_count, 15)
+
+    def test_invalid_tempo_falls_back_to_default(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?tempo=absurdo")
+        due_count = resp.content.decode().count('"due": true')
+        self.assertEqual(due_count, 35)  # default = longo
+
+    def test_practice_all_ignores_time_cap(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?tudo=1&tempo=curto")
         self.assertNotContains(resp, "Rodada de hoje")
         due_count = resp.content.decode().count('"due": true')
         self.assertEqual(due_count, 40)
 
-    def test_no_cap_when_under_threshold(self):
-        # Marca 10 como dominadas: sobram 30 vencidas, abaixo do cap
-        for w in self.topic.words.all()[:10]:
-            Progress.objects.create(
-                user=self.user, word=w, level=SRS_MAX_LEVEL,
-                next_review=timezone.now() + timedelta(days=30),
-            )
-        resp = self.client.get(reverse("study", args=[self.topic.slug]))
-        self.assertNotContains(resp, "Rodada de hoje")
+
+class OnboardingTests(TestCase):
+    """Home do usuário sem nenhuma palavra estudada mostra hero de boas-vindas
+    apontando pro primeiro tópico. Some depois da primeira palavra."""
+    def setUp(self):
+        make_topic(slug="basico", name="Básico", words=(("olá", "hello"),))
+        make_topic(slug="frutas", name="Frutas", words=(("maçã", "apple"),))
+        self.user = User.objects.create_user(username="new@t.com", email="new@t.com", password="x1234567")
+        Profile.objects.create(user=self.user)
+        self.client.login(username="new@t.com", password="x1234567")
+
+    def test_new_user_sees_welcome_hero(self):
+        resp = self.client.get(reverse("home"))
+        self.assertContains(resp, "Bem-vindo")
+        self.assertContains(resp, "Comece por")
+
+    def test_hero_disappears_after_first_word(self):
+        word = Topic.objects.get(slug="basico").words.first()
+        Progress.objects.create(user=self.user, word=word)
+        resp = self.client.get(reverse("home"))
+        self.assertNotContains(resp, "Comece por")

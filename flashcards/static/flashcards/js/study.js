@@ -39,12 +39,12 @@
   }
 
   const LS_KEY = 'idiomas.study-prefs';
-  let prefs = { cue:'pt', order:'rand' };
+  let prefs = { cue:'pt', order:'rand', voice:false };
   try{ Object.assign(prefs, JSON.parse(localStorage.getItem(LS_KEY)||'{}')); }catch(_){}
   // este tópico pode não ter nenhuma palavra fotografável (ex: preposições) —
   // nesse caso a aba "Foto" nem existe no HTML, então ignoramos qualquer
   // preferência antiga de outro tópico que ainda apontasse pra ela.
-  if(!window.TOPIC_HAS_PHOTO) prefs.cue = 'pt';
+  if(!window.TOPIC_HAS_PHOTO && prefs.cue === 'foto') prefs.cue = 'pt';
   function savePrefs(){ localStorage.setItem(LS_KEY, JSON.stringify(prefs)); }
 
   const ALL_WORDS = window.WORDS || []; // [{id,pt,en,has_photo,photo_url,photo_page,due,last_wrong}]
@@ -78,7 +78,22 @@
     $('#photo-wrap').classList.remove('on');
     const cueEl = $('#cue');
     cueEl.textContent = w.pt;
+    cueEl.classList.remove('dictation');
     $('#cue-label').textContent = 'Traduza';
+  }
+  // Ditado: o app fala a palavra em inglês (sem mostrar). O aluno digita
+  // o que ouviu. Treina listening que o modo visual não treina. Reaproveita
+  // o speak() e a tolerância de gralhas — nenhuma infra nova.
+  function showAsDictation(w){
+    $('#photo-wrap').classList.remove('on');
+    const cueEl = $('#cue');
+    cueEl.innerHTML = '<button type="button" class="dictation-btn" id="dictation-play" aria-label="Ouvir">🔊 Ouvir de novo</button>';
+    cueEl.classList.add('dictation');
+    $('#cue-label').textContent = 'Escute e escreva o que ouviu';
+    const play = () => speak(w.en);
+    // Toca 1 vez automático e permite repetir
+    setTimeout(play, 250);
+    $('#dictation-play')?.addEventListener('click', play);
   }
   function paintPhoto(url, title, page, credit){
     const img = $('#photo-img'), creditEl = $('#photo-credit');
@@ -131,7 +146,8 @@
     $('#study-progress').textContent = `${Math.min(st.i+1,total)}/${total}`;
     if(st.i >= total){ renderDone(); return; }
     const w = currentWord();
-    if(prefs.cue==='foto' && w.has_photo) showPhoto(w);
+    if(prefs.cue==='ditado') showAsDictation(w);
+    else if(prefs.cue==='foto' && w.has_photo) showPhoto(w);
     else showAsText(w);
 
     $('#answer-en').textContent = w.en;
@@ -156,7 +172,14 @@
     $('#nb-input').value = '';
     $('#verdict').textContent = '';
     $('#verdict').className = 'verdict';
-    setTimeout(()=>$('#nb-input').focus(), 60);
+    // Se está no modo voz, o input está oculto — não focar (evita teclado
+    // subir no mobile). Limpa o painel de voz também.
+    if(prefs.voice){
+      const heard = $('#voice-heard'); if(heard) heard.textContent = '';
+      const hint = $('#voice-hint'); if(hint) hint.textContent = 'Clique no microfone e diga a palavra em inglês';
+    }else{
+      setTimeout(()=>$('#nb-input').focus(), 60);
+    }
 
     renderControls();
   }
@@ -235,6 +258,98 @@
     const btn = $('#tts-btn');
     if(btn) btn.style.display = 'none';
   }
+
+  // ============ Reconhecimento de fala (opt-in) ============
+  // Web Speech API do navegador — zero servidor, zero armazenamento de
+  // áudio. Chrome/Edge suportam bem; Firefox e Safari desktop têm suporte
+  // irregular — nesses o botão nem aparece (feature detection).
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let recognizing = false;
+  const voiceToggle = $('#voice-toggle');
+  const voicePanel = $('#voice-panel');
+  const inputEl = $('#nb-input');
+
+  function applyVoiceMode(){
+    if(!voiceToggle) return;
+    voiceToggle.setAttribute('aria-pressed', prefs.voice ? 'true' : 'false');
+    voiceToggle.classList.toggle('on', prefs.voice);
+    if(prefs.voice){
+      voicePanel.hidden = false;
+      inputEl.hidden = true;
+      $('#nb-label').textContent = 'Fale a tradução em inglês';
+    }else{
+      voicePanel.hidden = true;
+      inputEl.hidden = false;
+      $('#nb-label').textContent = 'Escreva a tradução em inglês';
+      if(recognition && recognizing){ try{ recognition.stop(); }catch(_){} }
+    }
+    updateConferirState();
+  }
+  if(SpeechRec && voiceToggle){
+    voiceToggle.hidden = false;
+    voiceToggle.addEventListener('click', ()=>{
+      prefs.voice = !prefs.voice;
+      savePrefs();
+      applyVoiceMode();
+    });
+    applyVoiceMode();
+  }
+
+  function startRecognition(){
+    if(!SpeechRec) return;
+    if(recognizing) return;
+    if(!recognition){
+      recognition = new SpeechRec();
+      recognition.lang = TARGET_LANG;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 3;
+      recognition.onstart = ()=>{
+        recognizing = true;
+        $('#mic-btn')?.classList.add('rec');
+        $('#voice-hint').textContent = 'ouvindo…';
+      };
+      recognition.onend = ()=>{
+        recognizing = false;
+        $('#mic-btn')?.classList.remove('rec');
+      };
+      recognition.onerror = (ev)=>{
+        recognizing = false;
+        $('#mic-btn')?.classList.remove('rec');
+        const msg = ev.error === 'not-allowed'
+          ? 'permissão de microfone negada'
+          : ev.error === 'no-speech'
+            ? 'não ouvi nada — tente de novo'
+            : 'não deu — tente de novo';
+        $('#voice-hint').textContent = msg;
+      };
+      recognition.onresult = (ev)=>{
+        // Pega a melhor transcrição das alternativas — priorizando o
+        // match mais próximo do que era esperado, se o alvo já é conhecido.
+        const w = currentWord();
+        let best = ev.results[0][0].transcript || '';
+        for(let i=0;i<ev.results[0].length;i++){
+          const alt = ev.results[0][i].transcript;
+          if(matchAnswer(alt, w.en) === 'ok'){ best = alt; break; }
+        }
+        $('#voice-heard').textContent = `"${best}"`;
+        // Coloca no input pra o reveal() e o updateConferirState funcionarem
+        // igual ao fluxo digitado — mesmo caminho de validação.
+        inputEl.value = best;
+        updateConferirState();
+        // Auto-conferir depois de falar (não faz sentido pedir 2 confirmações)
+        setTimeout(()=>reveal(), 100);
+      };
+    }
+    try{
+      recognition.lang = TARGET_LANG;
+      $('#voice-heard').textContent = '';
+      recognition.start();
+    }catch(_){
+      // já rodando — ignora
+    }
+  }
+  $('#mic-btn')?.addEventListener('click', startRecognition);
 
   // O sistema decide o resultado a partir do que foi digitado (recall
   // ativo) OU do botão "Não lembro" (giveup). Nunca revela a resposta
