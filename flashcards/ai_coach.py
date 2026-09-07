@@ -39,11 +39,15 @@ Cada campo é uma frase (máximo duas), curta:
 ou padrão específico ("substantivos concretos", "vocabulário de família"). \
 Se não tiver evidência, seja honesto: "ainda pouco material pra afirmar".
 - "focus": o padrão de erro mais claro — cite palavras ou tipos ("os erros \
-foram grafia de verbos irregulares", "confunde 'much'/'many'"). Se não \
-houver erros no resumo, comente o gap de cobertura.
+foram grafia de verbos irregulares", "confunde 'much'/'many'"). Se \
+"palavras_travadas_exemplos" tiver algo, PRIORIZE citar essas palavras \
+pelo nome (elas estão travando o aluno em erro repetido — ele precisa \
+saber). Se não houver erros no resumo, comente o gap de cobertura.
 - "recommendation": UMA ação concreta pra próxima sessão — tópico \
 específico, tipo de exercício, ou uma técnica ("hoje foca só nas 3 \
-vencidas de <tópico>", "revise verbos antes de novos substantivos").
+vencidas de <tópico>", "revise verbos antes de novos substantivos"). Se \
+houver palavras travadas, uma tática específica pra elas (ex: "escreva \
+'X' três vezes olhando antes de rodar de novo") ganha prioridade.
 - "focus_topic": id do tópico que ele deveria estudar hoje (ou "").
 
 Resumo do aluno:
@@ -85,6 +89,14 @@ def _build_summary(user):
     ][:15]
     overdue = sum(1 for p in rows if p.next_review <= now)
     topics_touched = sorted({p.word.topic.name for p in rows})
+    # Palavras travadas (3+ erros seguidos). O aluno sozinho pode não notar
+    # o padrão; o coach cita nominalmente pra tirar da zona cega.
+    leech_qs = all_progress.filter(is_leech=True).order_by("-consecutive_errors", "-updated_at")
+    leech_total = leech_qs.count()
+    leech_examples = [
+        {"pt": p.word.pt, "en": p.word.en, "topic": p.word.topic.name, "erros_seguidos": p.consecutive_errors}
+        for p in leech_qs[:5]
+    ]
     return {
         "nivel_cefr_atual": level["code"],
         "descritor_nivel": level["label"],
@@ -94,6 +106,8 @@ def _build_summary(user):
         "revisoes_vencidas_agora": overdue,
         "topicos_recentes": topics_touched,
         "ultimos_erros": recent_wrong,
+        "palavras_travadas_total": leech_total,
+        "palavras_travadas_exemplos": leech_examples,
     }
 
 

@@ -357,6 +357,19 @@ footer{
 }
 
 /* Barra de modo (PT/Foto) — tipografia sem "chip-de-app" */
+.cap-notice{
+  background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:4px 10px 10px 4px; padding:10px 14px; margin-bottom:16px;
+  font-size:13px; line-height:1.5; color:var(--ink-2);
+}
+.cap-notice b{ color:var(--ink); font-weight:600; }
+.leech-badge{
+  align-self:flex-start; margin:-8px 0 4px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--wrong); background:transparent;
+  border:1px solid var(--wrong); border-radius:99px;
+  padding:4px 10px; opacity:.85;
+}
 .modebar{ display:flex; gap:0; padding:0; border-bottom:1px solid var(--line); margin-bottom:18px; }
 .modebar button{
   flex:1; appearance:none; background:transparent; border:0;

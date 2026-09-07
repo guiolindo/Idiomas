@@ -164,3 +164,81 @@ class StreakTests(TestCase):
         _bump_streak(self.user)
         profile = Profile.objects.get(user=self.user)
         self.assertEqual(profile.streak_count, 1)
+
+
+class LeechTests(TestCase):
+    """Palavras que o aluno erra 3+ vezes seguidas viram 'leech' — a UI
+    avisa e o coach passa a citá-las nominalmente."""
+    def setUp(self):
+        self.topic = make_topic()
+        self.word = self.topic.words.first()
+        self.user = User.objects.create_user(username="l@t.com", email="l@t.com", password="x1234567")
+
+    def test_consecutive_misses_mark_leech(self):
+        p = Progress.objects.create(user=self.user, word=self.word)
+        for _ in range(Progress.LEECH_THRESHOLD):
+            p.apply_feedback("miss", wrong_answer="err")
+        p.refresh_from_db()
+        self.assertTrue(p.is_leech)
+        self.assertEqual(p.consecutive_errors, Progress.LEECH_THRESHOLD)
+
+    def test_two_misses_not_yet_leech(self):
+        p = Progress.objects.create(user=self.user, word=self.word)
+        p.apply_feedback("miss", wrong_answer="a")
+        p.apply_feedback("miss", wrong_answer="b")
+        p.refresh_from_db()
+        self.assertFalse(p.is_leech)
+
+    def test_soso_resets_streak_but_keeps_leech(self):
+        # "Quase" mostra esforço, não domínio — não deve limpar o rótulo
+        p = Progress.objects.create(
+            user=self.user, word=self.word, consecutive_errors=3, is_leech=True,
+        )
+        p.apply_feedback("soso")
+        p.refresh_from_db()
+        self.assertEqual(p.consecutive_errors, 0)
+        self.assertTrue(p.is_leech)
+
+    def test_know_clears_leech(self):
+        p = Progress.objects.create(
+            user=self.user, word=self.word, consecutive_errors=3, is_leech=True,
+        )
+        p.apply_feedback("know")
+        p.refresh_from_db()
+        self.assertEqual(p.consecutive_errors, 0)
+        self.assertFalse(p.is_leech)
+
+
+class DailySessionCapTests(TestCase):
+    """Sessão normal (respeitando SRS) tem teto — evita cair de gaveta em
+    quem passa dias sem estudar. 'Praticar tudo' (?tudo=1) ignora o cap."""
+    def setUp(self):
+        # 40 palavras: acima do cap de 35
+        words = tuple((f"pt{i}", f"en{i}") for i in range(40))
+        self.topic = make_topic(words=words)
+        self.user = User.objects.create_user(username="c@t.com", email="c@t.com", password="x1234567")
+        self.client.login(username="c@t.com", password="x1234567")
+
+    def test_cap_notice_appears_when_due_over_cap(self):
+        # Nenhum Progress = todas 40 estão "vencidas" (novas)
+        resp = self.client.get(reverse("study", args=[self.topic.slug]))
+        self.assertContains(resp, "Rodada de hoje")
+        # confere no JSON serializado: só 35 vêm com due=True
+        due_count = resp.content.decode().count('"due": true')
+        self.assertEqual(due_count, 35)
+
+    def test_cap_ignored_when_practicing_all(self):
+        resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?tudo=1")
+        self.assertNotContains(resp, "Rodada de hoje")
+        due_count = resp.content.decode().count('"due": true')
+        self.assertEqual(due_count, 40)
+
+    def test_no_cap_when_under_threshold(self):
+        # Marca 10 como dominadas: sobram 30 vencidas, abaixo do cap
+        for w in self.topic.words.all()[:10]:
+            Progress.objects.create(
+                user=self.user, word=w, level=SRS_MAX_LEVEL,
+                next_review=timezone.now() + timedelta(days=30),
+            )
+        resp = self.client.get(reverse("study", args=[self.topic.slug]))
+        self.assertNotContains(resp, "Rodada de hoje")

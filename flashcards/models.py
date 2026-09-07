@@ -64,6 +64,12 @@ class Progress(models.Model):
     next_review = models.DateTimeField(default=timezone.now, db_index=True)
     last_wrong_answer = models.CharField(max_length=100, blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
+    # Leech: palavra que o aluno erra várias vezes seguidas — merece atenção
+    # extra (aviso visual no cartão + o coach de IA fica sabendo pra
+    # comentar sobre ela). Contador zera em qualquer acerto ("Quase" ou
+    # "Sabia"); marca é limpa só num acerto confiante ("Sabia").
+    consecutive_errors = models.PositiveSmallIntegerField(default=0)
+    is_leech = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         unique_together = ("user", "word")
@@ -76,6 +82,11 @@ class Progress(models.Model):
     def mastered(self):
         return self.level >= SRS_MAX_LEVEL
 
+    # Limiar pra considerar uma palavra "travada" (leech). 3 erros seguidos
+    # é forte o suficiente pra não marcar por deslize, e leve o suficiente
+    # pra o aviso aparecer antes do aluno desistir da palavra.
+    LEECH_THRESHOLD = 3
+
     def apply_feedback(self, result: str, wrong_answer: str = ""):
         """result: 'miss' | 'soso' | 'know'"""
         now = timezone.now()
@@ -83,13 +94,21 @@ class Progress(models.Model):
             self.level = 0
             self.next_review = now + timezone.timedelta(days=SRS_INTERVALS_DAYS[0])
             self.last_wrong_answer = wrong_answer[:100]
+            self.consecutive_errors += 1
+            if self.consecutive_errors >= self.LEECH_THRESHOLD:
+                self.is_leech = True
         elif result == "soso":
             self.next_review = now + timezone.timedelta(days=1)
             self.last_wrong_answer = ""
+            self.consecutive_errors = 0
+            # "Quase" zera o streak mas NÃO tira o rótulo de leech — o aluno
+            # ainda não domina confiantemente. Só o "Sabia" limpa.
         else:  # know
             self.level = min(self.level + 1, SRS_MAX_LEVEL)
             self.next_review = now + timezone.timedelta(days=SRS_INTERVALS_DAYS[self.level])
             self.last_wrong_answer = ""
+            self.consecutive_errors = 0
+            self.is_leech = False
         self.save()
 
 

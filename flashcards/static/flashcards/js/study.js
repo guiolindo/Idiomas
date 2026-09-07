@@ -139,6 +139,12 @@
     $('#answer').classList.remove('on');
     st.revealed = false;
 
+    // Palavra travada (leech): 3+ erros seguidos. Aviso pequeno pro aluno
+    // saber que essa é a "vilã" dele e vale gastar um segundo a mais
+    // pensando — sem mudar o fluxo.
+    const leechEl = $('#leech-badge');
+    if(leechEl){ leechEl.hidden = !w.is_leech; }
+
     const lastWrongEl = $('#last-wrong');
     if(w.last_wrong){
       lastWrongEl.hidden = false;

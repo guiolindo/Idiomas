@@ -251,6 +251,16 @@ def topic_detail(request, slug):
     })
 
 
+# Máximo de cartões por rodada de estudo (modo normal, respeitando SRS).
+# Sem esse teto, quem passa 5 dias sem entrar volta e encontra 200+
+# vencidas — sessão gigante, o aluno cansa e abandona. O resto fica pra
+# amanhã e não perde nada: são todas revisões atrasadas de qualquer forma,
+# ordenadas por urgência (mais atrasadas + nível mais baixo primeiro).
+# "Praticar tudo" (?tudo=1) ignora esse cap: se o aluno pediu pra revisar
+# o tópico inteiro fora da hora, respeita a vontade dele.
+DAILY_SESSION_CAP = 35
+
+
 @login_required
 def study(request, slug):
     topic = get_object_or_404(Topic, slug=slug)
@@ -279,8 +289,33 @@ def study(request, slug):
             "photo_credit": w.photo_credit,
             "photo_variants": w.photo_variants or [],
             "due": due,
+            "is_leech": bool(p and p.is_leech),
             "last_wrong": p.last_wrong_answer if p else "",
+            # campos internos pro cap (não vão pro JS)
+            "_priority_next_review": p.next_review if p else now,
+            "_priority_level": p.level if p else 0,
         })
+
+    total_due = sum(1 for w in words if w["due"])
+    session_capped = False
+    if not practice_all and total_due > DAILY_SESSION_CAP:
+        # Prioriza: mais atrasado primeiro, empate desempatado por menor nível
+        # (palavras mais frágeis do SRS antes das quase-dominadas).
+        due_sorted = sorted(
+            (w for w in words if w["due"]),
+            key=lambda w: (w["_priority_next_review"], w["_priority_level"]),
+        )
+        keep_ids = {w["id"] for w in due_sorted[:DAILY_SESSION_CAP]}
+        for w in words:
+            if w["due"] and w["id"] not in keep_ids:
+                w["due"] = False
+        session_capped = True
+
+    # limpa campos internos antes de serializar
+    for w in words:
+        w.pop("_priority_next_review", None)
+        w.pop("_priority_level", None)
+
     _bump_streak(request.user)
     return render(request, "flashcards/study.html", {
         "topic": topic,
@@ -289,6 +324,9 @@ def study(request, slug):
         "topic_has_photo": any(w["has_photo"] for w in words),
         "any_due": any(w["due"] for w in words),
         "practice_all": practice_all,
+        "session_capped": session_capped,
+        "total_due": total_due,
+        "session_cap": DAILY_SESSION_CAP,
     })
 
 
