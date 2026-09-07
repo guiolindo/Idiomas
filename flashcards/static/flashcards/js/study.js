@@ -421,7 +421,7 @@
     const pct = total ? Math.round(rightCount / total * 100) : 0;
     const wrap = $('#card');
     wrap.innerHTML = `
-      <div class="done">
+      <div class="round-done">
         <div class="done-label">Rodada completa</div>
         <div class="done-score"><b>${rightCount}</b> <span class="done-slash">/</span> ${total} <span class="done-pct">${pct}%</span></div>
         <p class="done-sub">${missedCount ? `${missedCount} ${missedCount===1?'palavra pra revisar':'palavras pra revisar'} agora.` : 'Perfeito. Volte amanhã pra próxima rodada.'}</p>

@@ -375,7 +375,10 @@ footer{
 .back{ font-family:var(--mono); font-size:11px; color:var(--ink-2); text-decoration:none; padding:6px 8px 6px 4px; border-radius:8px; letter-spacing:.1em; text-transform:uppercase; }
 .back:hover{ color:var(--ink) }
 .study-head .title{ font-family:var(--display); font-weight:400; font-size:22px; letter-spacing:-.01em; text-align:center; flex:1; }
-.progress{
+/* Contador "1/5" no header da tela de estudo. Renomeado de .progress
+   pra .study-count porque .tile.progress (card iniciado) herdava o
+   text-align:right e empurrava o título pra direita no grid da home. */
+.study-count{
   font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.1em;
   min-width:52px; text-align:right; padding:4px 8px; background:var(--paper); border:1px solid var(--line); border-radius:6px;
 }
@@ -629,46 +632,49 @@ footer{
 .btn.gold{ background:var(--gold-soft); color:var(--gold); border-color:transparent }
 .btn.miss{ background:var(--wrong-soft); color:var(--wrong); border-color:transparent }
 
-.done{
+/* Tela de fim de rodada (renomeada de .done pra evitar colisão com
+   .tile.done — antes o text-align:center e o padding pesado desta regra
+   vazavam pros cards dominados no grid da home). */
+.round-done{
   text-align:center; padding:52px 24px 44px; background:var(--paper);
   border:1px solid var(--line); border-radius:6px 16px 16px 6px;
   box-shadow:var(--shadow-card);
   position:relative;
 }
-.done::before{
+.round-done::before{
   content:""; position:absolute; left:22px; top:0; bottom:0; width:1px;
   background:var(--margin); opacity:.55;
 }
-.done .done-label{
+.round-done .done-label{
   font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-3);
   margin-bottom:14px;
 }
-.done .done-score{
+.round-done .done-score{
   font-family:var(--display); font-weight:400; font-size:64px; line-height:1;
   letter-spacing:-.02em; color:var(--ink);
 }
-.done .done-score b{ font-weight:400; color:var(--accent); }
-.done .done-score .done-slash{ color:var(--ink-3); font-size:44px; margin:0 4px; }
-.done .done-score .done-pct{
+.round-done .done-score b{ font-weight:400; color:var(--accent); }
+.round-done .done-score .done-slash{ color:var(--ink-3); font-size:44px; margin:0 4px; }
+.round-done .done-score .done-pct{
   display:block; font-family:var(--mono); font-size:12px; letter-spacing:.14em;
   color:var(--ink-2); margin-top:12px; text-transform:uppercase;
 }
-.done h3{ font-family:var(--display); font-weight:400; font-size:30px; letter-spacing:-.01em; margin:8px 0 10px; }
-.done .done-sub{ color:var(--ink-2); margin:16px 0 0; font-size:15px; font-family:var(--serif); font-style:italic; }
-.done p{ color:var(--ink-2); margin:0 0 14px; font-size:15px; }
-.done .coach-slot{
+.round-done h3{ font-family:var(--display); font-weight:400; font-size:30px; letter-spacing:-.01em; margin:8px 0 10px; }
+.round-done .done-sub{ color:var(--ink-2); margin:16px 0 0; font-size:15px; font-family:var(--serif); font-style:italic; }
+.round-done p{ color:var(--ink-2); margin:0 0 14px; font-size:15px; }
+.round-done .coach-slot{
   margin-top:26px; padding:16px 18px 14px 22px; text-align:left;
   border-top:1px dashed var(--line-2); position:relative;
 }
-.done .coach-slot::before{
+.round-done .coach-slot::before{
   content:""; position:absolute; left:22px; top:16px; width:3px; height:calc(100% - 30px);
   background:var(--gold); border-radius:2px;
 }
-.done .coach-label{
+.round-done .coach-label{
   font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
   color:var(--gold); margin-bottom:6px;
 }
-.done .coach-msg{
+.round-done .coach-msg{
   margin:0; font-family:var(--display); font-size:18px; font-style:italic;
   color:var(--ink); line-height:1.4; letter-spacing:-.005em;
 }

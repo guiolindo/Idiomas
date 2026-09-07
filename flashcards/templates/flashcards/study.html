@@ -6,11 +6,11 @@
 <div class="study-head">
   <a class="back" href="{% url 'home' %}">← Tópicos</a>
   <div class="title">{{ topic.name }}</div>
-  <div class="progress" id="study-progress">0/0</div>
+  <div class="study-count" id="study-progress">0/0</div>
 </div>
 
 {% if not any_due %}
-<div class="done">
+<div class="round-done">
   <div class="done-label">Tudo em dia</div>
   <h3>Nada vencido neste tópico agora.</h3>
   <p class="done-sub">Volte mais tarde ou pratique tudo mesmo assim — não penaliza seu progresso.</p>
