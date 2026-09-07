@@ -131,7 +131,8 @@ class ProgressTests(TestCase):
             next_review=timezone.now() - timedelta(days=1),
         )
         resp = self.client.get(reverse("home"))
-        self.assertContains(resp, "revisão vencida")
+        # Tagline agora fala "palavra vencida"; hero é "Recomendado agora"
+        self.assertContains(resp, "palavra vencida")
 
 
 class StreakTests(TestCase):

@@ -3,53 +3,67 @@
 {% block title %}Caderno de Idiomas{% endblock %}
 {% block content %}
 
-{# ============ Abertura: saudação + linha meta ============ #}
+{# ============ Cabeçalho editorial ============ #}
+<div class="editorial-mast">
+  <span class="mast-kicker">Seu caderno — {% now "l, j \d\e F" %}</span>
+  <span class="mast-rule"></span>
+  {% if profile.streak_count %}
+    <span class="mast-streak" title="Dias seguidos estudando">{{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} seguido{{ profile.streak_count|pluralize }}</span>
+  {% endif %}
+</div>
+
 <header class="home-open">
   <h1 class="home-greet">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</h1>
-  <p class="home-meta">
-    <span>{% now "l, j \d\e F" %}</span>
-    {% if overdue_count %}
-      <span class="dot">·</span>
-      <span class="meta-alert">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</span>
-    {% elif answered_today %}
-      <span class="dot">·</span>
-      <span>{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>
-    {% endif %}
-    {% if coverage.top500_total %}
-      <span class="dot">·</span>
-      <span title="Nível informal, baseado nas 500 palavras mais frequentes do inglês real (COCA/BNC)">
-        {{ coverage.top500_pct }}% das <b>500 mais frequentes</b>
-      </span>
-    {% endif %}
-    {% if profile.streak_count %}
-      <span class="dot">·</span>
-      <span>{{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} seguido{{ profile.streak_count|pluralize }}</span>
-    {% endif %}
-  </p>
+  {% if overdue_count %}
+    <p class="home-tagline"><span class="tagline-alert">{{ overdue_count }} {{ overdue_count|pluralize:"palavra vencida,palavras vencidas" }} te esperam.</span> Volta na sua última leva antes de avançar.</p>
+  {% elif answered_today %}
+    <p class="home-tagline">Hoje você já viu <b>{{ answered_today }}</b> {{ answered_today|pluralize:"palavra,palavras" }}. Bora fechar mais uma rodada.</p>
+  {% elif is_new_user %}
+    <p class="home-tagline">Você tá começando. Três minutinhos já valem — a memória se firma no ritmo, não no volume.</p>
+  {% else %}
+    <p class="home-tagline">Um bom dia pra estudar mais um pouco.</p>
+  {% endif %}
 </header>
 
-{# ============ Nível baseado em ESTUDO REAL — cobertura por banda ============ #}
+{# ============ Progresso em números-chave + barra por banda ============ #}
 {% if coverage.top500_total %}
-<section class="coverage-card">
-  <div class="cov-head">
-    <div class="cov-label">Seu nível — <b>{{ coverage.level_label }}</b></div>
-    <a href="{% url 'help' %}#nivel" class="cov-explain">como calculamos?</a>
+<section class="progress-hero">
+  <div class="ph-figures">
+    <div class="ph-fig">
+      <div class="ph-num">{{ coverage.top500_pct }}<span class="ph-unit">%</span></div>
+      <div class="ph-lbl">das 500 palavras<br>mais usadas em inglês</div>
+    </div>
+    <div class="ph-fig">
+      <div class="ph-num">{{ coverage.top500_mastered }}</div>
+      <div class="ph-lbl">palavras da base<br>já dominadas</div>
+    </div>
+    {% if coverage.reading_coverage_estimate >= 10 %}
+    <div class="ph-fig">
+      <div class="ph-num">~{{ coverage.reading_coverage_estimate }}<span class="ph-unit">%</span></div>
+      <div class="ph-lbl">da fala comum<br>você já entende</div>
+    </div>
+    {% endif %}
   </div>
-  <div class="cov-bar-wrap">
-    <div class="cov-bar"><div class="cov-fill" style="width:{{ coverage.top500_pct }}%"></div></div>
-    <div class="cov-numbers">
-      <span><b>{{ coverage.top500_mastered }}</b> de {{ coverage.top500_total }} palavras top-500 dominadas</span>
-      <span class="cov-pct">{{ coverage.top500_pct }}%</span>
+  <div class="ph-bar-wrap">
+    <div class="ph-bar-label">
+      <span><b>{{ coverage.level_label }}</b></span>
+      <a href="{% url 'help' %}#nivel" class="ph-explain">como isso é calculado?</a>
+    </div>
+    {% comment %}Barra empilhada por banda: só a top-500 tá populada,
+    mostramos as próximas metas em cinza pra dar sensação de trilha.{% endcomment %}
+    <div class="ph-bar">
+      <div class="ph-fill" style="width:{{ coverage.top500_pct }}%" title="{{ coverage.top500_mastered }} / {{ coverage.top500_total }}"></div>
+    </div>
+    <div class="ph-bands">
+      <span class="ph-band active">Top 500 — base essencial</span>
+      <span class="ph-band">Top 1500 — conversação</span>
+      <span class="ph-band">Top 3000 — leitura</span>
     </div>
   </div>
-  <p class="cov-hint">
-    As 500 palavras mais usadas no inglês do dia a dia representam cerca de <b>85% do que é falado</b>. Aprender essas primeiro é o caminho mais rápido pra entender conversas reais.
-    {% if coverage.reading_coverage_estimate >= 20 %}
-      Com o que você já domina, entende aproximadamente <b>{{ coverage.reading_coverage_estimate }}%</b> das palavras faladas numa conversa comum.
-    {% endif %}
-  </p>
 </section>
 {% endif %}
+
+<div class="section-rule"><span>o que estudar agora</span></div>
 
 {# ============ Ação primária — 1 botão grande, gordo, claro ============ #}
 {% if action_topic %}
@@ -118,6 +132,8 @@
     </a>
   {% endif %}
 </div>
+
+<div class="section-rule"><span>notas do dia</span></div>
 
 {# ============ Palavra do dia — linha itálica pequena ============ #}
 {% if word_of_day and not is_new_user %}

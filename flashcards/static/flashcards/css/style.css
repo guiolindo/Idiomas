@@ -1205,26 +1205,136 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
    colapsado — quem quer explorar abre; quem quer estudar
    entra por um dos cartões grandes.
    ============================================================ */
+/* Cabeçalho editorial — kicker "Seu caderno · 7 de Setembro" com filete
+   vermelho de margem, streak à direita. Dá peso de "publicação real". */
+.editorial-mast{
+  display:flex; align-items:center; gap:12px;
+  margin:8px 0 24px; padding-bottom:14px;
+  border-bottom:1px solid var(--line);
+  position:relative;
+}
+.editorial-mast::before{
+  content:""; position:absolute; left:0; bottom:-1px; width:60px; height:2px;
+  background:var(--margin);
+}
+.mast-kicker{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--graphite);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.mast-rule{
+  flex:1; height:1px; background:linear-gradient(90deg, var(--line-2), transparent);
+}
+.mast-streak{
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--gold-ink); padding:3px 10px;
+  border:1px solid var(--gold); border-radius:99px;
+  background:var(--gold-soft);
+}
+
 .home-open{
-  margin:0 0 22px;
+  margin:0 0 28px;
 }
 .home-greet{
-  font-family:var(--display); font-weight:400; font-size:40px; line-height:1.1;
-  letter-spacing:-.015em; color:var(--ink); margin:0 0 8px;
+  font-family:var(--display); font-weight:400; font-size:48px; line-height:1.05;
+  letter-spacing:-.02em; color:var(--ink); margin:0 0 10px;
   text-wrap:balance;
+  font-variation-settings: "opsz" 144, "SOFT" 30;
 }
 .home-greet .accent{ font-style:italic; color:var(--accent); }
-.home-meta{
-  font-family:var(--mono); font-size:12px; letter-spacing:.02em;
-  color:var(--graphite); margin:0 0 16px; line-height:1.6;
-  display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px;
+.home-tagline{
+  font-family:var(--serif); font-size:17px; line-height:1.5;
+  color:var(--ink-2); margin:0; max-width:52ch;
 }
-.home-meta .dot{ color:var(--line-2); }
-.home-meta .meta-alert{
-  color:var(--wrong); text-decoration:underline; text-underline-offset:3px;
-  text-decoration-thickness:1px;
+.home-tagline b{ color:var(--ink); font-weight:600; }
+.home-tagline .tagline-alert{ color:var(--wrong); font-weight:500; }
+
+/* Divisor editorial entre seções com legenda em mono */
+.section-rule{
+  display:flex; align-items:center; gap:14px;
+  margin:32px 0 20px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--graphite);
 }
-.home-meta .meta-alert:hover{ color:var(--wrong); text-decoration-thickness:2px; }
+.section-rule::before, .section-rule::after{
+  content:""; flex:1; height:1px; background:var(--line);
+}
+.section-rule::before{ background:linear-gradient(90deg, transparent, var(--line-2)); }
+.section-rule::after{ background:linear-gradient(90deg, var(--line-2), transparent); }
+.section-rule span{ white-space:nowrap; }
+
+/* Progress hero — números grandes tipo revista + barra + bandas */
+.progress-hero{
+  margin:0 0 8px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px 20px 20px 8px;
+  padding:26px 28px 26px 34px;
+  position:relative;
+  box-shadow:var(--shadow-card);
+}
+.progress-hero::before{
+  content:""; position:absolute; left:14px; top:22px; bottom:22px; width:1.5px;
+  background:var(--margin); opacity:.55;
+}
+.ph-figures{
+  display:flex; flex-wrap:wrap; gap:24px 40px;
+  padding-bottom:20px; margin-bottom:20px;
+  border-bottom:1px dashed var(--line-2);
+}
+.ph-fig{
+  flex:1; min-width:100px;
+}
+.ph-num{
+  font-family:var(--display); font-size:56px; font-weight:400; line-height:1;
+  letter-spacing:-.03em; color:var(--ink);
+  font-variation-settings: "opsz" 144, "SOFT" 30;
+  font-variant-numeric:tabular-nums;
+  margin-bottom:6px;
+}
+.ph-unit{ font-size:32px; color:var(--graphite); letter-spacing:0; }
+.ph-lbl{
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--graphite); line-height:1.4;
+}
+.ph-bar-label{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  flex-wrap:wrap; margin-bottom:8px;
+}
+.ph-bar-label > span{
+  font-family:var(--display); font-size:15px; color:var(--ink);
+}
+.ph-bar-label > span b{ font-weight:500; color:var(--accent); }
+.ph-explain{
+  font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  color:var(--graphite); text-decoration:none;
+}
+.ph-explain:hover{ color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
+.ph-bar{
+  height:8px; border-radius:6px; background:var(--line);
+  overflow:hidden; margin-bottom:10px;
+  box-shadow:inset 0 1px 2px rgba(31,26,16,.08);
+}
+.ph-fill{
+  height:100%; border-radius:6px;
+  background:linear-gradient(90deg, var(--accent), var(--gold));
+  transition:width .6s ease;
+  box-shadow:0 1px 3px rgba(31,49,87,.25);
+}
+.ph-bands{
+  display:flex; gap:6px; flex-wrap:wrap;
+  font-family:var(--mono); font-size:10px; letter-spacing:.06em;
+}
+.ph-band{
+  padding:3px 8px; border-radius:4px;
+  color:var(--graphite); background:var(--paper-2);
+  border:1px solid var(--line);
+}
+.ph-band.active{
+  color:var(--accent); background:var(--accent-soft);
+  border-color:var(--accent);
+  font-weight:500;
+}
 .cta-primary{
   display:inline-block; margin-top:4px;
   background:var(--ink); color:var(--paper);
