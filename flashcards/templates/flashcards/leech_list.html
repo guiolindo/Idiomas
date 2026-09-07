@@ -1,0 +1,46 @@
+{% extends "flashcards/base.html" %}
+{% load idiomas_extras %}
+{% block title %}Palavras travadas · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="study-head">
+  <a class="back" href="{% url 'home' %}">← Tópicos</a>
+  <div class="title">Palavras travadas</div>
+  <div class="progress">{{ total }}</div>
+</div>
+
+{% if total %}
+<p class="leech-intro">
+  Estas são as palavras que você errou <b>3 ou mais vezes seguidas</b>. Elas ficam repetindo no ciclo normal, mas o app avisa quando aparecem. Ver todas de uma vez ajuda a reconhecer o padrão.
+</p>
+
+<ul class="word-list">
+  {% for p in leeches %}
+  <li class="word-row state-due leech-row">
+    <span class="wr-dot"></span>
+    <span class="wr-pt">{{ p.word.pt }}</span>
+    <span class="wr-en-hint">→ {{ p.word.en }}</span>
+    <span class="wr-tag">{{ p.word.topic.name }}</span>
+    <span class="wr-when">{{ p.consecutive_errors }} erros seguidos</span>
+  </li>
+  {% endfor %}
+</ul>
+
+<div class="leech-tips">
+  <b>Dicas pra desbloquear uma palavra travada:</b>
+  <ul>
+    <li>Escreva a palavra três vezes olhando pra ela, antes de tentar de novo</li>
+    <li>Repita em voz alta enquanto digita — ativa outro canal de memória</li>
+    <li>Se tiver foto, olhe pra imagem falando o inglês, sem ver a resposta</li>
+  </ul>
+</div>
+
+{% else %}
+<div class="pending-caught-up">
+  <div class="pcu-line">Nenhuma palavra travada.</div>
+  <div class="pcu-when">Palavras aparecem aqui quando você erra <b>3 vezes seguidas</b>. Continue estudando — se alguma passar do limite, mostra aqui.</div>
+</div>
+<a class="btn primary btn-full" href="{% url 'home' %}" style="margin-top:16px">← Voltar aos tópicos</a>
+{% endif %}
+
+{% endblock %}

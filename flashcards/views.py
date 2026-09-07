@@ -1,4 +1,6 @@
+import hashlib
 import json
+import random
 from datetime import timedelta
 
 from django.contrib import messages
@@ -180,6 +182,16 @@ def home(request):
     is_new_user = total_studied == 0
     starter_topic = topics[0] if is_new_user and topics else None
 
+    # Palavra do dia: 1 palavra sorteada deterministicamente por dia+usuário.
+    # Reforça o ritual de abrir o app (mesmo em dia sem revisão vencida) e
+    # dá exposição casual a palavras que o SRS ainda não tocou. Sem gravar
+    # nada — puro conteúdo, zero fricção.
+    word_of_day = _word_of_the_day(request.user, now)
+
+    # Palavras travadas (leech) — só conta as que estão marcadas. Se houver,
+    # botão discreto na home leva pra dashboard focada.
+    leech_count = Progress.objects.filter(user=request.user, is_leech=True).count()
+
     return render(request, "flashcards/home.html", {
         "topic_cards": topic_cards,
         "total_words": total_words,
@@ -199,6 +211,74 @@ def home(request):
         "answered_today": answered_today,
         "is_new_user": is_new_user,
         "starter_topic": starter_topic,
+        "word_of_day": word_of_day,
+        "leech_count": leech_count,
+    })
+
+
+def _word_of_the_day(user, now):
+    """Sorteio determinístico: (user_id, data) → mesma palavra o dia inteiro,
+    diferente por usuário, muda no dia seguinte. Sem tabela nova, sem
+    migração — só um hash estável."""
+    all_words = list(Word.objects.select_related("topic"))
+    if not all_words:
+        return None
+    key = f"{user.id}:{timezone.localdate(now).isoformat()}"
+    seed = int(hashlib.md5(key.encode()).hexdigest()[:8], 16)
+    rng = random.Random(seed)
+    return rng.choice(all_words)
+
+
+@login_required
+def leech_list(request):
+    """Dashboard das palavras travadas — visão focada nas que erram mais.
+    Serve pra o aluno reconhecer os "vilões" e ter ação direta ("praticar
+    só essas")."""
+    leeches = (
+        Progress.objects.filter(user=request.user, is_leech=True)
+        .select_related("word", "word__topic")
+        .order_by("-consecutive_errors", "-updated_at")
+    )
+    return render(request, "flashcards/leech_list.html", {
+        "leeches": leeches,
+        "total": leeches.count(),
+    })
+
+
+CHALLENGE_SIZE = 12
+
+
+@login_required
+def challenge(request):
+    """Modo desafio: N palavras aleatórias de tópicos variados, misturado
+    fora do fluxo do SRS. Serve pra quebrar rotina e treinar reação — as
+    respostas NÃO afetam next_review/level (sinalizado pelo `challenge_mode`
+    no JSON, o study.js pula o POST de progresso quando ativo). O objetivo
+    é ludicidade e exposição ampla, não spaced repetition."""
+    all_words = list(Word.objects.select_related("topic"))
+    if not all_words:
+        return render(request, "flashcards/challenge.html", {"empty": True})
+    picked = random.sample(all_words, min(CHALLENGE_SIZE, len(all_words)))
+    words_json = json.dumps([
+        {
+            "id": w.id,
+            "pt": w.pt,
+            "en": w.en,
+            "has_photo": w.has_photo,
+            "photo_url": w.photo_url,
+            "photo_page": w.photo_page,
+            "photo_credit": w.photo_credit,
+            "photo_variants": w.photo_variants or [],
+            "due": True,       # todas entram na rodada
+            "is_leech": False,
+            "last_wrong": "",
+        }
+        for w in picked
+    ])
+    return render(request, "flashcards/challenge.html", {
+        "words_json": words_json,
+        "total": len(picked),
+        "topic_has_photo": any(w.has_photo for w in picked),
     })
 
 
@@ -349,6 +429,11 @@ def api_mark_progress(request, word_id):
     result = request.POST.get("result")  # 'miss' | 'soso' | 'know'
     if result not in ("miss", "soso", "know"):
         return JsonResponse({"error": "result inválido"}, status=400)
+    # Modo desafio: o cliente sinaliza que essa rodada não deve mexer no SRS
+    # (é jogo, não estudo). Retornamos ok sem alterar o Progress — o aluno
+    # continua tendo o feedback visual, só que sem consequência.
+    if request.POST.get("mode") == "challenge":
+        return JsonResponse({"ok": True, "challenge": True})
     wrong_answer = request.POST.get("wrong_answer", "")
     word = get_object_or_404(Word, id=word_id)
     progress, _ = Progress.objects.get_or_create(user=request.user, word=word)

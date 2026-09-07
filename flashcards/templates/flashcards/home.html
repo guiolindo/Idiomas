@@ -107,7 +107,7 @@
 
 {% if overdue_count %}
 <a class="continue-banner overdue" href="{% url 'study' overdue_topic.slug %}">
-  <div class="cb-emoji">⏰</div>
+  <div class="cb-mark">!</div>
   <div class="cb-text">
     <div class="cb-label">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</div>
     <div class="cb-title">Revisar {{ overdue_topic.name|lower }} agora</div>
@@ -116,13 +116,57 @@
 </a>
 {% elif continue_topic %}
 <a class="continue-banner" href="{% url 'study' continue_topic.slug %}">
-  <div class="cb-emoji">{{ continue_topic.emoji }}</div>
+  <div class="cb-mark">↻</div>
   <div class="cb-text">
     <div class="cb-label">Continuar estudando</div>
     <div class="cb-title">{{ continue_topic.name }}</div>
   </div>
   <div class="cb-arrow">→</div>
 </a>
+{% endif %}
+
+{# ============ Palavra do dia — ritual de exposição casual ============ #}
+{% if word_of_day and not is_new_user %}
+<div class="wod-card">
+  <div class="wod-side">
+    <div class="wod-label">Palavra do dia</div>
+    <div class="wod-pt">{{ word_of_day.pt }}</div>
+    <div class="wod-en">
+      <span id="wod-en-text">{{ word_of_day.en }}</span>
+      <button class="tts-btn small" id="wod-tts" type="button" title="Ouvir pronúncia" aria-label="Ouvir pronúncia">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+        </svg>
+      </button>
+    </div>
+    <a class="wod-link" href="{% url 'topic_detail' word_of_day.topic.slug %}">{{ word_of_day.topic.name }} →</a>
+  </div>
+  {% if word_of_day.photo_url %}
+  <div class="wod-photo" style="background-image:url('{{ word_of_day.photo_url }}')" aria-label="foto de {{ word_of_day.en }}"></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{# ============ Ações rápidas: desafio + travadas ============ #}
+{% if not is_new_user %}
+<div class="quick-actions">
+  <a class="qa-card" href="{% url 'challenge' %}">
+    <div class="qa-mark">⚡</div>
+    <div class="qa-body">
+      <div class="qa-title">Desafio relâmpago</div>
+      <div class="qa-sub">12 palavras aleatórias · sem afetar suas revisões</div>
+    </div>
+  </a>
+  {% if leech_count %}
+  <a class="qa-card leech" href="{% url 'leech_list' %}">
+    <div class="qa-mark">◉</div>
+    <div class="qa-body">
+      <div class="qa-title">{{ leech_count }} {{ leech_count|pluralize:"palavra travada,palavras travadas" }}</div>
+      <div class="qa-sub">Palavras que você tá errando muito</div>
+    </div>
+  </a>
+  {% endif %}
+</div>
 {% endif %}
 
 <div class="search-row">
@@ -142,9 +186,15 @@
      href="{% url 'topic_detail' tc.topic.slug %}"
      data-name="{{ tc.topic.name|lower }}"
      data-state="{% if tc.done %}done{% elif tc.studied > 0 %}progress{% else %}new{% endif %}">
-    <div class="emoji">{{ tc.topic.emoji }}</div>
+    <div class="tile-head">
+      <div class="tile-num">{{ forloop.counter|stringformat:"02d" }}</div>
+      {% if tc.done %}<div class="tile-check" aria-label="dominada">✓</div>{% endif %}
+    </div>
     <div class="name">{{ tc.topic.name }}</div>
-    <div class="meta"><span>{{ tc.studied }} / {{ tc.total }}</span>{% if tc.known %}<span class="known">{{ tc.known }} ✓</span>{% endif %}</div>
+    <div class="meta">
+      <span>{{ tc.studied }} / {{ tc.total }}</span>
+      {% if tc.known %}<span class="known">{{ tc.known }} dominadas</span>{% endif %}
+    </div>
     <div class="bar"><div class="bar-fill" style="width:{{ tc.pct }}%"></div></div>
   </a>
   {% endfor %}
@@ -154,6 +204,20 @@
 <footer>Sua conta é sua — o progresso fica salvo aqui, não só neste navegador.</footer>
 
 <script>
+  // Palavra do dia: botão de pronúncia via Web Speech API — mesmo mecanismo
+  // do estudo. Falha silenciosa se navegador não suporta.
+  (function(){
+    var btn = document.getElementById('wod-tts');
+    if(!btn || !window.speechSynthesis) return;
+    btn.addEventListener('click', function(){
+      var text = document.getElementById('wod-en-text')?.textContent?.trim();
+      if(!text) return;
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text.replace(/^to /i,''));
+      u.lang = 'en-US'; u.rate = 0.85;
+      speechSynthesis.speak(u);
+    });
+  })();
   document.querySelectorAll('.ring-fill').forEach(function(el){
     var pct = Number(el.dataset.pct||0);
     var circ = 2*Math.PI*27;

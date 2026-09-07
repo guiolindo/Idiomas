@@ -1,0 +1,98 @@
+{% extends "flashcards/base.html" %}
+{% load static %}
+{% block title %}Desafio · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="study-head">
+  <a class="back" href="{% url 'home' %}">← Tópicos</a>
+  <div class="title">Desafio relâmpago</div>
+  <div class="progress" id="study-progress">0/0</div>
+</div>
+
+{% if empty %}
+<div class="done">
+  <div class="done-label">Sem palavras</div>
+  <h3>Cadastre pelo menos uma palavra antes de jogar.</h3>
+</div>
+{% else %}
+
+<div class="challenge-intro">
+  <b>Modo livre</b> — {{ total }} palavras aleatórias de tópicos misturados. As respostas aqui <b>não afetam</b> as suas revisões. Solta a mão.
+</div>
+
+<div class="modebar" role="tablist" aria-label="Modo de estímulo">
+  <button type="button" data-cue="pt" class="on" role="tab">Palavra em PT</button>
+  {% if topic_has_photo %}<button type="button" data-cue="foto" role="tab">Foto</button>{% endif %}
+  <button type="button" data-cue="ditado" role="tab" title="O app fala em inglês, você escreve a tradução em português">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:4px">
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+    </svg>Ditado
+  </button>
+</div>
+
+<div class="card" id="card">
+  <div class="leech-badge" id="leech-badge" hidden></div>
+  <div class="cue-label" id="cue-label">Traduza</div>
+  <div class="cue" id="cue">—</div>
+  <div class="photo-wrap" id="photo-wrap">
+    <img id="photo-img" alt="">
+    <div class="credit" id="photo-credit"></div>
+  </div>
+  <div class="answer" id="answer">
+    <div class="en-row">
+      <div class="en" id="answer-en">—</div>
+      <button class="tts-btn" id="tts-btn" type="button" title="Ouvir pronúncia" aria-label="Ouvir pronúncia">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="pt-sub" id="answer-pt">—</div>
+  </div>
+</div>
+
+<div class="notebook" id="notebook">
+  <div class="nb-head">
+    <label for="nb-input" id="nb-label">Escreva a tradução em inglês</label>
+    <button type="button" class="voice-toggle" id="voice-toggle" hidden aria-pressed="false" title="Responder falando em vez de digitar">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
+      <span>Falar</span>
+    </button>
+  </div>
+  <input id="nb-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="digite e aperte Enter">
+  <div class="voice-panel" id="voice-panel" hidden>
+    <button type="button" class="mic-btn" id="mic-btn" title="Clique pra falar">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M12 14a3 3 0 003-3V5a3 3 0 10-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
+    </button>
+    <div class="voice-hint" id="voice-hint">Clique no microfone e diga a palavra em inglês</div>
+    <div class="voice-heard" id="voice-heard"></div>
+  </div>
+  <div class="last-wrong" id="last-wrong" hidden></div>
+  <div class="verdict" id="verdict"></div>
+</div>
+
+<div class="controls" id="controls">
+  <button class="btn" id="giveup-btn">Não lembro</button>
+  <button class="btn primary" id="reveal-btn" disabled>Conferir <kbd>Enter</kbd></button>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.WORDS = {{ words_json|default:"[]"|safe }};
+  window.TOPIC_HAS_PHOTO = {{ topic_has_photo|yesno:"true,false" }};
+  window.CSRF_TOKEN = "{{ csrf_token }}";
+  window.MARK_URL_BASE = "/api/progresso/";
+  window.IMAGE_URL = "{% url 'api_image' %}";
+  window.HOME_URL = "{% url 'home' %}";
+  window.COACH_URL = "{% url 'api_session_coach' %}";
+  window.TOPIC_NAME = "Desafio relâmpago";
+  window.TARGET_LANG = "en-US";
+  // Sinaliza pro study.js: rodada não afeta o SRS. syncWord manda
+  // "mode=challenge" e o backend ignora a atualização de Progress.
+  window.CHALLENGE_MODE = true;
+</script>
+<script src="{% static 'flashcards/js/study.js' %}"></script>
+{% endblock %}

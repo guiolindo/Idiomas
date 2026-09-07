@@ -404,10 +404,13 @@
     renderControls();
   }
   function syncWord(wordId, result, wrongAnswer){
+    // Modo desafio: manda o mode pro backend, que não altera o SRS.
+    // Ainda registramos pra o coach de sessão poder comentar a rodada.
+    const modeParam = window.CHALLENGE_MODE ? '&mode=challenge' : '';
     return fetch(`${window.MARK_URL_BASE}${wordId}/`, {
       method: 'POST',
       headers: { 'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}`,
+      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}${modeParam}`,
     }).catch(()=>{});
   }
   function next(){ st.i++; st.revealed = false; renderCard(); }

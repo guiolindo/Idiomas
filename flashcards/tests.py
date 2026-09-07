@@ -267,3 +267,82 @@ class OnboardingTests(TestCase):
         Progress.objects.create(user=self.user, word=word)
         resp = self.client.get(reverse("home"))
         self.assertNotContains(resp, "Comece por")
+
+
+class ChallengeTests(TestCase):
+    """Modo desafio: sessão de N palavras aleatórias que NÃO afeta o SRS.
+    Ainda registra pro coach da sessão poder comentar."""
+    def setUp(self):
+        make_topic(slug="a", name="A", words=(("um","one"),("dois","two"),("tres","three")))
+        make_topic(slug="b", name="B", words=(("quatro","four"),("cinco","five")))
+        self.user = User.objects.create_user(username="ch@t.com", email="ch@t.com", password="x1234567")
+        self.client.login(username="ch@t.com", password="x1234567")
+
+    def test_challenge_page_loads_with_shuffled_words(self):
+        resp = self.client.get(reverse("challenge"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "CHALLENGE_MODE = true")
+        self.assertContains(resp, "Modo livre")
+
+    def test_challenge_response_does_not_touch_progress(self):
+        word = Topic.objects.get(slug="a").words.first()
+        self.client.post(
+            reverse("api_mark_progress", args=[word.id]),
+            {"result": "miss", "mode": "challenge"},
+        )
+        # nenhum Progress criado
+        self.assertEqual(Progress.objects.filter(user=self.user).count(), 0)
+
+    def test_normal_response_still_creates_progress(self):
+        # Sem o mode=challenge, comportamento antigo
+        word = Topic.objects.get(slug="a").words.first()
+        self.client.post(
+            reverse("api_mark_progress", args=[word.id]),
+            {"result": "know"},
+        )
+        self.assertEqual(Progress.objects.filter(user=self.user).count(), 1)
+
+
+class LeechListTests(TestCase):
+    def setUp(self):
+        self.topic = make_topic()
+        self.user = User.objects.create_user(username="lp@t.com", email="lp@t.com", password="x1234567")
+        self.client.login(username="lp@t.com", password="x1234567")
+
+    def test_empty_state_when_no_leeches(self):
+        resp = self.client.get(reverse("leech_list"))
+        self.assertContains(resp, "Nenhuma palavra travada")
+
+    def test_leeches_listed_when_present(self):
+        word = self.topic.words.first()
+        Progress.objects.create(
+            user=self.user, word=word,
+            consecutive_errors=4, is_leech=True,
+        )
+        resp = self.client.get(reverse("leech_list"))
+        self.assertContains(resp, word.pt)
+        self.assertContains(resp, word.en)
+        self.assertContains(resp, "4 erros seguidos")
+
+
+class WordOfTheDayTests(TestCase):
+    def setUp(self):
+        make_topic(words=(("um","one"),("dois","two"),("tres","three")))
+        self.user = User.objects.create_user(username="wd@t.com", email="wd@t.com", password="x1234567")
+        Profile.objects.create(user=self.user)
+        # dá pelo menos 1 palavra estudada pro widget aparecer (novo user esconde)
+        Progress.objects.create(user=self.user, word=Topic.objects.first().words.first())
+        self.client.login(username="wd@t.com", password="x1234567")
+
+    def test_home_shows_word_of_day_widget(self):
+        resp = self.client.get(reverse("home"))
+        self.assertContains(resp, "Palavra do dia")
+
+    def test_same_word_returned_within_same_day(self):
+        # Duas chamadas seguidas devolvem a mesma palavra (determinismo)
+        from flashcards.views import _word_of_the_day
+        from django.utils import timezone as tz
+        now = tz.now()
+        w1 = _word_of_the_day(self.user, now)
+        w2 = _word_of_the_day(self.user, now)
+        self.assertEqual(w1.id, w2.id)
