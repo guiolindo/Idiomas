@@ -1520,9 +1520,27 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 
 /* Voz: alternativas do reconhecedor + fallback pra digitação */
 .voice-alts{
-  display:block; margin-top:4px;
+  display:inline-block; margin-top:4px;
   font-family:var(--mono); font-size:11px; color:var(--graphite);
   font-style:italic;
+}
+.voice-heard-main{
+  font-family:var(--display); font-size:22px; color:var(--ink); margin-bottom:6px;
+}
+.asr-ok{
+  display:inline-block; margin-top:6px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--accent);
+}
+.asr-close{
+  display:inline-block; margin-top:6px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--gold-ink);
+}
+.asr-off{
+  display:inline-block; margin-top:6px;
+  font-family:var(--serif); font-size:12.5px; font-style:italic;
+  color:var(--graphite); line-height:1.4; max-width:44ch;
 }
 .fallback-btn{
   appearance:none; background:transparent; border:0; padding:0;
@@ -1530,6 +1548,43 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
   cursor:pointer; font:inherit; font-size:12px;
 }
 .fallback-btn:hover{ color:var(--wrong); }
+
+/* Shadowing self-assessment — o aluno é juiz da própria pronúncia,
+   o ASR só sugere. Três botões grandes, hierarquia clara. */
+.voice-assess{
+  display:flex; flex-direction:column; gap:12px;
+}
+.voice-assess .assess-label{
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--graphite); text-align:center;
+}
+.voice-assess .assess-buttons{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;
+}
+
+/* Modo Compreensão (Ditado múltipla escolha) — 3 opções grandes,
+   feedback imediato (verde correto, vermelho errado). */
+.choice-grid{
+  display:grid; grid-template-columns:1fr; gap:10px;
+}
+.choice-btn{
+  font-family:var(--display); font-size:20px; font-weight:400;
+  padding:18px 16px; letter-spacing:-.005em;
+  transition:background .18s ease, border-color .18s ease, color .18s ease;
+}
+.choice-btn.right{
+  background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
+  animation:choice-pop .3s ease-out;
+}
+.choice-btn.wrong{
+  background:var(--wrong-soft); color:var(--wrong); border-color:var(--wrong);
+}
+.choice-btn:disabled{ cursor:default; }
+@keyframes choice-pop{
+  0%{ transform:scale(.98); }
+  50%{ transform:scale(1.02); }
+  100%{ transform:scale(1); }
+}
 
 /* Reduced motion — desliga tudo */
 @media (prefers-reduced-motion: reduce){

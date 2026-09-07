@@ -455,8 +455,11 @@ class StudyModeTests(TestCase):
 
     def test_mode_ditado(self):
         resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=ditado")
+        # Renomeado pra Compreensão: modo agora é múltipla escolha PT,
+        # não escrever tradução. Value do parâmetro mantém 'ditado' por
+        # compat (mudança só de label).
         self.assertContains(resp, 'STUDY_MODE = "ditado"')
-        self.assertContains(resp, "Modo Ditado")
+        self.assertContains(resp, "Modo Compreensão")
 
     def test_mode_voz(self):
         resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=voz")

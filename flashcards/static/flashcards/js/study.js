@@ -136,12 +136,12 @@
     cueEl.classList.remove('dictation');
     $('#cue-label').textContent = 'Traduza';
   }
-  // Áudio como estímulo — atende dois modos:
-  //   - ditado:      escute e escreva em PORTUGUÊS (compreensão auditiva)
+  // Áudio como estímulo — dois modos possíveis:
+  //   - ditado:      COMPREENSÃO (múltipla escolha PT) — reformulado
+  //                  por recomendação de SLA. Antes pedia pra ESCREVER
+  //                  em PT, virava teste de ortografia PT + tradução,
+  //                  não compreensão auditiva.
   //   - transcricao: escute e escreva em INGLÊS (spelling training)
-  // O cartão é idêntico, muda só o cue-label. A validação (buildDiff,
-  // reveal) usa prefs.cue pra decidir contra qual campo (w.pt/w.en)
-  // comparar.
   function showAsDictation(w){
     $('#photo-wrap').classList.remove('on');
     const cueEl = $('#cue');
@@ -149,10 +149,9 @@
     cueEl.classList.add('dictation');
     const label = prefs.cue === 'transcricao'
       ? 'Escute e escreva o que ouviu em inglês'
-      : 'Escute e escreva em português';
+      : 'Escute e escolha o significado';
     $('#cue-label').textContent = label;
     const play = () => speak(w.en);
-    // Toca 1 vez automático e permite repetir
     setTimeout(play, 250);
     $('#dictation-play')?.addEventListener('click', play);
   }
@@ -257,11 +256,52 @@
   }
   function renderControls(){
     const wrap = $('#controls');
+    // Modo Compreensão (ditado): múltipla escolha, esconde notebook.
+    if(prefs.cue === 'ditado' && !st.revealed){
+      const w = currentWord();
+      const options = shuffled([w.pt, ...(w.distractors || []).slice(0, 2)]);
+      const notebook = $('#notebook');
+      if(notebook) notebook.style.display = 'none';
+      wrap.className = 'controls choice-grid';
+      wrap.innerHTML = options.map((opt, i) =>
+        `<button type="button" class="btn choice-btn" data-choice="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`
+      ).join('');
+      $$('.choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const picked = btn.dataset.choice;
+          const correct = picked === w.pt;
+          // Marca a que foi clicada + destaca a correta se errou
+          $$('.choice-btn').forEach(b => {
+            b.disabled = true;
+            if(b.dataset.choice === w.pt) b.classList.add('right');
+            else if(b === btn && !correct) b.classList.add('wrong');
+          });
+          st.revealed = true;
+          $('#answer').classList.add('on');
+          const el = $('#verdict');
+          const result = correct ? 'know' : 'miss';
+          if(correct){ el.innerHTML = '<span class="verdict-mark ok">✓</span> Certo.'; el.className = 'verdict ok'; }
+          else { el.innerHTML = `<span class="verdict-mark no">✗</span> Era <b>${escapeHtml(w.pt)}</b>.`; el.className = 'verdict no'; }
+          if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
+          st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, answer:picked, result});
+          syncWord(w.id, result, result==='miss' ? picked : '');
+          speak(w.en);
+          setTimeout(() => {
+            wrap.className = 'controls single';
+            wrap.innerHTML = `<button class="btn primary" id="next-btn">Continuar <kbd>Enter</kbd></button>`;
+            $('#next-btn').addEventListener('click', next);
+          }, 900);
+        });
+      });
+      return;
+    }
     if(!st.revealed){
       // Dois caminhos, propositais: "Conferir" (só quando escreveu algo,
       // pra proteger o recall ativo) e "Não lembro" (assume miss sem
       // fingir esforço). Antes o Conferir vazio revelava a resposta —
       // quebra o objetivo do app.
+      // Restaura notebook (caso volta de modo compreensão numa rodada)
+      const nb = $('#notebook'); if(nb) nb.style.display = '';
       wrap.className = 'controls';
       wrap.innerHTML = `
         <button class="btn" id="giveup-btn">Não lembro</button>
@@ -426,38 +466,53 @@
         maybeOfferKeyboardFallback();
       };
       recognition.onresult = (ev)=>{
-        // Passa pelas 8 alternativas do reconhecedor, tenta achar a que
-        // dá match 'ok' com o alvo. Se nenhuma bater 'ok', tenta 'close'
-        // (o matchAnswer tolera pequenas variações). Se nenhuma tolera,
-        // usa a de maior confiança (índice 0) — o reveal vai marcar como
-        // miss/close honestamente.
+        // Voz reformulada como SHADOWING (não mais juiz binário).
+        //
+        // Por quê: SpeechRecognition calibrado pra fala nativa produz
+        // sistematicamente falsos negativos (aluno falou certo, ASR
+        // rejeitou → frustração, filtro afetivo alto, abandono da fala)
+        // E falsos positivos (aluno falou errado, ASR aceitou →
+        // consolidação do erro, caminho pra fossilização). Nas duas
+        // pontas o feedback binário do ASR era veneno pedagógico.
+        //
+        // Agora: o ASR vira CONSELHEIRO tolerante. Mostra o que ouviu +
+        // uma sugestão suave ("soou compreensível" / "consegui distinguir
+        // o final"). A REVELAÇÃO fica com o próprio aluno: ele ouve a
+        // palavra tocada pelo TTS, se auto-avalia com 3 botões
+        // (Errei/Quase/Sabia) e o app confia. Isso alinha com literatura
+        // de shadowing (Krashen sobre affective filter; Long sobre
+        // interação com feedback recastly).
         const w = currentWord();
         const alts = [];
         for(let i=0;i<ev.results[0].length;i++){
           alts.push(ev.results[0][i].transcript || '');
         }
         let best = alts[0];
-        let bestKind = 'no';
+        let matchLevel = 'off';  // 'ok' | 'close' | 'off'
         for(const alt of alts){
           const m = matchAnswer(alt, w.en);
-          if(m === 'ok'){ best = alt; bestKind = 'ok'; break; }
-          if(m === 'close' && bestKind !== 'close'){ best = alt; bestKind = 'close'; }
+          if(m === 'ok'){ best = alt; matchLevel = 'ok'; break; }
+          if(m === 'close' && matchLevel !== 'close'){ best = alt; matchLevel = 'close'; }
         }
-        // Mostra as top alternativas discretamente pra o aluno perceber
-        // que o reconhecedor ouviu algo (transparência do processo).
-        const alternatives = alts.slice(1, 4).filter(a => a && a !== best).slice(0, 2);
+        // Reset o counter — se OU ok OU close, achamos algo relacionado
+        if(matchLevel !== 'off') voiceFailCount = 0;
+        else voiceFailCount++;
+        // Feedback do ASR como sinal SUAVE. Nunca decide o resultado.
+        const asrHint = matchLevel === 'ok'
+          ? '<span class="asr-ok">✓ soou compreensível</span>'
+          : matchLevel === 'close'
+            ? '<span class="asr-close">≈ próximo do alvo</span>'
+            : '<span class="asr-off">o reconhecedor ouviu algo diferente — pode ser o sotaque, tenta de novo se quiser</span>';
+        const alternatives = alts.slice(1, 3).filter(a => a && a !== best);
         const altText = alternatives.length
-          ? `<span class="voice-alts">(também ouvi: ${alternatives.map(a=>`"${a}"`).join(', ')})</span>`
+          ? `<span class="voice-alts">também ouvi: ${alternatives.map(a=>`"${a}"`).join(', ')}</span>`
           : '';
-        $('#voice-heard').innerHTML = `"${best}" ${altText}`;
-        inputEl.value = best;
-        updateConferirState();
-        if(bestKind === 'no') voiceFailCount++;
-        else voiceFailCount = 0;
-        setTimeout(()=>{
-          reveal();
-          maybeOfferKeyboardFallback();
-        }, 100);
+        $('#voice-heard').innerHTML = `<div class="voice-heard-main">"${best}"</div>${asrHint}${altText ? '<br>' + altText : ''}`;
+        // Toca a resposta modelo pra shadowing (ouvir a diferença)
+        setTimeout(()=>speak(w.en), 200);
+        // Revela a resposta + 3 botões de auto-avaliação
+        setTimeout(()=>showVoiceSelfAssess(w, best), 500);
+        maybeOfferKeyboardFallback();
       };
     }
     try{
@@ -467,6 +522,44 @@
     }catch(_){
       // já rodando — ignora
     }
+  }
+
+  // Shadowing self-assessment — aluno ouve a palavra modelo e se
+  // auto-avalia com 3 botões. Bypassa completamente o julgamento
+  // binário do ASR. Alinha com Krashen (affective filter baixo) e
+  // com skill acquisition theory (auto-monitoramento).
+  function showVoiceSelfAssess(w, spoken){
+    st.revealed = true;
+    $('#answer').classList.add('on');
+    $('#answer-en').textContent = w.en;
+    $('#answer-pt').textContent = w.pt;
+    const wrap = $('#controls');
+    wrap.className = 'controls voice-assess';
+    wrap.innerHTML = `
+      <div class="assess-label">Como foi sua pronúncia?</div>
+      <div class="assess-buttons">
+        <button class="btn miss" id="va-miss">Errei</button>
+        <button class="btn gold" id="va-close">Quase</button>
+        <button class="btn primary" id="va-know">Sabia</button>
+      </div>
+    `;
+    const applyResult = (result) => {
+      const el = $('#verdict');
+      if(el){
+        const msgs = {miss:'✗ Volta amanhã.', close:'≈ Repete pra fixar.', know:'✓ Segue jogo.'};
+        el.innerHTML = msgs[result];
+        el.className = 'verdict ' + (result==='know'?'ok':result==='close'?'close':'no');
+      }
+      if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
+      st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, answer:spoken, result});
+      syncWord(w.id, result, result==='miss' ? spoken : '');
+      wrap.className = 'controls single';
+      wrap.innerHTML = `<button class="btn primary" id="next-btn">Continuar <kbd>Enter</kbd></button>`;
+      $('#next-btn').addEventListener('click', next);
+    };
+    $('#va-miss')?.addEventListener('click', ()=>applyResult('miss'));
+    $('#va-close')?.addEventListener('click', ()=>applyResult('close'));
+    $('#va-know')?.addEventListener('click', ()=>applyResult('know'));
   }
 
   function maybeOfferKeyboardFallback(){

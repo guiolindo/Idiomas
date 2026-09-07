@@ -398,8 +398,12 @@ DEFAULT_SESSION_LENGTH = "longo"  # sem escolha explícita, mantém o teto antig
 # do estudo, o que confundia (parecia sub-opção de leitura, mas na
 # verdade é outro tipo de exercício por completo — treina audição).
 STUDY_MODES = {
+    # ATENÇÃO ao "Ditado": antes ele pedia pra ESCREVER em português,
+    # o que virava teste de tradução + ortografia PT em vez de
+    # compreensão auditiva. Agora é múltipla escolha PT (3 opções),
+    # segundo recomendação de SLA — ouvir → reconhecer significado.
     "escrita":     {"label": "Escrita",     "desc": "Vê em português, escreve em inglês"},
-    "ditado":      {"label": "Ditado",      "desc": "Ouve em inglês, escreve em português"},
+    "ditado":      {"label": "Compreensão", "desc": "Ouve em inglês, escolhe o significado em português"},
     "transcricao": {"label": "Transcrição", "desc": "Ouve em inglês, escreve em inglês"},
     "voz":         {"label": "Voz",         "desc": "Vê em português, fala em inglês"},
 }
@@ -419,11 +423,19 @@ def study(request, slug):
     progress_map = {
         p.word_id: p for p in Progress.objects.filter(user=request.user, word__topic=topic)
     }
+    all_topic_words = list(topic.words.all())
+    # Distratores pra múltipla escolha (modo Compreensão): 2 outros PTs
+    # do mesmo tópico. Melhor que sortear do vocabulário todo — os
+    # distratores ficam plausíveis (mesma categoria semântica).
+    all_pts = [w.pt for w in all_topic_words]
     words = []
-    for w in topic.words.all():
+    for w in all_topic_words:
         p = progress_map.get(w.id)
         actually_due = (p is None) or (p.next_review <= now)
         due = actually_due or practice_all
+        # Escolhe 2 distratores aleatórios que NÃO são a palavra atual
+        other_pts = [pt for pt in all_pts if pt != w.pt]
+        distractors = random.sample(other_pts, k=min(2, len(other_pts))) if other_pts else []
         words.append({
             "id": w.id,
             "pt": w.pt,
@@ -436,6 +448,8 @@ def study(request, slug):
             "due": due,
             "is_leech": bool(p and p.is_leech),
             "last_wrong": p.last_wrong_answer if p else "",
+            # Distratores pra modo Compreensão (Ditado múltipla escolha)
+            "distractors": distractors,
             # em qual idioma foi a última resposta errada (en/pt) — o JS
             # usa isso pra só mostrar "última vez você escreveu X" quando
             # o modo atual espera resposta no MESMO idioma
