@@ -5,91 +5,123 @@
  * - Vermelho-de-caneta pra erros, ocre-de-marcador pra alertas
  * - Card de estudo com linhas horizontais de régua e margem vermelha
  */
+/* Paleta reformulada seguindo revisão de UI/UX (todos os pares
+   verificados por contraste WCAG). Ouro anterior (#9E7226) falhava
+   em texto — separado agora em gold-fill (preenchimento grande) e
+   gold-ink (texto). Novo token 'graphite' entra pra meta-texto como
+   o "lápis" do caderno; antes esse papel estava confuso entre ouro
+   e indigo com opacity.
+   Dark mode reconstruído (não invertido) — "escrivaninha à noite",
+   quase-preto quente da família do kraft. */
 :root{
-  /* papel + tinta */
-  --bg:#EDE2C7;
-  --paper:#F7EFDC;
-  --paper-2:#FBF5E4;
-  --ink:#1A1E28;
-  --ink-2:#4E5464;
-  --ink-3:#837E70;
-  --line:#DACBAA;
-  --line-2:#BFAF88;
-  --margin:#B44231;         /* linha vermelha de margem no papel pautado */
-
-  /* traços coloridos */
-  --accent:#1F3157;         /* tinta principal — indigo profundo */
-  --accent-ink:#F7EFDC;
+  --bg:#F4EBD9;              /* papel base — menos amarelo, mais limpo */
+  --paper:#FBF6EA;            /* superfície de card */
+  --hairline:#DED3BA;         /* diferenciação de superfície é por linha, não cor */
+  --ink:#1F3157;              /* tinta principal — 10.84:1 sobre papel */
+  --ink-2:#3A445E;            /* tinta secundária */
+  --graphite:#6B6455;         /* lápis — 4.95:1, meta e datas */
+  --line:#DED3BA;
+  --line-2:#C9BC9C;           /* leaders pontilhados */
+  --margin:#B44231;           /* margem vermelha e erro — 4.71:1 */
+  --accent:#1F3157;
+  --accent-ink:#FBF6EA;
   --accent-soft:#DFE2EE;
-  --gold:#9E7226;           /* marca-texto ocre */
+  --gold-ink:#7C5A17;         /* ouro pra texto — 5.32:1 */
+  --gold:#9E7226;             /* ouro pra preenchimentos e ícones grandes */
   --gold-soft:#F0E2BB;
-  --wrong:#A64230;
+  --wrong:#B44231;
   --wrong-soft:#F1D6CD;
 
-  --shadow-card: 0 1px 0 rgba(26,30,40,.05), 0 6px 20px rgba(26,30,40,.08), 0 20px 40px -20px rgba(26,30,40,.12);
-  --shadow-lifted: 0 2px 0 rgba(26,30,40,.06), 0 14px 30px rgba(26,30,40,.14), 0 30px 60px -20px rgba(26,30,40,.18);
+  /* Legado — mapas dos nomes antigos pros novos, evita quebrar tudo
+     de uma vez enquanto o resto do CSS ainda referencia esses tokens. */
+  --paper-2:var(--paper);
+  --ink-3:var(--graphite);
 
-  --serif:'Fraunces', ui-serif, Georgia, serif;
-  --display:'Instrument Serif', 'Fraunces', ui-serif, Georgia, serif;
-  --sans:'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: 0 1px 2px rgba(31,26,16,.08), 0 8px 24px rgba(31,26,16,.10);
+  --shadow-lifted: 0 2px 4px rgba(31,26,16,.10), 0 16px 40px rgba(31,26,16,.16);
+
+  /* Tipografia:
+     - Fraunces: display (títulos, números do índice, palavra do cartão)
+     - Newsreader: corpo de texto (parágrafos, listas) — feita pra leitura
+     - Instrument Serif: só ornamental (uma frase por tela, no máximo)
+     - IBM Plex Mono: dados, meta, datas — o "grafite" tipográfico */
+  --display:'Fraunces', ui-serif, Georgia, serif;
+  --serif:'Newsreader', 'Fraunces', ui-serif, Georgia, serif;
+  --ornament:'Instrument Serif', 'Fraunces', ui-serif, Georgia, serif;
   --mono:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --sans:'Newsreader', system-ui, sans-serif;  /* legado */
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#14161C;
-    --paper:#1D2029;
-    --paper-2:#242833;
-    --ink:#EDE4CD;
-    --ink-2:#A9AEC0;
-    --ink-3:#727684;
-    --line:#2F3441;
-    --line-2:#3F4657;
-    --margin:#C86554;
-    --accent:#94A8D6;
-    --accent-ink:#14161C;
+    --bg:#171512;              /* quase-preto quente, família do kraft */
+    --paper:#1F1C17;
+    --hairline:#2E2921;
+    --ink:#EDE4CF;             /* 14.4:1 */
+    --ink-2:#C7BFAA;
+    --graphite:#8E8571;
+    --line:#2E2921;
+    --line-2:#4A4235;
+    --margin:#C86A56;          /* 4.9:1 */
+    --accent:#9FB4E8;          /* indigo clareado — 8.82:1 */
+    --accent-ink:#171512;
     --accent-soft:#22293A;
-    --gold:#E0AC5A;
+    --gold-ink:#D4AF5E;
+    --gold:#D4AF5E;            /* 8.76:1 */
     --gold-soft:#3A2E19;
     --wrong:#E28175;
     --wrong-soft:#3A211D;
-    --shadow-card: 0 1px 0 rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.35), 0 24px 60px rgba(0,0,0,.45);
-    --shadow-lifted: 0 2px 0 rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.5), 0 40px 80px rgba(0,0,0,.6);
+    --paper-2:var(--paper);
+    --ink-3:var(--graphite);
+    --shadow-card: 0 0 0 1px #2A251D, 0 8px 24px rgba(0,0,0,.4);
+    --shadow-lifted: 0 0 0 1px #4A4235, 0 16px 40px rgba(0,0,0,.55);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#14161C;
-  --paper:#1D2029;
-  --paper-2:#242833;
-  --ink:#EDE4CD;
-  --ink-2:#A9AEC0;
-  --ink-3:#727684;
-  --line:#2F3441;
-  --line-2:#3F4657;
-  --margin:#C86554;
-  --accent:#94A8D6;
-  --accent-ink:#14161C;
+  --bg:#171512;
+  --paper:#1F1C17;
+  --hairline:#2E2921;
+  --ink:#EDE4CF;
+  --ink-2:#C7BFAA;
+  --graphite:#8E8571;
+  --line:#2E2921;
+  --line-2:#4A4235;
+  --margin:#C86A56;
+  --accent:#9FB4E8;
+  --accent-ink:#171512;
   --accent-soft:#22293A;
-  --gold:#E0AC5A;
+  --gold-ink:#D4AF5E;
+  --gold:#D4AF5E;
   --gold-soft:#3A2E19;
   --wrong:#E28175;
   --wrong-soft:#3A211D;
-  --shadow-card: 0 1px 0 rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.35), 0 24px 60px rgba(0,0,0,.45);
-  --shadow-lifted: 0 2px 0 rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.5), 0 40px 80px rgba(0,0,0,.6);
+  --paper-2:var(--paper);
+  --ink-3:var(--graphite);
+  --shadow-card: 0 0 0 1px #2A251D, 0 8px 24px rgba(0,0,0,.4);
+  --shadow-lifted: 0 0 0 1px #4A4235, 0 16px 40px rgba(0,0,0,.55);
 }
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+/* Garante que o atributo HTML [hidden] sempre vence — evita colisão
+   com regras posteriores tipo `display:flex` em containers ocultos. */
+[hidden]{ display:none !important; }
 body{
-  /* grão de papel: pontinhos discretos e uma vinheta bem sutil pra não ficar chapado */
+  /* Grão de papel — só a vinheta suave no topo e uma trama de pontos MUITO
+     discreta. O contraste dos pontos foi reduzido: antes eles competiam
+     com o texto por atenção; agora só sugerem textura. */
   background:
-    radial-gradient(1200px 700px at 50% -100px, rgba(26,30,40,.05), transparent 60%),
-    radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0/22px 22px,
+    radial-gradient(1200px 700px at 50% -100px, rgba(31,26,16,.04), transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(107,100,85,.14) 1px, transparent 0) 0 0/24px 24px,
     var(--bg);
   color:var(--ink);
-  font-family:var(--sans); font-size:16px; line-height:1.55;
+  font-family:var(--serif); font-size:17px; line-height:1.55;
   -webkit-font-smoothing:antialiased; min-height:100vh;
+  display:flex; flex-direction:column;
 }
-h1,h2,h3{ font-family:var(--serif); font-weight:500; margin:0; }
+h1,h2,h3{ font-family:var(--display); font-weight:400; margin:0; letter-spacing:-.01em; }
+h1{ font-size:40px; line-height:1.15; }
+h2{ font-size:26px; line-height:1.25; }
+h3{ font-size:19px; line-height:1.35; font-weight:500; }
 a{ color:inherit }
 ::selection{ background:var(--accent); color:var(--accent-ink); }
 
@@ -315,55 +347,71 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
 .continue-banner[hidden]{ display:none }
 
 /* Índice de tópicos — cada tile é uma ficha, com número de índice */
-.grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
-/* Cards de tópico — sistema "índice de caderno": número serifado grande
-   no topo em vez de emoji do sistema. Duas razões:
-   1. Emojis coloridos do SO (Segoe UI Emoji, Apple Color Emoji) brigam
-      visualmente com a paleta sépia/kraft do resto do app — parecia
-      Disney colado num diário.
-   2. Métricas de altura por emoji são inconsistentes: algumas subiam pro
-      canto e desalinhavam o card (bug real em Frutas e vegetais).
-   O número puxa a metáfora "capítulo/página do caderno" e fica coerente. */
+/* ÍNDICE — grid de tópicos como sumário de livro/caderno:
+   "01 — Nome do tópico ................ 84%"
+   Cada linha tem número, título, leaders pontilhados e progresso à
+   direita. Sozinho, esse padrão mata o "cara de app genérico" mais
+   rápido que qualquer outra mudança visual — ninguém confunde um
+   índice com "grid de cards de dashboard".
+   Cards do modelo antigo permanecem em .tile pra compatibilidade,
+   mas o novo default é .index-row. */
+.grid{ display:flex; flex-direction:column; gap:2px; margin:0 -2px; }
 .tile{
   position:relative;
-  background:var(--paper); border:1px solid var(--line); border-radius:6px 12px 12px 6px;
-  cursor:pointer; display:flex; flex-direction:column; gap:6px; text-align:left; text-decoration:none; color:inherit;
-  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  box-shadow:var(--shadow-card);
-  overflow:hidden;
-  padding:16px 14px 14px 20px;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:baseline; gap:14px;
+  padding:16px 14px;
+  border:0; background:transparent; text-decoration:none; color:inherit;
+  cursor:pointer;
+  border-radius:6px;
+  transition:background .12s ease;
 }
-.tile::before{
-  /* linha de margem tipo caderno pautado, coerente com o card de estudo */
-  content:""; position:absolute; left:11px; top:14px; bottom:14px; width:1px;
-  background:var(--margin); opacity:.45;
-}
-.tile:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lifted); border-color:var(--ink-3); }
-.tile-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:2px; }
+.tile:hover{ background:var(--paper); }
+.tile:hover .tile-name{ color:var(--accent); }
+.tile-head{ display:contents; }
 .tile-num{
-  font-family:var(--display); font-weight:400; font-size:22px; line-height:1;
-  color:var(--ink-3); letter-spacing:-.02em; font-variant-numeric:tabular-nums;
+  font-family:var(--display); font-weight:400; font-size:26px; line-height:1;
+  color:var(--graphite); letter-spacing:-.01em; font-variant-numeric:tabular-nums;
+  min-width:2.2ch;
 }
 .tile-check{
-  width:20px; height:20px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
-  font-size:11px; font-weight:700; display:grid; place-items:center;
-  box-shadow:0 1px 3px rgba(26,30,40,.2);
+  display:inline-grid; place-items:center;
+  width:16px; height:16px; border-radius:50%;
+  background:var(--gold); color:var(--paper);
+  font-size:9px; font-weight:700; margin-left:6px;
+  vertical-align:1px;
 }
-.tile .name{
-  font-family:var(--display); font-weight:400; font-size:19px; line-height:1.18;
-  letter-spacing:-.01em; color:var(--ink); text-wrap:balance;
-  margin-top:4px;
+.tile .name, .tile .tile-name{
+  font-family:var(--display); font-weight:400; font-size:19px; line-height:1.2;
+  color:var(--ink); letter-spacing:-.005em;
+  position:relative; padding-right:14px;
+  transition:color .12s ease;
 }
+/* Leaders pontilhados: um pseudo-elemento com border-bottom dotted
+   ocupa o espaço restante entre o título e o meta. Alinhado com o
+   baseline do número. */
+.tile .name::after, .tile .tile-name::after{
+  content:""; position:absolute; left:100%; right:0;
+  bottom:8px; height:0; border-bottom:1.5px dotted var(--line-2);
+  transform:translateX(8px);
+}
+/* Contêiner do índice não vaza scroll horizontal por causa dos leaders */
+.grid{ overflow:hidden; }
+.tile{ position:relative; overflow:hidden; }
 .tile .meta{
-  font-family:var(--mono); font-size:10px; color:var(--ink-3); letter-spacing:.08em; text-transform:uppercase;
-  display:flex; justify-content:space-between; align-items:baseline; margin-top:auto; padding-top:10px; gap:6px;
+  font-family:var(--mono); font-size:11px; color:var(--graphite);
+  letter-spacing:.06em; text-transform:none;
+  white-space:nowrap; font-variant-numeric:tabular-nums;
+  display:flex; align-items:baseline; gap:10px;
 }
-.tile .meta .known{ color:var(--accent); font-weight:500; }
-.tile .bar{ height:2px; border-radius:2px; background:var(--line); overflow:hidden; margin-top:6px; }
-.tile .bar-fill{ height:100%; background:var(--accent); border-radius:2px; transition:width .35s ease; }
+.tile .meta .known{ color:var(--gold-ink); font-weight:500; }
+/* A barra fininha vira totalmente opcional — no índice de verdade,
+   a % já basta. Escondida por padrão. */
+.tile .bar{ display:none; }
 .tile.progress .tile-num{ color:var(--ink-2); }
-.tile.done{ background:linear-gradient(135deg, var(--accent-soft), var(--paper) 70%); border-color:var(--accent); }
-.tile.done .tile-num{ color:var(--accent); }
+.tile.done .tile-num, .tile.done .tile-name{ color:var(--gold-ink); }
+.tile.done .tile-name{ font-style:italic; }
 
 footer{
   margin-top:36px; padding-top:20px; border-top:1px dashed var(--line-2);
@@ -446,6 +494,7 @@ footer{
   display:flex; flex-direction:column; align-items:center; gap:12px;
   padding:20px 0 8px;
 }
+.voice-panel[hidden]{ display:none !important; }
 .mic-btn{
   width:64px; height:64px; border-radius:50%;
   background:var(--accent); color:var(--accent-ink); border:none; cursor:pointer;
@@ -506,33 +555,51 @@ footer{
 .modebar button:hover{ color:var(--ink-2) }
 .modebar button.on{ color:var(--ink); border-bottom-color:var(--accent); }
 
-/* O card em si é uma ficha de papel pautado — margem vermelha à esquerda,
-   linhas horizontais de régua, cantos ligeiramente inclinados na altura do canto */
+/* Cartão de estudo redesenhado (revisão de UI/UX):
+   - Proporção próxima de 3:2 (max-width 560, min-height 340px)
+   - Margem vermelha DENTRO do cartão (não borda), com nº em mono
+   - SEM pauta atrás do prompt — pauta só aparece na área de resposta
+     (é onde se escreve). Antes a régua rolava o cartão inteiro e ficava
+     ruído por trás do texto principal.
+   - Micro-rotação sutil (-0.35deg) que zera no foco — dá materialidade
+     sem virar cerimônia. */
 .card{
   position:relative;
   background:var(--paper);
-  background-image:
-    linear-gradient(to bottom, transparent 0, transparent calc(100% - 1px), transparent 100%),
-    repeating-linear-gradient(to bottom, transparent 0, transparent 31px, var(--line) 31px, var(--line) 32px);
-  background-size:100% 100%, 100% 32px;
-  background-position: 0 0, 0 20px;
   border:1px solid var(--line); border-radius:6px 16px 16px 6px;
-  padding:36px 24px 26px 40px;
-  min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; gap:16px;
+  max-width:560px; margin:0 auto;
+  padding:48px 40px 32px 60px;
+  min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:18px;
   box-shadow:var(--shadow-card);
+  transform:rotate(-0.35deg);
+  transition:transform .2s ease;
 }
+.card:hover, .card:focus-within{ transform:rotate(0); }
 .card::before{
-  /* margem vermelha (como caneta) */
-  content:""; position:absolute; left:22px; top:0; bottom:0; width:1px;
-  background:var(--margin); opacity:.55;
+  /* margem vermelha vertical dentro do cartão */
+  content:""; position:absolute; left:40px; top:0; bottom:0; width:1.5px;
+  background:var(--margin); opacity:.6;
 }
+.card::after{
+  /* "nº XX" pendurado na margem, em mono — anotação tipo caderno */
+  content:"nº " counter(card-num, decimal-leading-zero);
+  position:absolute; left:8px; top:20px;
+  font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  color:var(--graphite);
+  writing-mode:horizontal-tb;
+  width:32px; text-align:right;
+}
+/* Sequencial da posição no HTML — o study.js atualiza o CSS var pra
+   refletir a palavra atual */
+.card{ counter-reset:card-num var(--card-num, 1); }
 .card .cue-label{
-  font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-3);
+  font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--graphite);
 }
 .card .cue{
-  font-family:var(--display); font-weight:400; font-size:58px; line-height:1;
+  font-family:var(--display); font-weight:400; font-size:56px; line-height:1.05;
   letter-spacing:-.02em; text-wrap:balance; color:var(--ink);
+  font-variation-settings: "opsz" 144, "SOFT" 30;
 }
 .card .photo-wrap{ width:100%; display:none; }
 .card .photo-wrap.on{ display:block }
@@ -544,12 +611,16 @@ footer{
 .card .photo-wrap .credit a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
 .photo-status{ font-family:var(--mono); font-size:11px; color:var(--ink-3); font-style:italic; letter-spacing:.06em; }
 
-/* Resposta revelada — parece a resposta escrita em outra cor de caneta */
+/* Resposta revelada com fade+translateY (120ms, ease-out) — a resposta
+   "assenta" no cartão como se fosse tinta caindo, em vez de aparecer
+   instantânea. Sensação de materialidade. */
 .card .answer{
   margin-top:4px; padding-top:16px;
   border-top:1px dashed var(--line-2); width:100%; display:none;
+  opacity:0; transform:translateY(6px);
+  transition:opacity .18s ease-out, transform .18s ease-out;
 }
-.card .answer.on{ display:block }
+.card .answer.on{ display:block; opacity:1; transform:translateY(0); }
 .card .answer .en-row{
   display:flex; align-items:center; justify-content:center; gap:14px;
 }
@@ -601,11 +672,29 @@ footer{
   letter-spacing:.04em; padding:6px 10px; background:var(--gold-soft); border-radius:6px;
 }
 .notebook .verdict{
-  margin-top:12px; font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; min-height:16px;
+  margin-top:14px; font-family:var(--mono); font-size:12px; letter-spacing:.06em;
+  min-height:20px; line-height:1.5;
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:8px;
 }
-.verdict.ok{ color:var(--accent) }
-.verdict.close{ color:var(--gold) }
-.verdict.no{ color:var(--wrong) }
+.verdict-mark{
+  font-size:18px; line-height:1; vertical-align:-2px;
+  font-family:var(--display); font-weight:400;
+}
+.verdict.ok{ color:var(--accent); }
+.verdict.close{ color:var(--gold-ink); }
+.verdict.no{ color:var(--wrong); }
+.verdict .diff{
+  color:var(--ink); font-family:var(--serif); font-size:18px;
+  letter-spacing:-.005em; text-transform:none;
+  margin-left:2px; font-style:italic;
+}
+/* Diff tipográfico — o feedback é o texto, não um ícone. Letras certas
+   ficam em tinta, erradas em vermelho (mesma cor do erro), e faltantes
+   sublinhadas em ouro. Nenhum caractere extra ("!", "✗") no meio da
+   palavra — o próprio traço da letra comunica o que aconteceu. */
+.verdict .d-ok{ color:var(--ink); }
+.verdict .d-extra{ color:var(--wrong); text-decoration:line-through; text-decoration-thickness:1px; }
+.verdict .d-miss{ color:var(--gold-ink); border-bottom:1.5px solid var(--gold); padding-bottom:1px; }
 
 /* Botões — mais peso, mais físicos */
 .controls{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; }
@@ -1048,6 +1137,155 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
   font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
   color:var(--ink-3); margin:24px 0 10px; font-weight:500;
 }
+
+/* ============================================================
+   Home redesenhada (revisão de UI/UX): saudação + linha meta +
+   uma ação primária. Análise IA colapsada. Palavra do dia como
+   linha, não card. Ações extras como marginália. Tópicos como
+   índice de sumário (grid antigo virou lista com leaders).
+   ============================================================ */
+.home-open{
+  margin:0 0 22px;
+}
+.home-greet{
+  font-family:var(--display); font-weight:400; font-size:40px; line-height:1.1;
+  letter-spacing:-.015em; color:var(--ink); margin:0 0 8px;
+  text-wrap:balance;
+}
+.home-greet .accent{ font-style:italic; color:var(--accent); }
+.home-meta{
+  font-family:var(--mono); font-size:12px; letter-spacing:.02em;
+  color:var(--graphite); margin:0 0 16px; line-height:1.6;
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px;
+}
+.home-meta .dot{ color:var(--line-2); }
+.home-meta .meta-alert{
+  color:var(--wrong); text-decoration:underline; text-underline-offset:3px;
+  text-decoration-thickness:1px;
+}
+.home-meta .meta-alert:hover{ color:var(--wrong); text-decoration-thickness:2px; }
+.cta-primary{
+  display:inline-block; margin-top:4px;
+  background:var(--ink); color:var(--paper);
+  padding:12px 20px; border-radius:6px;
+  font-family:var(--display); font-size:16px; font-weight:500;
+  text-decoration:none; letter-spacing:-.005em;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.cta-primary:hover{ transform:translateY(-1px); box-shadow:0 4px 12px rgba(31,49,87,.25); }
+
+/* Palavra do dia — uma linha só, italica ornamental */
+.wod-line{
+  margin:20px 0 22px; padding:14px 0;
+  border-top:1px dashed var(--line-2); border-bottom:1px dashed var(--line-2);
+  font-family:var(--serif); font-size:15px; color:var(--ink-2);
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:8px;
+  line-height:1.5;
+}
+.wod-line .wod-label{
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--graphite);
+}
+.wod-line .wod-en{
+  font-family:var(--ornament); font-style:italic; font-size:22px;
+  color:var(--accent);
+}
+.wod-line .wod-pt{ color:var(--ink); }
+.wod-line .wod-pt::before{ content:"— "; color:var(--graphite); }
+.wod-line .wod-topic{
+  margin-left:auto;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--graphite); text-decoration:none;
+}
+.wod-line .wod-topic:hover{ color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
+.tts-inline{
+  appearance:none; background:transparent; border:0; cursor:pointer;
+  color:var(--accent); font-size:14px; padding:0 4px;
+  transform:scaleX(-1); /* seta virada = "play" tipo bandeja */
+}
+.tts-inline:hover{ color:var(--wrong); }
+
+/* Análise IA colapsada */
+.ai-details{
+  margin:0 0 18px; border-top:1px dashed var(--line-2);
+  padding:12px 0 0;
+}
+.ai-details > summary{
+  cursor:pointer; list-style:none;
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--graphite);
+}
+.ai-details > summary::-webkit-details-marker{ display:none; }
+.ai-details > summary::before{
+  content:"›"; display:inline-block; margin-right:6px;
+  transition:transform .15s ease; color:var(--accent); font-size:14px;
+}
+.ai-details[open] > summary::before{ transform:rotate(90deg); }
+.ai-details > summary > span:first-child{ color:var(--ink); text-transform:none; letter-spacing:-.005em;
+  font-family:var(--serif); font-size:14px; }
+.ai-details .ai-when{ font-family:var(--mono); }
+.ai-details .ai-body{ margin-top:12px; padding-left:20px; border-left:2px solid var(--gold); }
+.ai-details .ai-body p{
+  margin:0 0 8px; font-size:14.5px; line-height:1.55; color:var(--ink-2);
+  max-width:60ch;
+}
+.ai-details .ai-body b{ color:var(--ink); font-weight:600; }
+
+/* Ações extras — como marginália em mono */
+.margin-actions{
+  margin:0 0 28px; display:flex; flex-direction:column;
+  border-top:1px dashed var(--line-2); padding-top:12px;
+}
+.margin-actions a{
+  padding:8px 0; text-decoration:none; color:var(--ink);
+  font-family:var(--serif); font-size:15px; line-height:1.4;
+  display:flex; align-items:baseline; gap:8px;
+  border-bottom:1px dashed transparent;
+  transition:border-color .12s ease, color .12s ease;
+}
+.margin-actions a:hover{ color:var(--accent); border-bottom-color:var(--line-2); }
+.margin-actions .ma-key{
+  display:inline-block; width:20px; text-align:center;
+  color:var(--gold-ink); font-size:16px;
+}
+.margin-actions a.alert .ma-key{ color:var(--wrong); }
+.margin-actions .ma-hint{
+  color:var(--graphite); font-family:var(--mono); font-size:11px;
+  letter-spacing:.03em;
+}
+
+/* Índice de tópicos — header discreto + lista */
+.index-section{ margin-top:14px; }
+.index-head{
+  display:flex; align-items:baseline; justify-content:space-between;
+  gap:12px; flex-wrap:wrap; margin-bottom:12px;
+  padding-bottom:10px; border-bottom:1px solid var(--line);
+}
+.index-title{
+  font-family:var(--display); font-weight:400; font-size:22px;
+  color:var(--ink); letter-spacing:-.01em; margin:0;
+}
+.index-tools{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.index-tools input[type="search"]{
+  appearance:none; border:0; background:transparent;
+  border-bottom:1px solid var(--line);
+  padding:4px 6px; min-width:130px;
+  font:inherit; font-size:13px; color:var(--ink);
+  outline:none;
+}
+.index-tools input[type="search"]:focus{ border-bottom-color:var(--accent); }
+.index-tools input[type="search"]::placeholder{ color:var(--graphite); font-style:italic; }
+.index-filters{ display:flex; gap:2px; }
+.index-filters button{
+  appearance:none; background:transparent; border:0; cursor:pointer;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--graphite); padding:4px 8px; border-radius:4px;
+}
+.index-filters button:hover{ color:var(--ink); }
+.index-filters button.on{ color:var(--accent); background:var(--accent-soft); }
+.empty-search{ text-align:center; color:var(--graphite); padding:24px 0; font-style:italic; font-size:14px; }
+.empty-search[hidden]{ display:none; }
 
 /* Reduced motion — desliga tudo */
 @media (prefers-reduced-motion: reduce){

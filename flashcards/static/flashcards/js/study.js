@@ -26,6 +26,44 @@
     }
     return v1[b.length];
   }
+  // Diff caractere-a-caractere entre a resposta digitada e a esperada.
+  // Devolve HTML com spans: letras certas em tinta, erradas em vermelho,
+  // faltantes sublinhadas. Alinhamento simples baseado em LCS aproximado —
+  // não é diff perfeito de Myers, mas é O(n·m) rápido pro tamanho de
+  // palavras aqui (< 30 chars) e produz feedback intuitivo.
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function buildDiff(typed, target){
+    const a = fold(typed), b = fold(target);
+    if(!a) return `<span class="d-miss">${escapeHtml(target)}</span>`;
+    // Programação dinâmica pra tabela LCS
+    const m = a.length, n = b.length;
+    const dp = Array.from({length:m+1}, () => new Array(n+1).fill(0));
+    for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
+    }
+    // Backtrack pra montar as sequências alinhadas
+    const parts = [];
+    let i=m, j=n;
+    while(i>0 && j>0){
+      if(a[i-1]===b[j-1]){ parts.unshift({t:'ok', c:b[j-1]}); i--; j--; }
+      else if(dp[i-1][j] >= dp[i][j-1]){ parts.unshift({t:'extra', c:a[i-1]}); i--; }
+      else { parts.unshift({t:'miss', c:b[j-1]}); j--; }
+    }
+    while(i>0){ parts.unshift({t:'extra', c:a[--i]+''}); }
+    while(j>0){ parts.unshift({t:'miss', c:b[--j]+''}); }
+    // Junta caracteres consecutivos do mesmo tipo em spans
+    let html = '', prev = null, buf = '';
+    parts.forEach(p => {
+      if(p.t !== prev){
+        if(buf) html += `<span class="d-${prev}">${escapeHtml(buf)}</span>`;
+        buf = p.c; prev = p.t;
+      } else { buf += p.c; }
+    });
+    if(buf) html += `<span class="d-${prev}">${escapeHtml(buf)}</span>`;
+    return html;
+  }
   function matchAnswer(input, target){
     const a = fold(input), b = fold(target);
     if(!a) return 'empty';
@@ -389,9 +427,23 @@
       // Foto), o alvo é w.en como sempre.
       const target = prefs.cue === 'ditado' ? w.pt : w.en;
       const v = matchAnswer(typed, target);
-      if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; result='know'; }
-      else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; result='soso'; }
-      else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; result='miss'; }
+      // Diff tipográfico: mostra o que foi digitado com as letras certas
+      // em tinta e as diferentes em vermelho — feedback é o próprio texto,
+      // não precisa de ícone. Uma vozinha de professor sem palavra escrita.
+      const diffHTML = buildDiff(typed, target);
+      if(v==='ok'){
+        el.innerHTML = '<span class="verdict-mark ok">✓</span> Perfeito.';
+        el.className='verdict ok';
+        result='know';
+      } else if(v==='close'){
+        el.innerHTML = `<span class="verdict-mark close">≈</span> Quase — veja a grafia. <span class="diff">${diffHTML}</span>`;
+        el.className='verdict close';
+        result='soso';
+      } else {
+        el.innerHTML = `<span class="verdict-mark no">✗</span> Não bateu. <span class="diff">${diffHTML}</span>`;
+        el.className='verdict no';
+        result='miss';
+      }
     }
     if(result==='miss' && !st.sessionMissed.includes(w.id)) st.sessionMissed.push(w.id);
     st.sessionAnswers.push({wordId:w.id, pt:w.pt, en:w.en, typed, result});

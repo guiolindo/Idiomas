@@ -3,225 +3,123 @@
 {% block title %}Caderno de Idiomas{% endblock %}
 {% block content %}
 
-<div class="home-greeting">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</div>
-<p class="home-sub">
-  Caderno de bordo · {% now "j \d\e F" %}
-  {% if answered_today %} · <span class="today-count">{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>{% endif %}
-</p>
-
-{# ============ CARTÃO DE NÍVEL CEFR — o hero da página ============ #}
-<div class="level-card">
-  <div class="level-head">
-    <div class="level-code">{{ level.code }}</div>
-    <div class="level-meta">
-      <div class="level-name">{{ level.label }}</div>
-      <div class="level-desc">{{ level.detail }}</div>
-    </div>
-  </div>
-  <div class="level-progress">
-    <div class="level-bar"><div class="level-bar-fill" style="width:{{ level.progress_pct }}%"></div></div>
-    <div class="level-numbers">
-      <span><b>{{ level.mastered }}</b> palavras dominadas</span>
-      {% if level.next_code %}
-        <span class="level-to-next">faltam <b>{{ level.to_next }}</b> pra <b>{{ level.next_code }}</b></span>
-      {% else %}
-        <span class="level-to-next">nível máximo</span>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-{# ============ Cartão de progresso geral (compacto) ============ #}
-<div class="stats-card">
-  <div class="stats-ring">
-    <svg viewBox="0 0 64 64" width="56" height="56">
-      <circle cx="32" cy="32" r="27" class="ring-track"></circle>
-      <circle cx="32" cy="32" r="27" class="ring-fill" data-pct="{{ overall_pct }}"></circle>
-    </svg>
-    <span class="ring-label">{{ overall_pct }}%</span>
-  </div>
-  <div class="stats-body">
-    <div class="stats-count"><b>{{ total_studied }}</b> de {{ total_words }} palavras iniciadas</div>
-    <div class="stats-streak">
-      <span class="pill">{{ total_known }} dominadas</span>
-      {% if profile.streak_count %}
-        <span class="dot">·</span> {{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} <i class="flame">●</i>
-      {% else %}
-        <span class="dot">·</span> comece sua sequência hoje
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-{# ============ Análise IA — 3 seções, sempre visível se AI habilitada ============ #}
-{% if ai_enabled %}
-  {% if ai_analysis.strengths or ai_analysis.focus or ai_analysis.recommendation %}
-  <div class="analysis-card">
-    <div class="analysis-head">
-      <div class="analysis-label">Análise do seu progresso</div>
-      {% if ai_generated_at %}
-        <div class="analysis-when">atualizado {{ ai_generated_at|quando }}</div>
-      {% endif %}
-    </div>
-    {% if ai_analysis.strengths %}
-    <div class="analysis-row">
-      <div class="analysis-tag strengths">Pontos fortes</div>
-      <p>{{ ai_analysis.strengths }}</p>
-    </div>
+{# ============ Abertura enxuta — saudação + linha de meta em mono ============ #}
+<header class="home-open">
+  <h1 class="home-greet">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</h1>
+  <p class="home-meta">
+    <span>{% now "l, j \d\e F" %}</span>
+    {% if overdue_count %}
+      <span class="dot">·</span>
+      <a class="meta-alert" href="{% url 'study' overdue_topic.slug %}">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</a>
+    {% elif answered_today %}
+      <span class="dot">·</span>
+      <span>{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>
     {% endif %}
-    {% if ai_analysis.focus %}
-    <div class="analysis-row">
-      <div class="analysis-tag focus">O que ajustar</div>
-      <p>{{ ai_analysis.focus }}</p>
-    </div>
+    <span class="dot">·</span>
+    <span>nível {{ level.code }} · {{ level.mastered }} palavras dominadas</span>
+    {% if profile.streak_count %}
+      <span class="dot">·</span>
+      <span>{{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} seguido{{ profile.streak_count|pluralize }}</span>
     {% endif %}
-    {% if ai_analysis.recommendation %}
-    <div class="analysis-row">
-      <div class="analysis-tag reco">Recomendação de hoje</div>
-      <p>{{ ai_analysis.recommendation }}</p>
-    </div>
-    {% endif %}
-  </div>
-  {% elif total_studied == 0 %}
-  {# usuário novo — o welcome-hero acima já dá o próximo passo, não precisa duplicar #}
-  {% else %}
-  <div class="analysis-card empty">
-    <div class="analysis-label">Análise do seu progresso</div>
-    <p class="analysis-empty">Sua próxima análise chega quando você terminar uma rodada de estudo.</p>
-  </div>
-  {% endif %}
-{% endif %}
-
-{% if is_new_user and starter_topic %}
-<div class="welcome-hero">
-  <div class="wh-label">Bem-vindo</div>
-  <h2>Comece por <b>{{ starter_topic.name }}</b> — 3 minutinhos já valem.</h2>
-  <p>
-    A ideia é simples: você vê uma palavra em português, tenta escrever em inglês, e o app decide quando reforçar. Errar faz parte — quem erra vê a palavra voltar amanhã. Sem pressão.
   </p>
-  <a class="wh-cta" href="{% url 'study' starter_topic.slug %}?tempo=curto">
-    Começar agora — 5 cartões →
-  </a>
-</div>
-{% endif %}
 
-{% if overdue_count %}
-<a class="continue-banner overdue" href="{% url 'study' overdue_topic.slug %}">
-  <div class="cb-mark">!</div>
-  <div class="cb-text">
-    <div class="cb-label">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</div>
-    <div class="cb-title">Revisar {{ overdue_topic.name|lower }} agora</div>
-  </div>
-  <div class="cb-arrow">→</div>
-</a>
-{% elif continue_topic %}
-<a class="continue-banner" href="{% url 'study' continue_topic.slug %}">
-  <div class="cb-mark">↻</div>
-  <div class="cb-text">
-    <div class="cb-label">Continuar estudando</div>
-    <div class="cb-title">{{ continue_topic.name }}</div>
-  </div>
-  <div class="cb-arrow">→</div>
-</a>
-{% endif %}
+  {% if overdue_count %}
+    <a class="cta-primary" href="{% url 'study' overdue_topic.slug %}">Continuar — {{ overdue_topic.name }}</a>
+  {% elif continue_topic %}
+    <a class="cta-primary" href="{% url 'topic_detail' continue_topic.slug %}">Continuar — {{ continue_topic.name }}</a>
+  {% elif is_new_user and starter_topic %}
+    <a class="cta-primary" href="{% url 'study' starter_topic.slug %}?tempo=curto">Começar por {{ starter_topic.name }} — 5 cartões</a>
+  {% endif %}
+</header>
 
-{# ============ Palavra do dia — ritual de exposição casual ============ #}
+{# ============ Palavra do dia — linha ornamental, não card ============ #}
 {% if word_of_day and not is_new_user %}
-<div class="wod-card">
-  <div class="wod-side">
-    <div class="wod-label">Palavra do dia</div>
-    <div class="wod-pt">{{ word_of_day.pt }}</div>
-    <div class="wod-en">
-      <span id="wod-en-text">{{ word_of_day.en }}</span>
-      <button class="tts-btn small" id="wod-tts" type="button" title="Ouvir pronúncia" aria-label="Ouvir pronúncia">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-        </svg>
-      </button>
-    </div>
-    <a class="wod-link" href="{% url 'topic_detail' word_of_day.topic.slug %}">{{ word_of_day.topic.name }} →</a>
+<p class="wod-line">
+  <span class="wod-label">Palavra do dia —</span>
+  <em class="wod-en" id="wod-en-text">{{ word_of_day.en }}</em>
+  <button class="tts-inline" id="wod-tts" type="button" title="Ouvir pronúncia" aria-label="Ouvir pronúncia">◁</button>
+  <span class="wod-pt">{{ word_of_day.pt }}</span>
+  <a class="wod-topic" href="{% url 'topic_detail' word_of_day.topic.slug %}">{{ word_of_day.topic.name }}</a>
+</p>
+{% endif %}
+
+{# ============ Análise IA colapsada — nunca mais três blocos empilhados ============ #}
+{% if ai_enabled and ai_analysis.strengths or ai_analysis.focus or ai_analysis.recommendation %}
+<details class="ai-details">
+  <summary>
+    <span>Análise do seu progresso</span>
+    {% if ai_generated_at %}<span class="ai-when">{{ ai_generated_at|quando }}</span>{% endif %}
+  </summary>
+  <div class="ai-body">
+    {% if ai_analysis.strengths %}<p><b>Fortes:</b> {{ ai_analysis.strengths }}</p>{% endif %}
+    {% if ai_analysis.focus %}<p><b>Foco:</b> {{ ai_analysis.focus }}</p>{% endif %}
+    {% if ai_analysis.recommendation %}<p><b>Recomendação:</b> {{ ai_analysis.recommendation }}</p>{% endif %}
   </div>
-  {% if word_of_day.photo_url %}
-  <div class="wod-photo" style="background-image:url('{{ word_of_day.photo_url }}')" aria-label="foto de {{ word_of_day.en }}"></div>
-  {% endif %}
-</div>
+</details>
 {% endif %}
 
-{# ============ Ações rápidas: desafio + travadas ============ #}
+{# ============ Ações extras — linhas quietas na margem ============ #}
 {% if not is_new_user %}
-<div class="quick-actions">
-  <a class="qa-card" href="{% url 'challenge' %}">
-    <div class="qa-mark">⚡</div>
-    <div class="qa-body">
-      <div class="qa-title">Desafio relâmpago</div>
-      <div class="qa-sub">12 palavras aleatórias · sem afetar suas revisões</div>
-    </div>
-  </a>
+<nav class="margin-actions" aria-label="Ações extras">
+  <a href="{% url 'challenge' %}"><span class="ma-key">↯</span> Desafio relâmpago <span class="ma-hint">— 12 palavras, não afeta suas revisões</span></a>
   {% if leech_count %}
-  <a class="qa-card leech" href="{% url 'leech_list' %}">
-    <div class="qa-mark">◉</div>
-    <div class="qa-body">
-      <div class="qa-title">{{ leech_count }} {{ leech_count|pluralize:"palavra travada,palavras travadas" }}</div>
-      <div class="qa-sub">Palavras que você tá errando muito</div>
-    </div>
-  </a>
+    <a class="alert" href="{% url 'leech_list' %}"><span class="ma-key">◉</span> {{ leech_count }} {{ leech_count|pluralize:"palavra travada,palavras travadas" }} <span class="ma-hint">— erra três vezes seguido, aparece aqui</span></a>
   {% endif %}
-</div>
+</nav>
 {% endif %}
 
-<div class="search-row">
-  <input type="search" id="search-input" placeholder="Buscar tópico… (ex: comida, verbos)" aria-label="Buscar tópico">
-</div>
-
-<div class="filter-row" id="filter-row">
-  <button data-filter="all" class="on">Todos</button>
-  <button data-filter="progress">Em progresso</button>
-  <button data-filter="done">Dominados</button>
-  <button data-filter="new">Não iniciados</button>
-</div>
-
-<div class="grid" id="topics">
-  {% for tc in topic_cards %}
-  <a class="tile{% if tc.done %} done{% elif tc.studied %} progress{% endif %}"
-     href="{% url 'topic_detail' tc.topic.slug %}"
-     data-name="{{ tc.topic.name|lower }}"
-     data-state="{% if tc.done %}done{% elif tc.studied > 0 %}progress{% else %}new{% endif %}">
-    <div class="tile-head">
-      <div class="tile-num">{{ forloop.counter|stringformat:"02d" }}</div>
-      {% if tc.done %}<div class="tile-check" aria-label="dominada">✓</div>{% endif %}
+{# ============ Índice de tópicos — sumário, não grid de cards ============ #}
+<section class="index-section">
+  <div class="index-head">
+    <h2 class="index-title">Índice</h2>
+    <div class="index-tools">
+      <input type="search" id="search-input" placeholder="buscar…" aria-label="Buscar tópico">
+      <div class="index-filters" id="filter-row">
+        <button type="button" data-filter="all" class="on">Todos</button>
+        <button type="button" data-filter="progress">Em progresso</button>
+        <button type="button" data-filter="done">Dominados</button>
+        <button type="button" data-filter="new">Não iniciados</button>
+      </div>
     </div>
-    <div class="name">{{ tc.topic.name }}</div>
-    <div class="meta">
-      <span>{{ tc.studied }} / {{ tc.total }}</span>
-      {% if tc.known %}<span class="known">{{ tc.known }} dominadas</span>{% endif %}
-    </div>
-    <div class="bar"><div class="bar-fill" style="width:{{ tc.pct }}%"></div></div>
-  </a>
-  {% endfor %}
-</div>
-<p class="empty-search" id="empty-search" hidden>Nenhum tópico bate com essa busca.</p>
+  </div>
+
+  <div class="grid" id="topics">
+    {% for tc in topic_cards %}
+    <a class="tile{% if tc.done %} done{% elif tc.studied %} progress{% endif %}"
+       href="{% url 'topic_detail' tc.topic.slug %}"
+       data-name="{{ tc.topic.name|lower }}"
+       data-state="{% if tc.done %}done{% elif tc.studied > 0 %}progress{% else %}new{% endif %}">
+      <span class="tile-num">{{ forloop.counter|stringformat:"02d" }}</span>
+      <span class="tile-name">{{ tc.topic.name }}{% if tc.done %}<span class="tile-check" aria-label="dominado">✓</span>{% endif %}</span>
+      <span class="meta">
+        {% if tc.done %}
+          concluído
+        {% elif tc.studied %}
+          {{ tc.pct }}%
+        {% else %}
+          — / {{ tc.total }}
+        {% endif %}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="empty-search" id="empty-search" hidden>Nenhum tópico bate com essa busca.</p>
+</section>
 
 <script>
-  // Palavra do dia: botão de pronúncia via Web Speech API — mesmo mecanismo
-  // do estudo. Falha silenciosa se navegador não suporta.
   (function(){
     var btn = document.getElementById('wod-tts');
-    if(!btn || !window.speechSynthesis) return;
-    btn.addEventListener('click', function(){
-      var text = document.getElementById('wod-en-text')?.textContent?.trim();
-      if(!text) return;
-      speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text.replace(/^to /i,''));
-      u.lang = 'en-US'; u.rate = 0.85;
-      speechSynthesis.speak(u);
-    });
+    if(btn && window.speechSynthesis){
+      btn.addEventListener('click', function(){
+        var text = document.getElementById('wod-en-text')?.textContent?.trim();
+        if(!text) return;
+        speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text.replace(/^to /i,''));
+        u.lang = 'en-US'; u.rate = 0.85;
+        speechSynthesis.speak(u);
+      });
+    }
   })();
-  document.querySelectorAll('.ring-fill').forEach(function(el){
-    var pct = Number(el.dataset.pct||0);
-    var circ = 2*Math.PI*27;
-    el.style.strokeDasharray = circ;
-    el.style.strokeDashoffset = circ * (1 - pct/100);
-  });
   var tiles = Array.from(document.querySelectorAll('#topics .tile'));
   var search = document.getElementById('search-input');
   var filterRow = document.getElementById('filter-row');

@@ -28,9 +28,11 @@
 {% endif %}
 
 {% if study_mode == 'escrita' and topic_has_photo %}
-{# Dentro do modo Escrita, o aluno ainda pode alternar entre ver a
-   palavra em português ou ver uma foto do conceito. Ditado e Voz
-   NÃO aparecem aqui — são modos separados, escolhidos antes da sessão. #}
+{% comment %}
+Dentro do modo Escrita, o aluno ainda pode alternar entre ver a
+palavra em português ou ver uma foto do conceito. Ditado e Voz
+NÃO aparecem aqui — são modos separados, escolhidos antes da sessão.
+{% endcomment %}
 <div class="modebar" role="tablist" aria-label="Estímulo dentro do modo Escrita">
   <button type="button" data-cue="pt" class="on" role="tab">Palavra em PT</button>
   <button type="button" data-cue="foto" role="tab">Foto</button>

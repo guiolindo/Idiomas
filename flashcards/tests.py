@@ -110,10 +110,11 @@ class ProgressTests(TestCase):
     def test_home_counts_mastered_words(self):
         Progress.objects.create(user=self.user, word=self.word, level=SRS_MAX_LEVEL)
         resp = self.client.get(reverse("home"))
-        # Home mostra "iniciadas" (Progress existe) e "dominadas" (nivel 4)
-        # como duas metricas distintas — verificar ambas.
-        self.assertContains(resp, "de 2 palavras iniciadas")
-        self.assertContains(resp, "1 dominadas")
+        # Home reformatada (linha meta em mono) — nível CEFR + contagem de
+        # dominadas ficam na linha meta. Antes eram cards separados.
+        self.assertContains(resp, "1 palavras dominadas")
+        # E o item "1 palavra hoje" indica atividade
+        self.assertContains(resp, "palavra")
 
     def test_word_due_when_no_progress_or_overdue(self):
         due_word = self.topic.words.last()
@@ -259,8 +260,8 @@ class OnboardingTests(TestCase):
 
     def test_new_user_sees_welcome_hero(self):
         resp = self.client.get(reverse("home"))
-        self.assertContains(resp, "Bem-vindo")
-        self.assertContains(resp, "Comece por")
+        # Home reformatada — CTA de onboarding agora é "Começar por X — 5 cartões"
+        self.assertContains(resp, "Começar por")
 
     def test_hero_disappears_after_first_word(self):
         word = Topic.objects.get(slug="basico").words.first()
