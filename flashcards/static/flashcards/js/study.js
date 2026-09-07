@@ -81,15 +81,17 @@
     cueEl.classList.remove('dictation');
     $('#cue-label').textContent = 'Traduza';
   }
-  // Ditado: o app fala a palavra em inglês (sem mostrar). O aluno digita
-  // o que ouviu. Treina listening que o modo visual não treina. Reaproveita
-  // o speak() e a tolerância de gralhas — nenhuma infra nova.
+  // Compreensão auditiva: o app fala a palavra em inglês, e o aluno escreve
+  // a TRADUÇÃO em português. Treina o canal ouvir → entender → produzir no
+  // idioma nativo, que o modo visual não treina. Antes eu tinha implementado
+  // "ouve em inglês, escreve em inglês" — ficava loteria: quem nunca viu a
+  // palavra só transcreve som, sem exercitar entendimento.
   function showAsDictation(w){
     $('#photo-wrap').classList.remove('on');
     const cueEl = $('#cue');
     cueEl.innerHTML = '<button type="button" class="dictation-btn" id="dictation-play" aria-label="Ouvir">🔊 Ouvir de novo</button>';
     cueEl.classList.add('dictation');
-    $('#cue-label').textContent = 'Escute e escreva o que ouviu';
+    $('#cue-label').textContent = 'Escute e escreva em português';
     const play = () => speak(w.en);
     // Toca 1 vez automático e permite repetir
     setTimeout(play, 250);
@@ -178,7 +180,10 @@
       const heard = $('#voice-heard'); if(heard) heard.textContent = '';
       const hint = $('#voice-hint'); if(hint) hint.textContent = 'Clique no microfone e diga a palavra em inglês';
     }else{
-      setTimeout(()=>$('#nb-input').focus(), 60);
+      // preventScroll evita o pulo pro topo/pro input quando trocamos de
+      // aba (modebar) ou re-renderizamos por qualquer motivo. O cursor
+      // ainda vai pro input, só sem o navegador rolar a página.
+      setTimeout(()=>$('#nb-input').focus({preventScroll:true}), 60);
     }
 
     renderControls();
@@ -272,6 +277,13 @@
 
   function applyVoiceMode(){
     if(!voiceToggle) return;
+    // Voz + ditado juntos não faz sentido — ditado testa entendimento em
+    // português. Se está em ditado, força voz desligada e esconde o toggle
+    // pra não confundir.
+    const isDictation = prefs.cue === 'ditado';
+    voiceToggle.hidden = !SpeechRec || isDictation;
+    if(isDictation) prefs.voice = false;
+
     voiceToggle.setAttribute('aria-pressed', prefs.voice ? 'true' : 'false');
     voiceToggle.classList.toggle('on', prefs.voice);
     if(prefs.voice){
@@ -281,20 +293,23 @@
     }else{
       voicePanel.hidden = true;
       inputEl.hidden = false;
-      $('#nb-label').textContent = 'Escreva a tradução em inglês';
+      $('#nb-label').textContent = isDictation
+        ? 'Escreva a tradução em português'
+        : 'Escreva a tradução em inglês';
       if(recognition && recognizing){ try{ recognition.stop(); }catch(_){} }
     }
     updateConferirState();
   }
   if(SpeechRec && voiceToggle){
-    voiceToggle.hidden = false;
     voiceToggle.addEventListener('click', ()=>{
       prefs.voice = !prefs.voice;
       savePrefs();
       applyVoiceMode();
     });
-    applyVoiceMode();
   }
+  // Roda sempre — mesmo sem SpeechRec, precisa atualizar o label do notebook
+  // se o modo salvo for ditado (label passa a ser "em português").
+  applyVoiceMode();
 
   function startRecognition(){
     if(!SpeechRec) return;
@@ -370,7 +385,11 @@
       el.className = 'verdict no';
       result = 'miss';
     }else{
-      const v = matchAnswer(typed, w.en);
+      // No modo ditado, o aluno ouve inglês e escreve português — a
+      // resposta esperada é w.pt. Em qualquer outro modo (PT visível ou
+      // Foto), o alvo é w.en como sempre.
+      const target = prefs.cue === 'ditado' ? w.pt : w.en;
+      const v = matchAnswer(typed, target);
       if(v==='ok'){ el.textContent = '✓ Perfeito.'; el.className='verdict ok'; result='know'; }
       else if(v==='close'){ el.textContent = '≈ Quase — confira a grafia.'; el.className='verdict close'; result='soso'; }
       else { el.textContent = '✗ Não bateu.'; el.className='verdict no'; result='miss'; }
@@ -459,11 +478,19 @@
   function initModebar(){
     $$('.modebar button').forEach(b=>{
       b.classList.toggle('on', b.dataset.cue===prefs.cue);
-      b.addEventListener('click', ()=>{
+      b.addEventListener('click', (e)=>{
+        // Botão do modebar rouba foco e a página rola pro topo em telas
+        // pequenas — bloqueia. Também previne default por segurança
+        // (button dentro de container clicável pode ter comportamento
+        // estranho em alguns navegadores).
+        e.preventDefault();
+        b.blur();
+        if(prefs.cue === b.dataset.cue) return;
         $$('.modebar button').forEach(x=>x.classList.remove('on'));
         b.classList.add('on');
         prefs.cue = b.dataset.cue;
         savePrefs();
+        applyVoiceMode();
         renderCard();
       });
     });
