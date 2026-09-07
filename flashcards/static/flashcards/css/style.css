@@ -1099,7 +1099,7 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 /* ==== Escolha de modo (topic detail) ==== */
 .mode-picker{ margin:18px 0 14px; }
 .mode-options{
-  display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px;
 }
 .mode-opt{
   display:flex; flex-direction:column; gap:2px;
@@ -1272,13 +1272,15 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 }
 .action-card.action-leech .action-eyebrow{ color:var(--wrong); }
 .action-card.mode-ditado::after,
+.action-card.mode-transcricao::after,
 .action-card.mode-voz::after{
   content:""; position:absolute; top:16px; right:16px;
-  width:8px; height:8px; border-radius:50%; background:var(--accent);
-  opacity:.5;
+  width:8px; height:8px; border-radius:50%;
+  opacity:.6;
 }
 .action-card.mode-ditado::after{ background:var(--accent); }
-.action-card.mode-voz::after{ background:var(--gold); }
+.action-card.mode-transcricao::after{ background:var(--gold-ink); }
+.action-card.mode-voz::after{ background:var(--wrong); }
 
 /* Índice colapsado — quem quer explorar 92 tópicos, abre.
    O <details> é o "o resto está aqui, se você quiser". */

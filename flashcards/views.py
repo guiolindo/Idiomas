@@ -365,9 +365,10 @@ DEFAULT_SESSION_LENGTH = "longo"  # sem escolha explícita, mantém o teto antig
 # do estudo, o que confundia (parecia sub-opção de leitura, mas na
 # verdade é outro tipo de exercício por completo — treina audição).
 STUDY_MODES = {
-    "escrita": {"label": "Escrita", "desc": "Vê em português, escreve em inglês"},
-    "ditado":  {"label": "Ditado",  "desc": "Ouve em inglês, escreve em português"},
-    "voz":     {"label": "Voz",     "desc": "Vê em português, fala em inglês"},
+    "escrita":     {"label": "Escrita",     "desc": "Vê em português, escreve em inglês"},
+    "ditado":      {"label": "Ditado",      "desc": "Ouve em inglês, escreve em português"},
+    "transcricao": {"label": "Transcrição", "desc": "Ouve em inglês, escreve em inglês"},
+    "voz":         {"label": "Voz",         "desc": "Vê em português, fala em inglês"},
 }
 DEFAULT_STUDY_MODE = "escrita"
 
@@ -402,6 +403,10 @@ def study(request, slug):
             "due": due,
             "is_leech": bool(p and p.is_leech),
             "last_wrong": p.last_wrong_answer if p else "",
+            # em qual idioma foi a última resposta errada (en/pt) — o JS
+            # usa isso pra só mostrar "última vez você escreveu X" quando
+            # o modo atual espera resposta no MESMO idioma
+            "last_wrong_lang": p.last_wrong_lang if p else "",
             # campos internos pro cap (não vão pro JS)
             "_priority_next_review": p.next_review if p else now,
             "_priority_level": p.level if p else 0,
@@ -485,9 +490,15 @@ def api_mark_progress(request, word_id):
     if request.POST.get("mode") == "challenge":
         return JsonResponse({"ok": True, "challenge": True})
     wrong_answer = request.POST.get("wrong_answer", "")
+    # Idioma em que a resposta foi dada (en/pt) — Ditado responde em PT,
+    # os outros modos em EN. Guardado no Progress pra "última vez você
+    # escreveu X" só reaparecer no mesmo modo.
+    answer_lang = request.POST.get("answer_lang", "en")
+    if answer_lang not in ("en", "pt"):
+        answer_lang = "en"
     word = get_object_or_404(Word, id=word_id)
     progress, _ = Progress.objects.get_or_create(user=request.user, word=word)
-    progress.apply_feedback(result, wrong_answer=wrong_answer)
+    progress.apply_feedback(result, wrong_answer=wrong_answer, answer_lang=answer_lang)
     Profile.objects.filter(user=request.user).update(last_activity_at=timezone.now())
     return JsonResponse({
         "ok": True,

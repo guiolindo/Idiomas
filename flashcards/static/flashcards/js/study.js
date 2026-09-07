@@ -90,9 +90,16 @@
   // Isso evita que o localStorage de uma sessão anterior misture com o
   // modo atual (ex: entrar em "Voz" com prefs.cue='ditado' salvo).
   const STUDY_MODE = window.STUDY_MODE || 'escrita';
-  if(STUDY_MODE === 'ditado') prefs.cue = 'ditado';
-  else if(STUDY_MODE === 'voz'){ prefs.voice = true; if(prefs.cue === 'ditado') prefs.cue = 'pt'; }
-  else { prefs.voice = false; if(prefs.cue === 'ditado') prefs.cue = 'pt'; }
+  // Ambos ditado e transcricao apresentam o cartao do mesmo jeito (audio +
+  // botao "Ouvir de novo"), a diferenca esta so no ALVO da resposta:
+  //   - ditado      → aluno escreve em português (w.pt)
+  //   - transcricao → aluno escreve em inglês (w.en)  ← spelling training
+  if(STUDY_MODE === 'ditado' || STUDY_MODE === 'transcricao'){
+    prefs.cue = STUDY_MODE;  // usa o proprio nome como cue
+    prefs.voice = false;
+  }
+  else if(STUDY_MODE === 'voz'){ prefs.voice = true; if(prefs.cue === 'ditado' || prefs.cue === 'transcricao') prefs.cue = 'pt'; }
+  else { prefs.voice = false; if(prefs.cue === 'ditado' || prefs.cue === 'transcricao') prefs.cue = 'pt'; }
   function savePrefs(){ localStorage.setItem(LS_KEY, JSON.stringify(prefs)); }
 
   const ALL_WORDS = window.WORDS || []; // [{id,pt,en,has_photo,photo_url,photo_page,due,last_wrong}]
@@ -129,17 +136,21 @@
     cueEl.classList.remove('dictation');
     $('#cue-label').textContent = 'Traduza';
   }
-  // Compreensão auditiva: o app fala a palavra em inglês, e o aluno escreve
-  // a TRADUÇÃO em português. Treina o canal ouvir → entender → produzir no
-  // idioma nativo, que o modo visual não treina. Antes eu tinha implementado
-  // "ouve em inglês, escreve em inglês" — ficava loteria: quem nunca viu a
-  // palavra só transcreve som, sem exercitar entendimento.
+  // Áudio como estímulo — atende dois modos:
+  //   - ditado:      escute e escreva em PORTUGUÊS (compreensão auditiva)
+  //   - transcricao: escute e escreva em INGLÊS (spelling training)
+  // O cartão é idêntico, muda só o cue-label. A validação (buildDiff,
+  // reveal) usa prefs.cue pra decidir contra qual campo (w.pt/w.en)
+  // comparar.
   function showAsDictation(w){
     $('#photo-wrap').classList.remove('on');
     const cueEl = $('#cue');
     cueEl.innerHTML = '<button type="button" class="dictation-btn" id="dictation-play" aria-label="Ouvir">🔊 Ouvir de novo</button>';
     cueEl.classList.add('dictation');
-    $('#cue-label').textContent = 'Escute e escreva em português';
+    const label = prefs.cue === 'transcricao'
+      ? 'Escute e escreva o que ouviu em inglês'
+      : 'Escute e escreva em português';
+    $('#cue-label').textContent = label;
     const play = () => speak(w.en);
     // Toca 1 vez automático e permite repetir
     setTimeout(play, 250);
@@ -196,7 +207,7 @@
     $('#study-progress').textContent = `${Math.min(st.i+1,total)}/${total}`;
     if(st.i >= total){ renderDone(); return; }
     const w = currentWord();
-    if(prefs.cue==='ditado') showAsDictation(w);
+    if(prefs.cue==='ditado' || prefs.cue==='transcricao') showAsDictation(w);
     else if(prefs.cue==='foto' && w.has_photo) showPhoto(w);
     else showAsText(w);
 
@@ -211,8 +222,15 @@
     const leechEl = $('#leech-badge');
     if(leechEl){ leechEl.hidden = !w.is_leech; }
 
+    // "Da última vez você escreveu X" — só reaparece no MESMO idioma
+    // em que foi errada. Antes, a dica vazava entre modos: erro em
+    // "people" (modo Escrita) aparecia depois na tentativa "pessoa"
+    // (modo Ditado) e confundia. Agora comparamos o idioma esperado da
+    // resposta com o last_wrong_lang salvo.
+    const currentLang = prefs.cue === 'ditado' ? 'pt' : 'en';
     const lastWrongEl = $('#last-wrong');
-    if(w.last_wrong){
+    const showLastWrong = w.last_wrong && (!w.last_wrong_lang || w.last_wrong_lang === currentLang);
+    if(showLastWrong){
       lastWrongEl.hidden = false;
       lastWrongEl.textContent = `Da última vez você escreveu "${w.last_wrong}" — repare na grafia.`;
     }else{
@@ -337,9 +355,11 @@
       if(voicePanel){ voicePanel.hidden = true; }
       if(inputEl){ inputEl.hidden = false; }
       const lab = $('#nb-label');
-      if(lab) lab.textContent = prefs.cue === 'ditado'
-        ? 'Escreva a tradução em português'
-        : 'Escreva a tradução em inglês';
+      if(lab){
+        if(prefs.cue === 'ditado') lab.textContent = 'Escreva a tradução em português';
+        else if(prefs.cue === 'transcricao') lab.textContent = 'Escreva em inglês o que você ouviu';
+        else lab.textContent = 'Escreva a tradução em inglês';
+      }
       if(recognition && recognizing){ try{ recognition.stop(); }catch(_){} }
     }
     updateConferirState();
@@ -422,9 +442,9 @@
       el.className = 'verdict no';
       result = 'miss';
     }else{
-      // No modo ditado, o aluno ouve inglês e escreve português — a
-      // resposta esperada é w.pt. Em qualquer outro modo (PT visível ou
-      // Foto), o alvo é w.en como sempre.
+      // Alvo da resposta muda por modo:
+      //   - ditado: aluno ouviu inglês e escreve tradução em português
+      //   - transcricao / PT / Foto / Voz: alvo é o inglês (w.en)
       const target = prefs.cue === 'ditado' ? w.pt : w.en;
       const v = matchAnswer(typed, target);
       // Diff tipográfico: mostra o que foi digitado com as letras certas
@@ -458,10 +478,14 @@
     // Modo desafio: manda o mode pro backend, que não altera o SRS.
     // Ainda registramos pra o coach de sessão poder comentar a rodada.
     const modeParam = window.CHALLENGE_MODE ? '&mode=challenge' : '';
+    // Idioma da resposta — Ditado responde em português, resto em inglês.
+    // Guardado com o last_wrong pra "última vez você escreveu X" só
+    // aparecer no mesmo modo depois.
+    const answerLang = prefs.cue === 'ditado' ? 'pt' : 'en';
     return fetch(`${window.MARK_URL_BASE}${wordId}/`, {
       method: 'POST',
       headers: { 'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}${modeParam}`,
+      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}&answer_lang=${answerLang}${modeParam}`,
     }).catch(()=>{});
   }
   function next(){ st.i++; st.revealed = false; renderCard(); }

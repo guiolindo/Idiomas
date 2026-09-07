@@ -39,7 +39,10 @@ NÃO aparecem aqui — são modos separados, escolhidos antes da sessão.
 </div>
 {% else %}
 <div class="mode-badge">
-  {% if study_mode == 'ditado' %}Modo Ditado{% elif study_mode == 'voz' %}Modo Voz{% else %}Modo Escrita{% endif %}
+  {% if study_mode == 'ditado' %}Modo Ditado
+  {% elif study_mode == 'transcricao' %}Modo Transcrição
+  {% elif study_mode == 'voz' %}Modo Voz
+  {% else %}Modo Escrita{% endif %}
 </div>
 {% endif %}
 

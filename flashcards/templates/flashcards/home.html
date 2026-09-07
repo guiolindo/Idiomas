@@ -57,6 +57,11 @@
       <div class="action-title">Ditado</div>
       <div class="action-sub">Ouve em inglês, escreve em português</div>
     </a>
+    <a class="action-card mode-transcricao" href="{% url 'study' action_topic.slug %}?modo=transcricao">
+      <div class="action-eyebrow">Modo</div>
+      <div class="action-title">Transcrição</div>
+      <div class="action-sub">Ouve em inglês, escreve em inglês</div>
+    </a>
     <a class="action-card mode-voz" id="action-voz" href="{% url 'study' action_topic.slug %}?modo=voz">
       <div class="action-eyebrow">Modo</div>
       <div class="action-title">Voz</div>
