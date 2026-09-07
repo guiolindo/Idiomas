@@ -4,97 +4,108 @@
 
 <div class="doc-page">
   <h1 class="doc-title">Ajuda</h1>
-  <p class="doc-lead">Respostas diretas pras perguntas que fazem mais sentido pra quem tá usando o app.</p>
+  <p class="doc-lead">Respostas rápidas pra quem tá usando o app pela primeira vez.</p>
 
   <section class="doc-section" id="nivel">
-    <h2>Como o "nível" é calculado?</h2>
+    <h2>O que significa "23% das 500 mais frequentes"?</h2>
     <p>
-      Ao invés de mostrar "você é A1/A2/B1" baseado só na quantidade de palavras que você dominou (o que a pesquisa de aquisição de segunda língua descreve como "ilusão de progresso" — mesma XP do Duolingo), o app mostra <b>cobertura das 500 palavras mais frequentes do inglês real</b> (fontes COCA e BNC).
+      Na home você vê uma barra com uma porcentagem. Ela mostra quantas das <b>500 palavras mais usadas no inglês do dia a dia</b> você já dominou.
     </p>
     <p>
-      Por que isso importa: essas 500 palavras cobrem <b>~85% da fala cotidiana informal</b> (Nation 2013, <i>Learning Vocabulary in Another Language</i>). Dominar 200 palavras raras não vale o mesmo que dominar 200 das top-500 — em conversação real, você só usa e ouve as top-500 na maior parte do tempo.
+      Por que essas 500? Porque, na fala normal, elas representam cerca de <b>85% de tudo que é dito</b>. Aprender essas primeiro te dá a base pra entender conversas, ver filmes, ler notícias. Aprender 200 palavras raras não vale o mesmo que aprender 200 das mais usadas.
     </p>
     <p>
-      A porcentagem que você vê é literal: <b>N das 500 mais frequentes já estão dominadas</b> pelo seu SRS. Nenhum arredondamento inflacionado, nenhum "quase A2 já" — o número mede o que mede.
-    </p>
-  </section>
-
-  <section class="doc-section">
-    <h2>Como funciona a revisão espaçada?</h2>
-    <p>
-      Cada palavra que você estuda entra numa das 5 caixas (nível 0 a 4). Errou volta pra caixa 0 e reaparece <b>amanhã</b>. Acertou sobe uma caixa e demora mais pra voltar: 1, 3, 7, 15 ou 30 dias. É o método de Leitner — funciona porque força você a rever a palavra <b>antes</b> de esquecer, sem gastar tempo com o que você já sabe.
+      A porcentagem é honesta: se você domina 100 das 500, o app mostra 20%. Sem inflar. Sem "quase A2 já".
     </p>
   </section>
 
   <section class="doc-section">
-    <h2>Qual a diferença entre "Errei", "Quase" e "Sabia"?</h2>
+    <h2>Como funciona a revisão?</h2>
+    <p>
+      Cada palavra que você estuda tem um <b>nível de 0 a 4</b>. Se errar, volta pro nível 0 e aparece de novo <b>amanhã</b>. Se acertar, sobe um nível e demora mais pra voltar:
+    </p>
+    <ul>
+      <li><b>Nível 0</b> → volta em 1 dia</li>
+      <li><b>Nível 1</b> → em 3 dias</li>
+      <li><b>Nível 2</b> → em 1 semana</li>
+      <li><b>Nível 3</b> → em 2 semanas</li>
+      <li><b>Nível 4</b> → dominada, volta em 1 mês</li>
+    </ul>
+    <p>
+      A ideia: você revê a palavra <b>logo antes</b> de esquecer. Isso é muito mais eficiente do que ficar repetindo o que já sabe.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Errei, Quase e Sabia — qual a diferença?</h2>
     <ul>
       <li><b>Errei</b> — não fazia ideia. A palavra volta amanhã do nível 0.</li>
-      <li><b>Quase</b> — sabia com esforço ou errou uma letra. Volta amanhã mas mantém o nível.</li>
-      <li><b>Sabia</b> — respondeu com confiança. Sobe de nível, demora mais pra voltar.</li>
+      <li><b>Quase</b> — sabia com esforço ou errou só uma letra. Volta amanhã mas mantém o nível.</li>
+      <li><b>Sabia</b> — respondeu com confiança. Sobe de nível.</li>
     </ul>
-    <p>Escrever com uma letra trocada em palavra longa é detectado como "Quase" automaticamente — não te pune por deslize de digitação.</p>
+    <p>Se você digitou uma palavra longa com uma letra trocada, o app detecta como "Quase" automaticamente. Não te pune por deslize de dedo.</p>
   </section>
 
   <section class="doc-section">
-    <h2>O que significa "palavra travada"?</h2>
+    <h2>O que é "palavra travada"?</h2>
     <p>
-      Uma palavra que você errou <b>3 ou mais vezes seguidas</b>. Elas continuam no ciclo normal, mas ganham um aviso pra você reconhecer o padrão. A página <a href="{% url 'leech_list' %}">Palavras travadas</a> lista todas em um lugar só, com dicas pra desbloquear.
+      Uma palavra que você errou <b>3 ou mais vezes seguidas</b>. Ela continua aparecendo no ritmo normal, mas ganha um aviso pra você reconhecer que ali tem um bloqueio. Na página <a href="{% url 'leech_list' %}">Palavras travadas</a> dá pra ver todas em um lugar só, com dicas pra desbloquear.
     </p>
   </section>
 
   <section class="doc-section">
-    <h2>Por que só apareceram 5 palavras se eu tenho mais vencidas?</h2>
+    <h2>Por que só apareceram 5 palavras hoje?</h2>
     <p>
-      Você escolheu "3 min" antes de começar. Cada opção de tempo entrega um número diferente de cartões (5, 15 ou 35). O resto fica pra próxima sessão — todas continuam vencidas, ordenadas por urgência. É melhor 5 hoje que 35 abandonadas no meio.
+      Você escolheu "3 min" antes de começar. Cada opção de tempo dá uma quantidade diferente de cartões (5, 15 ou 35). O resto fica pra próxima sessão — as palavras continuam esperando, ordenadas por urgência. Melhor estudar 5 hoje e voltar amanhã do que encarar 35 e desistir no meio.
     </p>
   </section>
 
   <section class="doc-section">
     <h2>Diferença entre os modos de estudo</h2>
     <ul>
-      <li><b>Escrita</b> — vê a palavra em português (ou uma foto), escreve em inglês. É o padrão. Treina produção escrita.</li>
-      <li><b>Compreensão</b> — ouve a palavra em inglês e escolhe o significado entre 3 opções em português. Treina compreensão auditiva de verdade — não te obriga a soletrar em português.</li>
-      <li><b>Transcrição</b> — ouve a palavra em inglês e escreve o que ouviu <b>em inglês</b>. Treina spelling — quando você já sabe o que a palavra significa mas erra a grafia.</li>
-      <li><b>Voz</b> — vê a palavra em português, fala em inglês. Você mesmo se auto-avalia com "Errei/Quase/Sabia" depois de comparar sua fala com o áudio modelo (shadowing). O reconhecedor de voz do navegador dá um sinal auxiliar mas nunca decide por você — pra não penalizar fala correta com sotaque. Só funciona em Chrome/Edge.</li>
+      <li><b>Escrita</b> — você vê a palavra em português (ou uma foto) e escreve em inglês. É o padrão, treina produção escrita.</li>
+      <li><b>Compreensão</b> — você ouve em inglês e escolhe o significado entre 3 opções em português. Treina compreensão auditiva de verdade — sem te obrigar a soletrar palavra por palavra.</li>
+      <li><b>Transcrição</b> — você ouve em inglês e escreve o que ouviu <b>em inglês</b>. Treina grafia auditiva — quando você já sabe o que a palavra significa mas erra na hora de escrever.</li>
+      <li><b>Voz</b> — você vê a palavra em português e fala em inglês. Depois compara sua fala com o áudio modelo e se auto-avalia (Errei/Quase/Sabia). O reconhecimento de voz do navegador ajuda, mas não decide por você — pra não penalizar sotaque brasileiro correto. Funciona melhor em Chrome/Edge.</li>
     </ul>
   </section>
 
   <section class="doc-section">
-    <h2>O reconhecimento de voz é confiável?</h2>
+    <h2>Modo Misturar e Desafio — qual escolher?</h2>
+    <ul>
+      <li><b>Misturar</b> — mistura palavras vencidas de vários tópicos numa rodada só. Estudar tudo separado por tema (só cores, só verbos) atrapalha a memória por confusão entre palavras parecidas. Misturar ajuda o cérebro a distinguir melhor. Afeta suas revisões normalmente.</li>
+      <li><b>Desafio relâmpago</b> — 12 palavras aleatórias pra jogar rápido. As respostas <b>não</b> afetam suas revisões. Serve pra ter contato amplo com o vocabulário sem risco de "voltar" no progresso.</li>
+    </ul>
+  </section>
+
+  <section class="doc-section">
+    <h2>O reconhecimento de voz funciona bem?</h2>
     <p>
-      Usa o reconhecimento nativo do navegador (Web Speech API). No Chrome/Edge, roda no servidor do Google — mesma engine do Google Assistant. Pega bem sotaque brasileiro. O app aceita as top 3 alternativas que o reconhecedor devolve, então se ele "ouviu" errado uma delas, ainda tem chance de bater.
+      Ele usa o próprio navegador (não precisa instalar nada) — no Chrome e Edge, é a mesma tecnologia por trás do "OK Google". Pega bem sotaque brasileiro. O app aceita as 8 melhores hipóteses que o reconhecedor gera, então se ele "ouviu" errado em uma, ainda tem chance de bater.
     </p>
     <p>
-      O que ele <b>não</b> faz: te dar nota de pronúncia estilo "78%, melhora o 'th'". Isso precisaria de serviço pago.
+      O que ele <b>não</b> faz: te dar nota de pronúncia estilo "78%, melhora o 'th'". Isso precisaria de serviço pago. Por isso o modo Voz aqui é <b>shadowing</b>: você fala, ouve o áudio modelo, compara e você mesmo se avalia. Você é o juiz da própria pronúncia — e é assim que quem aprende idioma na vida real faz.
     </p>
   </section>
 
   <section class="doc-section">
-    <h2>O "Desafio relâmpago" afeta minhas revisões?</h2>
+    <h2>Como funciona a análise no topo da home?</h2>
     <p>
-      Não. Desafio é modo livre — 12 palavras aleatórias de tópicos misturados, sem gravar nada no seu SRS. Serve pra quebrar rotina e ter uma exposição ampla ao vocabulário. Erros ali não te fazem "voltar" no progresso normal.
-    </p>
-  </section>
-
-  <section class="doc-section">
-    <h2>Como funciona o coach de IA?</h2>
-    <p>
-      Toda vez que você termina uma rodada de estudo, um resumo do que aconteceu é enviado pra uma IA (Gemini ou Groq como fallback). Ela devolve uma análise em 3 partes — pontos fortes, o que ajustar, recomendação de próximo passo — considerando também as palavras que estão te travando. A análise aparece na home até você fazer a próxima rodada.
+      Toda vez que você termina uma rodada, um resumo do que aconteceu vai pra uma inteligência artificial (Gemini do Google, ou Groq como reserva). Ela devolve uma análise em 3 partes — pontos fortes, o que ajustar, e uma recomendação de próximo passo — considerando também as palavras que estão te travando. Fica visível na home até você terminar a próxima rodada.
     </p>
   </section>
 
   <section class="doc-section">
     <h2>Esqueci minha senha</h2>
     <p>
-      Na tela de login, clique em "Esqueceu a senha?". Se o e-mail tiver conta, um link chega em até 1 minuto. O link expira em <b>1 hora</b> por segurança.
+      Na tela de entrada, clique em "Esqueceu a senha?". Se o e-mail tiver conta, um link chega em até 1 minuto. Ele expira em <b>1 hora</b> por segurança.
     </p>
   </section>
 
   <section class="doc-section">
-    <h2>Preciso pagar alguma coisa?</h2>
+    <h2>Preciso pagar?</h2>
     <p>
-      Não. O app é gratuito e sem anúncios. Ele existe porque foi feito pra uma pessoa específica ganhar vocabulário — o autor abriu pra qualquer um que quiser usar.
+      Não. O app é gratuito e sem anúncios. Ele foi feito pra uma pessoa específica aprender inglês — o autor liberou pra qualquer um usar.
     </p>
   </section>
 

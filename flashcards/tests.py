@@ -430,12 +430,14 @@ class StaticPagesTests(TestCase):
     def test_help_page_loads(self):
         resp = self.client.get(reverse("help"))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "revisão espaçada")
+        # Ajuda reescrita em linguagem natural — sem jargão técnico
+        self.assertContains(resp, "Como funciona a revisão")
 
     def test_about_page_loads(self):
         resp = self.client.get(reverse("about"))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Princípios")
+        # Sobre reescrita — "Princípios" virou "No que a gente acredita"
+        self.assertContains(resp, "No que a gente acredita")
 
     def test_terms_page_loads(self):
         resp = self.client.get(reverse("terms"))
