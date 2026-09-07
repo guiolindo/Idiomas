@@ -164,7 +164,23 @@ a{ color:inherit }
 }
 .flash-error{ border-left-color:var(--wrong); }
 
-.app{ max-width:520px; margin:0 auto; padding:20px 18px 96px; }
+/* Container principal do conteúdo — largura escala com a viewport.
+   Mobile/retrato mantém coluna estreita (leitura confortável).
+   Desktop/paisagem aproveita mais espaço horizontal em vez de deixar
+   o app parecer um formulário no meio de um monitor de 24". Mas texto
+   corrido (parágrafos) continua limitado a ~60ch pra ler bem — quem
+   alarga é o layout de cards e o hero. */
+.app{ max-width:560px; margin:0 auto; padding:20px 18px 96px; }
+@media (min-width: 900px){
+  .app{ max-width:860px; padding:28px 32px 96px; }
+  .topnav, .topnav-rule{ max-width:860px; }
+  .footer-inner{ max-width:860px; }
+}
+@media (min-width: 1280px){
+  .app{ max-width:1080px; padding:32px 40px 120px; }
+  .topnav, .topnav-rule{ max-width:1080px; }
+  .footer-inner{ max-width:1080px; }
+}
 
 /* Form elements */
 input[type="email"], input[type="password"], input[type="text"], input[type="search"]{
@@ -356,6 +372,12 @@ input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focu
    Cards do modelo antigo permanecem em .tile pra compatibilidade,
    mas o novo default é .index-row. */
 .grid{ display:flex; flex-direction:column; gap:2px; margin:0 -2px; }
+@media (min-width: 900px){
+  /* Em desktop o índice vira 2 colunas de linhas com leaders. Cada
+     coluna se comporta igual: número + nome + leaders + %. Não vira
+     tabela — cada linha continua sendo um link independente. */
+  .grid{ display:grid; grid-template-columns:1fr 1fr; column-gap:32px; row-gap:0; }
+}
 .tile{
   position:relative;
   display:grid;
@@ -1205,6 +1227,24 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
    colapsado — quem quer explorar abre; quem quer estudar
    entra por um dos cartões grandes.
    ============================================================ */
+/* Layout responsivo da home em desktop — usa duas colunas quando há
+   espaço. Coluna esquerda: abertura + progresso + CTA principal +
+   grid de ações. Coluna direita: análise IA + palavra do dia + índice.
+   Em mobile é uma coluna só (o padrão). */
+@media (min-width: 1000px){
+  .home-desktop-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1.35fr) minmax(0, 1fr);
+    column-gap:44px;
+  }
+  .home-col-primary > .section-rule:first-child{ margin-top:8px; }
+  .home-col-side > .section-rule:first-child{ margin-top:0; }
+  /* progress-hero em desktop respira mais */
+  .progress-hero{ padding:32px 34px 30px 42px; }
+  .ph-num{ font-size:68px; }
+  .ph-unit{ font-size:38px; }
+}
+
 /* Cabeçalho editorial — kicker "Seu caderno · 7 de Setembro" com filete
    vermelho de margem, streak à direita. Dá peso de "publicação real". */
 .editorial-mast{
