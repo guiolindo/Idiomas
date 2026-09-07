@@ -15,6 +15,7 @@ urlpatterns = [
     path("ajuda/", views.help_page, name="help"),
     path("sobre/", views.about_page, name="about"),
     path("termos/", views.terms_page, name="terms"),
+    path("healthz", views.healthz, name="healthz"),
     path("api/progresso/<int:word_id>/", views.api_mark_progress, name="api_mark_progress"),
     path("api/imagem/", views.api_image, name="api_image"),
     path("api/coach/sessao/", views.api_session_coach, name="api_session_coach"),

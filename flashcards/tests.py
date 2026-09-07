@@ -110,11 +110,10 @@ class ProgressTests(TestCase):
     def test_home_counts_mastered_words(self):
         Progress.objects.create(user=self.user, word=self.word, level=SRS_MAX_LEVEL)
         resp = self.client.get(reverse("home"))
-        # Home reformatada (linha meta em mono) — nível CEFR + contagem de
-        # dominadas ficam na linha meta. Antes eram cards separados.
-        self.assertContains(resp, "1 palavras dominadas")
-        # E o item "1 palavra hoje" indica atividade
-        self.assertContains(resp, "palavra")
+        # Home reformatada (v3 — ação primeiro): nível CEFR na meta,
+        # análise IA colapsada. Confirma que a página carrega e mostra
+        # o nível calculado a partir das dominadas.
+        self.assertContains(resp, "nível A1")
 
     def test_word_due_when_no_progress_or_overdue(self):
         due_word = self.topic.words.last()
@@ -260,8 +259,10 @@ class OnboardingTests(TestCase):
 
     def test_new_user_sees_welcome_hero(self):
         resp = self.client.get(reverse("home"))
-        # Home reformatada — CTA de onboarding agora é "Começar por X — 5 cartões"
-        self.assertContains(resp, "Começar por")
+        # Home v3 — CTA hero pra novo user tem eyebrow "Comece por" +
+        # hint "3 minutinhos já valem"
+        self.assertContains(resp, "Comece por")
+        self.assertContains(resp, "3 minutinhos")
 
     def test_hero_disappears_after_first_word(self):
         word = Topic.objects.get(slug="basico").words.first()
@@ -324,6 +325,41 @@ class LeechListTests(TestCase):
         self.assertContains(resp, word.pt)
         self.assertContains(resp, word.en)
         self.assertContains(resp, "4 erros seguidos")
+
+
+class HealthzTests(TestCase):
+    """Health check pra sondagem externa — 200 ok se app + DB vivos."""
+    def test_healthz_returns_ok(self):
+        resp = self.client.get(reverse("healthz"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertJSONEqual(resp.content, {"ok": True})
+
+
+class DisplayNameTests(TestCase):
+    """Nome bonito no cumprimento — evita 'Ux.review.20260907.' feio."""
+    def test_uses_first_name_when_set(self):
+        from flashcards.views import _display_name
+        u = User.objects.create_user(
+            username="a@t.com", email="a@t.com",
+            first_name="joão", password="x1234567",
+        )
+        self.assertEqual(_display_name(u), "João")
+
+    def test_falls_back_to_email_local_part(self):
+        from flashcards.views import _display_name
+        u = User.objects.create_user(
+            username="bruno@t.com", email="bruno@t.com", password="x1234567",
+        )
+        self.assertEqual(_display_name(u), "Bruno")
+
+    def test_strips_junk_from_email(self):
+        """Emails como 'ux.review.20260907@t.com' viram só 'Ux'."""
+        from flashcards.views import _display_name
+        u = User.objects.create_user(
+            username="ux.review.20260907@t.com",
+            email="ux.review.20260907@t.com", password="x1234567",
+        )
+        self.assertEqual(_display_name(u), "Ux")
 
 
 class StaticPagesTests(TestCase):

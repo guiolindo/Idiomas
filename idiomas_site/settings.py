@@ -21,16 +21,39 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-t+sh-s8*3b^&b5u#$-g6*5my)5x&m9@fbzc19dxoro24rohtr8',
-)
+# Ambiente: 'production' = ativa checagens rígidas (sem segredo default,
+# hosts explícitos obrigatórios, DEBUG forçado False). Qualquer outro
+# valor (ou ausente) é tratado como dev local, onde os defaults valem.
+# No Railway/Render/produção real, defina DJANGO_ENV=production.
+IS_PRODUCTION = os.environ.get('DJANGO_ENV') == 'production'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+# DEBUG: em produção sempre False (independente da variável). Em dev, o
+# default é True mas dá pra desligar via DJANGO_DEBUG=False.
+DEBUG = False if IS_PRODUCTION else os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
+# SECRET_KEY: em dev usa fallback óbvio. Em produção, falha no boot se a
+# variável não estiver setada — recomendação do QA: um preview mal
+# configurado NÃO deve subir com segredo conhecido silenciosamente.
+_secret = os.environ.get('DJANGO_SECRET_KEY')
+if _secret:
+    SECRET_KEY = _secret
+elif not IS_PRODUCTION:
+    SECRET_KEY = 'django-insecure-dev-only-nao-usar-em-producao'
+else:
+    raise RuntimeError(
+        "DJANGO_SECRET_KEY nao esta definida em producao (DJANGO_ENV=production). "
+        "Configure a variavel antes de subir o servidor."
+    )
+
+# ALLOWED_HOSTS: em produção exige explicitação (defaults 'localhost' não
+# valem). Sem isso, um deploy sobe sem restrição de host — Host header
+# poisoning e outros vetores.
 ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
+if IS_PRODUCTION and (not ALLOWED_HOSTS or set(ALLOWED_HOSTS) <= {'localhost', '127.0.0.1'}):
+    raise RuntimeError(
+        "DJANGO_ALLOWED_HOSTS nao esta configurada em producao. "
+        "Defina os hosts autorizados antes de subir o servidor."
+    )
 
 # CSRF exige a origem com esquema (https://dominio). Railway/Render ficam
 # atrás de um proxy HTTPS — sem isso o Django rejeita todo POST (login,

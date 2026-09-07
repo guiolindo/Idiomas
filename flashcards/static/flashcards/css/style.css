@@ -1139,10 +1139,15 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 }
 
 /* ============================================================
-   Home redesenhada (revisão de UI/UX): saudação + linha meta +
-   uma ação primária. Análise IA colapsada. Palavra do dia como
-   linha, não card. Ações extras como marginália. Tópicos como
-   índice de sumário (grid antigo virou lista com leaders).
+   Home v3 — resposta ao feedback direto ("botões difíceis de
+   clicar, sem separação, monte de coisa estranha, ter que
+   scrollar até o fim pra ver os exercícios").
+
+   Filosofia: AÇÃO PRIMEIRO. A home responde "o que você quer
+   fazer agora?" com cartões grandes e clicáveis na primeira
+   dobra. Índice de 92 tópicos passa a ser um <details>
+   colapsado — quem quer explorar abre; quem quer estudar
+   entra por um dos cartões grandes.
    ============================================================ */
 .home-open{
   margin:0 0 22px;
@@ -1173,6 +1178,136 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
   transition:transform .12s ease, box-shadow .12s ease;
 }
 .cta-primary:hover{ transform:translateY(-1px); box-shadow:0 4px 12px rgba(31,49,87,.25); }
+
+/* CTA principal — grande, gorda, óbvia. Alvo generoso (mínimo 72px de
+   altura) que fica confortável no mobile e imediatamente identifica a
+   "próxima coisa a fazer". */
+.cta-hero{
+  display:grid; grid-template-columns:1fr auto;
+  grid-template-rows:auto auto auto; gap:2px 12px;
+  align-items:center;
+  background:var(--ink); color:var(--paper);
+  border-radius:12px; padding:22px 24px;
+  text-decoration:none;
+  margin:0 0 20px;
+  box-shadow:0 2px 8px rgba(31,49,87,.15), 0 12px 32px rgba(31,49,87,.2);
+  transition:transform .12s ease, box-shadow .12s ease;
+  min-height:96px;
+}
+.cta-hero:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(31,49,87,.2), 0 18px 40px rgba(31,49,87,.28);
+}
+.cta-hero-eyebrow{
+  grid-column:1; grid-row:1;
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent-soft); opacity:.9;
+}
+.cta-hero-title{
+  grid-column:1; grid-row:2;
+  font-family:var(--display); font-size:26px; font-weight:400;
+  letter-spacing:-.01em; line-height:1.15;
+}
+.cta-hero-hint{
+  grid-column:1; grid-row:3;
+  font-family:var(--serif); font-size:14px; color:var(--accent-soft);
+  opacity:.85; margin-top:4px;
+}
+.cta-hero-arrow{
+  grid-column:2; grid-row:1 / span 3;
+  font-family:var(--display); font-size:32px; align-self:center;
+  color:var(--paper); opacity:.7;
+  transition:transform .15s ease, opacity .15s ease;
+}
+.cta-hero:hover .cta-hero-arrow{ transform:translateX(4px); opacity:1; }
+
+/* Grid de ações — a lista de "o que fazer" na primeira dobra.
+   Cartões grandes, alvos confortáveis, separação visível (borda +
+   sombra), estados de hover claros. */
+.action-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:12px; margin:0 0 28px;
+}
+.action-card{
+  display:flex; flex-direction:column; gap:6px;
+  padding:20px 20px 18px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:6px 14px 14px 6px;
+  text-decoration:none; color:inherit;
+  box-shadow:var(--shadow-card);
+  position:relative;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  min-height:112px;
+}
+.action-card::before{
+  content:""; position:absolute; left:8px; top:14px; bottom:14px; width:1.5px;
+  background:var(--margin); opacity:.55;
+}
+.action-card:hover{
+  transform:translateY(-2px);
+  border-color:var(--accent);
+  box-shadow:var(--shadow-lifted);
+}
+.action-eyebrow{
+  font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--graphite);
+}
+.action-title{
+  font-family:var(--display); font-size:22px; font-weight:400;
+  letter-spacing:-.01em; line-height:1.15; color:var(--ink);
+}
+.action-sub{
+  font-family:var(--serif); font-size:13.5px; color:var(--ink-2);
+  line-height:1.4; margin-top:auto;
+}
+.action-card.action-challenge{
+  background:linear-gradient(to bottom right, var(--gold-soft), var(--paper) 70%);
+  border-color:var(--gold);
+}
+.action-card.action-challenge .action-eyebrow{ color:var(--gold-ink); }
+.action-card.action-leech{
+  background:linear-gradient(to bottom right, var(--wrong-soft), var(--paper) 70%);
+  border-color:var(--wrong);
+}
+.action-card.action-leech .action-eyebrow{ color:var(--wrong); }
+.action-card.mode-ditado::after,
+.action-card.mode-voz::after{
+  content:""; position:absolute; top:16px; right:16px;
+  width:8px; height:8px; border-radius:50%; background:var(--accent);
+  opacity:.5;
+}
+.action-card.mode-ditado::after{ background:var(--accent); }
+.action-card.mode-voz::after{ background:var(--gold); }
+
+/* Índice colapsado — quem quer explorar 92 tópicos, abre.
+   O <details> é o "o resto está aqui, se você quiser". */
+.index-details{
+  margin:24px 0 0; padding-top:16px;
+  border-top:1px solid var(--line);
+}
+.index-details > summary{
+  cursor:pointer; list-style:none;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  font-family:var(--display); font-size:16px; color:var(--ink);
+  padding:6px 0;
+}
+.index-details > summary::-webkit-details-marker{ display:none; }
+.index-details > summary::before{
+  content:"›"; display:inline-block; margin-right:8px;
+  transition:transform .15s ease; color:var(--accent); font-size:18px;
+}
+.index-details[open] > summary::before{ transform:rotate(90deg); }
+.index-details > summary > span:first-child{ flex:1; }
+.index-details .index-count{
+  font-family:var(--mono); font-size:11px; color:var(--graphite);
+  letter-spacing:.06em;
+}
+.index-details .index-body{ margin-top:16px; }
+.index-details .index-tools{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);
+}
 
 /* Palavra do dia — uma linha só, italica ornamental */
 .wod-line{

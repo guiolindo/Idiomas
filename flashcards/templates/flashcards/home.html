@@ -3,36 +3,81 @@
 {% block title %}Caderno de Idiomas{% endblock %}
 {% block content %}
 
-{# ============ Abertura enxuta — saudação + linha de meta em mono ============ #}
+{# ============ Abertura: saudação + linha meta ============ #}
 <header class="home-open">
   <h1 class="home-greet">{{ greeting }}, <span class="accent">{{ first_name }}</span>.</h1>
   <p class="home-meta">
     <span>{% now "l, j \d\e F" %}</span>
     {% if overdue_count %}
       <span class="dot">·</span>
-      <a class="meta-alert" href="{% url 'study' overdue_topic.slug %}">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</a>
+      <span class="meta-alert">{{ overdue_count }} {{ overdue_count|pluralize:"revisão vencida,revisões vencidas" }}</span>
     {% elif answered_today %}
       <span class="dot">·</span>
       <span>{{ answered_today }} {{ answered_today|pluralize:"palavra hoje,palavras hoje" }}</span>
     {% endif %}
     <span class="dot">·</span>
-    <span>nível {{ level.code }} · {{ level.mastered }} palavras dominadas</span>
+    <span>nível {{ level.code }}</span>
     {% if profile.streak_count %}
       <span class="dot">·</span>
       <span>{{ profile.streak_count }} {{ profile.streak_count|pluralize:"dia,dias" }} seguido{{ profile.streak_count|pluralize }}</span>
     {% endif %}
   </p>
-
-  {% if overdue_count %}
-    <a class="cta-primary" href="{% url 'study' overdue_topic.slug %}">Continuar — {{ overdue_topic.name }}</a>
-  {% elif continue_topic %}
-    <a class="cta-primary" href="{% url 'topic_detail' continue_topic.slug %}">Continuar — {{ continue_topic.name }}</a>
-  {% elif is_new_user and starter_topic %}
-    <a class="cta-primary" href="{% url 'study' starter_topic.slug %}?tempo=curto">Começar por {{ starter_topic.name }} — 5 cartões</a>
-  {% endif %}
 </header>
 
-{# ============ Palavra do dia — linha ornamental, não card ============ #}
+{# ============ Ação primária — 1 botão grande, gordo, claro ============ #}
+{% if action_topic %}
+<a class="cta-hero" href="{% url 'topic_detail' action_topic.slug %}">
+  <span class="cta-hero-eyebrow">
+    {% if overdue_count %}Recomendado agora{% elif is_new_user %}Comece por{% else %}Continuar{% endif %}
+  </span>
+  <span class="cta-hero-title">{{ action_topic.name }}</span>
+  <span class="cta-hero-hint">
+    {% if overdue_count %}
+      {{ overdue_count }} {{ overdue_count|pluralize:"palavra vencida,palavras vencidas" }} — o resto pode esperar
+    {% elif is_new_user %}
+      3 minutinhos já valem
+    {% else %}
+      Escolher modo e tempo
+    {% endif %}
+  </span>
+  <span class="cta-hero-arrow">→</span>
+</a>
+{% endif %}
+
+{# ============ Modos de estudo + Desafio + Travadas — cartões grandes clicáveis ============ #}
+<div class="action-grid">
+  {% if action_topic %}
+    <a class="action-card mode-escrita" href="{% url 'study' action_topic.slug %}?modo=escrita">
+      <div class="action-eyebrow">Modo</div>
+      <div class="action-title">Escrita</div>
+      <div class="action-sub">Vê em português, escreve em inglês</div>
+    </a>
+    <a class="action-card mode-ditado" href="{% url 'study' action_topic.slug %}?modo=ditado">
+      <div class="action-eyebrow">Modo</div>
+      <div class="action-title">Ditado</div>
+      <div class="action-sub">Ouve em inglês, escreve em português</div>
+    </a>
+    <a class="action-card mode-voz" id="action-voz" href="{% url 'study' action_topic.slug %}?modo=voz">
+      <div class="action-eyebrow">Modo</div>
+      <div class="action-title">Voz</div>
+      <div class="action-sub">Vê em português, fala em inglês</div>
+    </a>
+  {% endif %}
+  <a class="action-card action-challenge" href="{% url 'challenge' %}">
+    <div class="action-eyebrow">Extra</div>
+    <div class="action-title">Desafio relâmpago</div>
+    <div class="action-sub">12 palavras aleatórias · não afeta suas revisões</div>
+  </a>
+  {% if leech_count %}
+    <a class="action-card action-leech" href="{% url 'leech_list' %}">
+      <div class="action-eyebrow">Cuidado</div>
+      <div class="action-title">{{ leech_count }} {{ leech_count|pluralize:"palavra travada,palavras travadas" }}</div>
+      <div class="action-sub">Palavras que você tá errando muito</div>
+    </a>
+  {% endif %}
+</div>
+
+{# ============ Palavra do dia — linha itálica pequena ============ #}
 {% if word_of_day and not is_new_user %}
 <p class="wod-line">
   <span class="wod-label">Palavra do dia —</span>
@@ -43,7 +88,7 @@
 </p>
 {% endif %}
 
-{# ============ Análise IA colapsada — nunca mais três blocos empilhados ============ #}
+{# ============ Análise IA colapsada ============ #}
 {% if ai_enabled and ai_analysis.strengths or ai_analysis.focus or ai_analysis.recommendation %}
 <details class="ai-details">
   <summary>
@@ -58,22 +103,15 @@
 </details>
 {% endif %}
 
-{# ============ Ações extras — linhas quietas na margem ============ #}
-{% if not is_new_user %}
-<nav class="margin-actions" aria-label="Ações extras">
-  <a href="{% url 'challenge' %}"><span class="ma-key">↯</span> Desafio relâmpago <span class="ma-hint">— 12 palavras, não afeta suas revisões</span></a>
-  {% if leech_count %}
-    <a class="alert" href="{% url 'leech_list' %}"><span class="ma-key">◉</span> {{ leech_count }} {{ leech_count|pluralize:"palavra travada,palavras travadas" }} <span class="ma-hint">— erra três vezes seguido, aparece aqui</span></a>
-  {% endif %}
-</nav>
-{% endif %}
-
-{# ============ Índice de tópicos — sumário, não grid de cards ============ #}
-<section class="index-section">
-  <div class="index-head">
-    <h2 class="index-title">Índice</h2>
+{# ============ Índice de tópicos — colapsado por padrão, aparece quando quer ============ #}
+<details class="index-details">
+  <summary>
+    <span>Explorar todos os tópicos</span>
+    <span class="index-count">{{ topic_cards|length }}</span>
+  </summary>
+  <div class="index-body">
     <div class="index-tools">
-      <input type="search" id="search-input" placeholder="buscar…" aria-label="Buscar tópico">
+      <input type="search" id="search-input" placeholder="buscar tópico…" aria-label="Buscar tópico">
       <div class="index-filters" id="filter-row">
         <button type="button" data-filter="all" class="on">Todos</button>
         <button type="button" data-filter="progress">Em progresso</button>
@@ -81,30 +119,26 @@
         <button type="button" data-filter="new">Não iniciados</button>
       </div>
     </div>
-  </div>
 
-  <div class="grid" id="topics">
-    {% for tc in topic_cards %}
-    <a class="tile{% if tc.done %} done{% elif tc.studied %} progress{% endif %}"
-       href="{% url 'topic_detail' tc.topic.slug %}"
-       data-name="{{ tc.topic.name|lower }}"
-       data-state="{% if tc.done %}done{% elif tc.studied > 0 %}progress{% else %}new{% endif %}">
-      <span class="tile-num">{{ forloop.counter|stringformat:"02d" }}</span>
-      <span class="tile-name">{{ tc.topic.name }}{% if tc.done %}<span class="tile-check" aria-label="dominado">✓</span>{% endif %}</span>
-      <span class="meta">
-        {% if tc.done %}
-          concluído
-        {% elif tc.studied %}
-          {{ tc.pct }}%
-        {% else %}
-          — / {{ tc.total }}
-        {% endif %}
-      </span>
-    </a>
-    {% endfor %}
+    <div class="grid" id="topics">
+      {% for tc in topic_cards %}
+      <a class="tile{% if tc.done %} done{% elif tc.studied %} progress{% endif %}"
+         href="{% url 'topic_detail' tc.topic.slug %}"
+         data-name="{{ tc.topic.name|lower }}"
+         data-state="{% if tc.done %}done{% elif tc.studied > 0 %}progress{% else %}new{% endif %}">
+        <span class="tile-num">{{ forloop.counter|stringformat:"02d" }}</span>
+        <span class="tile-name">{{ tc.topic.name }}{% if tc.done %}<span class="tile-check" aria-label="dominado">✓</span>{% endif %}</span>
+        <span class="meta">
+          {% if tc.done %}concluído
+          {% elif tc.studied %}{{ tc.pct }}%
+          {% else %}não iniciado{% endif %}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="empty-search" id="empty-search" hidden>Nenhum tópico bate com essa busca.</p>
   </div>
-  <p class="empty-search" id="empty-search" hidden>Nenhum tópico bate com essa busca.</p>
-</section>
+</details>
 
 <script>
   (function(){
@@ -119,33 +153,39 @@
         speechSynthesis.speak(u);
       });
     }
+    // Esconde o card de Voz se o navegador não suportar SpeechRecognition
+    var voz = document.getElementById('action-voz');
+    var supports = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+    if(voz && !supports){ voz.hidden = true; }
   })();
-  var tiles = Array.from(document.querySelectorAll('#topics .tile'));
+
   var search = document.getElementById('search-input');
   var filterRow = document.getElementById('filter-row');
   var emptyMsg = document.getElementById('empty-search');
-  var currentFilter = 'all';
-
-  function applyFilters(){
-    var q = search.value.trim().toLowerCase();
-    var visible = 0;
-    tiles.forEach(function(t){
-      var matchesText = !q || t.dataset.name.indexOf(q) !== -1;
-      var matchesChip = currentFilter === 'all' || t.dataset.state === currentFilter;
-      var show = matchesText && matchesChip;
-      t.style.display = show ? '' : 'none';
-      if(show) visible++;
+  if(search && filterRow){
+    var tiles = Array.from(document.querySelectorAll('#topics .tile'));
+    var currentFilter = 'all';
+    function applyFilters(){
+      var q = search.value.trim().toLowerCase();
+      var visible = 0;
+      tiles.forEach(function(t){
+        var matchesText = !q || t.dataset.name.indexOf(q) !== -1;
+        var matchesChip = currentFilter === 'all' || t.dataset.state === currentFilter;
+        var show = matchesText && matchesChip;
+        t.style.display = show ? '' : 'none';
+        if(show) visible++;
+      });
+      if(emptyMsg) emptyMsg.hidden = visible > 0;
+    }
+    search.addEventListener('input', applyFilters);
+    filterRow.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){
+        filterRow.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on');
+        currentFilter = b.dataset.filter;
+        applyFilters();
+      });
     });
-    emptyMsg.hidden = visible > 0;
   }
-  search.addEventListener('input', applyFilters);
-  filterRow.querySelectorAll('button').forEach(function(b){
-    b.addEventListener('click', function(){
-      filterRow.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
-      b.classList.add('on');
-      currentFilter = b.dataset.filter;
-      applyFilters();
-    });
-  });
 </script>
 {% endblock %}

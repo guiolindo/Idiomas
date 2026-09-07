@@ -101,6 +101,22 @@ def _greeting(now):
     return "Boa noite"
 
 
+def _display_name(user):
+    """Nome bonito pra cumprimentar. Prefere first_name; senão pega a
+    parte antes do @ do e-mail, mas só a primeira "palavra" (o segmento
+    antes de pontos ou traços) — evita coisas feias como
+    "Ux.review.20260907." apontadas na avaliação de QA."""
+    if user.first_name:
+        return user.first_name.strip().split(" ")[0].capitalize()
+    local = (user.email or "").split("@")[0]
+    # Primeira palavra útil, sem números finais
+    import re as _re
+    m = _re.match(r"[a-zA-ZçÇáéíóúÁÉÍÓÚâêîôûÂÊÎÔÛãõÃÕàÀ]+", local)
+    if m:
+        return m.group(0).capitalize()
+    return local.capitalize() or "aí"
+
+
 @login_required
 def home(request):
     now = timezone.now()
@@ -192,6 +208,13 @@ def home(request):
     # botão discreto na home leva pra dashboard focada.
     leech_count = Progress.objects.filter(user=request.user, is_leech=True).count()
 
+    # Tópico "próxima ação": prioridade — tópico com vencidas, senão o
+    # continue_topic (última atividade), senão starter (novo user), senão
+    # o primeiro tópico. Usado nos cards de modo (Escrita/Ditado/Voz) pra
+    # já apontar pra onde estudar — evita "clico em Ditado e caio em outra
+    # tela pedindo tópico".
+    action_topic = overdue_topic or continue_topic or starter_topic or (topics[0] if topics else None)
+
     return render(request, "flashcards/home.html", {
         "topic_cards": topic_cards,
         "total_words": total_words,
@@ -207,12 +230,13 @@ def home(request):
         "ai_generated_at": profile.ai_feedback_at,
         "level": level,
         "greeting": _greeting(now),
-        "first_name": (request.user.first_name or request.user.email.split("@")[0]).capitalize(),
+        "first_name": _display_name(request.user),
         "answered_today": answered_today,
         "is_new_user": is_new_user,
         "starter_topic": starter_topic,
         "word_of_day": word_of_day,
         "leech_count": leech_count,
+        "action_topic": action_topic,
     })
 
 
@@ -442,6 +466,16 @@ def _bump_streak(user):
 @login_required
 @require_POST
 def api_mark_progress(request, word_id):
+    # TODO (feedback de QA, P0): a integridade do SRS depende do cliente
+    # aqui. Um usuário autenticado pode chamar essa API com QUALQUER
+    # word_id do banco e marcar como know/miss/soso, mesmo palavras que
+    # não estavam na sessão dele. Isso não é escalonamento de privilégio
+    # (o usuário só sabota o próprio SRS), mas ainda assim vulnerabiliza
+    # os dados. Correção completa: emitir um token de sessão server-side
+    # ao abrir /estudar/, guardar em cache a lista de word_ids elegíveis,
+    # e aceitar o POST só quando o token bate e o word está na lista.
+    # Deixado como próxima iteração — a defesa atual só valida que o word
+    # existe (get_object_or_404) e limita result a valores conhecidos.
     result = request.POST.get("result")  # 'miss' | 'soso' | 'know'
     if result not in ("miss", "soso", "know"):
         return JsonResponse({"error": "result inválido"}, status=400)
@@ -507,6 +541,21 @@ def api_session_coach(request):
     if not result:
         return JsonResponse({"enabled": True, "message": ""})
     return JsonResponse({"enabled": True, "message": result["message"]})
+
+
+def healthz(request):
+    """Endpoint de health check pra sondagem externa (Railway, monitor
+    externo). Faz um SELECT trivial no banco pra confirmar que a app +
+    conexão de DB estão vivas. Retorna 200 ok / 500 se algo trava.
+    Sem autenticação — é infra, não UI."""
+    from django.db import connection
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT 1")
+            c.fetchone()
+    except Exception as e:
+        return JsonResponse({"ok": False, "error": str(e)[:120]}, status=500)
+    return JsonResponse({"ok": True})
 
 
 def help_page(request):
