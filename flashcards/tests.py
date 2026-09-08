@@ -72,9 +72,17 @@ class ProgressTests(TestCase):
         Profile.objects.create(user=self.user)
         self.client.login(username="p@t.com", password="x1234567")
 
+    def _open_session(self):
+        """Abre uma rodada em /estudar/ e retorna a sessão criada."""
+        from flashcards.models import StudySession
+        self.client.get(reverse("study", args=[self.topic.slug]))
+        return StudySession.objects.filter(user=self.user).order_by("-created_at").first()
+
     def test_know_creates_progress_and_advances_level(self):
+        session = self._open_session()
         resp = self.client.post(
-            reverse("api_mark_progress", args=[self.word.id]), {"result": "know"}
+            reverse("api_mark_progress", args=[self.word.id]),
+            {"result": "know", "session_id": session.id},
         )
         self.assertEqual(resp.status_code, 200)
         progress = Progress.objects.get(user=self.user, word=self.word)
@@ -83,9 +91,10 @@ class ProgressTests(TestCase):
 
     def test_miss_resets_level_and_stores_wrong_answer(self):
         progress = Progress.objects.create(user=self.user, word=self.word, level=3)
+        session = self._open_session()
         resp = self.client.post(
             reverse("api_mark_progress", args=[self.word.id]),
-            {"result": "miss", "wrong_answer": "aple"},
+            {"result": "miss", "wrong_answer": "aple", "session_id": session.id},
         )
         self.assertEqual(resp.status_code, 200)
         progress.refresh_from_db()
@@ -289,21 +298,98 @@ class ChallengeTests(TestCase):
         self.assertContains(resp, "Modo livre")
 
     def test_challenge_response_does_not_touch_progress(self):
-        word = Topic.objects.get(slug="a").words.first()
+        # Autoriza sessão via GET normal e usa o session_id que o servidor
+        # deu — não dá mais pra forjar mode=challenge do cliente.
+        from flashcards.models import StudySession
+        resp = self.client.get(reverse("challenge"))
+        session = StudySession.objects.filter(user=self.user).order_by("-created_at").first()
+        self.assertFalse(session.affects_srs)
+        word_id = session.word_ids[0]
         self.client.post(
-            reverse("api_mark_progress", args=[word.id]),
-            {"result": "miss", "mode": "challenge"},
+            reverse("api_mark_progress", args=[word_id]),
+            {"result": "miss", "session_id": session.id},
         )
-        # nenhum Progress criado
+        # nenhum Progress criado — sessão marcou affects_srs=False
         self.assertEqual(Progress.objects.filter(user=self.user).count(), 0)
 
     def test_normal_response_still_creates_progress(self):
-        # Sem o mode=challenge, comportamento antigo
-        word = Topic.objects.get(slug="a").words.first()
+        # Rodada normal via /estudar/ — sessão autoriza a palavra
+        from flashcards.models import StudySession
+        topic = Topic.objects.get(slug="a")
+        self.client.get(reverse("study", args=[topic.slug]))
+        session = StudySession.objects.filter(user=self.user).order_by("-created_at").first()
+        self.assertTrue(session.affects_srs)
+        word_id = session.word_ids[0]
         self.client.post(
-            reverse("api_mark_progress", args=[word.id]),
-            {"result": "know"},
+            reverse("api_mark_progress", args=[word_id]),
+            {"result": "know", "session_id": session.id},
         )
+        self.assertEqual(Progress.objects.filter(user=self.user).count(), 1)
+
+
+class ProgressAuthorizationTests(TestCase):
+    """Fecha A-01 da auditoria: api_mark_progress agora exige session_id
+    válido criado server-side, e a palavra tem que estar na rodada."""
+    def setUp(self):
+        self.topic_a = make_topic(slug="a", name="A", words=(("um","one"),("dois","two")))
+        self.topic_b = make_topic(slug="b", name="B", words=(("cinco","five"),("seis","six")))
+        self.user = User.objects.create_user(username="s@t.com", email="s@t.com", password="x1234567")
+        self.client.login(username="s@t.com", password="x1234567")
+
+    def test_progress_requires_session_id(self):
+        word = self.topic_a.words.first()
+        resp = self.client.post(reverse("api_mark_progress", args=[word.id]), {"result": "know"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(Progress.objects.count(), 0)
+
+    def test_progress_rejects_invalid_session(self):
+        word = self.topic_a.words.first()
+        resp = self.client.post(
+            reverse("api_mark_progress", args=[word.id]),
+            {"result": "know", "session_id": "999999"},
+        )
+        self.assertEqual(resp.status_code, 403)
+
+    def test_progress_rejects_word_outside_session(self):
+        """Abro rodada do tópico A e tento marcar palavra do tópico B."""
+        from flashcards.models import StudySession
+        self.client.get(reverse("study", args=["a"]))
+        session = StudySession.objects.filter(user=self.user).order_by("-created_at").first()
+        stranger_word = self.topic_b.words.first()
+        resp = self.client.post(
+            reverse("api_mark_progress", args=[stranger_word.id]),
+            {"result": "know", "session_id": session.id},
+        )
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(Progress.objects.count(), 0)
+
+    def test_progress_rejects_expired_session(self):
+        from flashcards.models import StudySession
+        from datetime import timedelta as td
+        self.client.get(reverse("study", args=["a"]))
+        session = StudySession.objects.filter(user=self.user).order_by("-created_at").first()
+        session.expires_at = timezone.now() - td(minutes=1)
+        session.save()
+        word_id = session.word_ids[0]
+        resp = self.client.post(
+            reverse("api_mark_progress", args=[word_id]),
+            {"result": "know", "session_id": session.id},
+        )
+        self.assertEqual(resp.status_code, 403)
+
+    def test_client_cannot_forge_challenge_mode(self):
+        """Cliente não pode mais mandar mode=challenge pra pular SRS —
+        a decisão de affects_srs vem só da sessão."""
+        from flashcards.models import StudySession
+        self.client.get(reverse("study", args=["a"]))  # sessão normal, affects_srs=True
+        session = StudySession.objects.filter(user=self.user).order_by("-created_at").first()
+        word_id = session.word_ids[0]
+        # Cliente envia mode=challenge tentando burlar
+        self.client.post(
+            reverse("api_mark_progress", args=[word_id]),
+            {"result": "know", "session_id": session.id, "mode": "challenge"},
+        )
+        # SRS foi gravado normalmente — o mode do cliente é ignorado
         self.assertEqual(Progress.objects.filter(user=self.user).count(), 1)
 
 
@@ -463,12 +549,13 @@ class StudyModeTests(TestCase):
         # não escrever tradução. Value do parâmetro mantém 'ditado' por
         # compat (mudança só de label).
         self.assertContains(resp, 'STUDY_MODE = "ditado"')
-        self.assertContains(resp, "Modo Compreensão")
+        # Label agora é a TAREFA, não o método (feedback da revisão UX)
+        self.assertContains(resp, "Ouvir e escolher")
 
     def test_mode_voz(self):
         resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=voz")
         self.assertContains(resp, 'STUDY_MODE = "voz"')
-        self.assertContains(resp, "Modo Voz")
+        self.assertContains(resp, "Falar e comparar")
 
     def test_invalid_mode_falls_back_to_escrita(self):
         resp = self.client.get(reverse("study", args=[self.topic.slug]) + "?modo=xpto")

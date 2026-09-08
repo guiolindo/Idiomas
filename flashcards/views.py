@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 from .ai_coach import AI_ENABLED, generate_feedback, generate_session_feedback
 from .forms import SignupForm
 from .levels import compute_level, compute_coverage
-from .models import Topic, Word, Progress, Profile, SRS_MAX_LEVEL
+from .models import Topic, Word, Progress, Profile, StudySession, SRS_MAX_LEVEL
 from .photos import fetch_photo
 
 
@@ -43,6 +43,22 @@ class IdiomasLoginView(LoginView):
 
 class IdiomasLogoutView(LogoutView):
     next_page = "login"
+
+
+SESSION_TTL_MINUTES = 90  # tempo máx entre abrir rodada e responder último card
+
+
+def _create_study_session(user, mode: str, word_ids: list, *,
+                          affects_srs: bool = True, topic_slug: str = "") -> StudySession:
+    """Autoriza uma rodada: guarda no servidor quais word_ids valem e se
+    afeta o SRS. Devolve a sessão pra o cliente receber apenas o id."""
+    return StudySession.objects.create(
+        user=user, mode=mode,
+        word_ids=[int(wid) for wid in word_ids],
+        affects_srs=affects_srs,
+        topic_slug=topic_slug,
+        expires_at=timezone.now() + timedelta(minutes=SESSION_TTL_MINUTES),
+    )
 
 
 def _client_ip(request):
@@ -337,10 +353,17 @@ def challenge(request):
         }
         for w in picked
     ])
+    # Desafio: rodada autorizada explicitamente como "não afeta SRS".
+    # O cliente não pode mais forjar mode=challenge — o servidor decide.
+    session = _create_study_session(
+        request.user, mode="desafio", word_ids=[w.id for w in picked],
+        affects_srs=False, topic_slug="",
+    )
     return render(request, "flashcards/challenge.html", {
         "words_json": words_json,
         "total": len(picked),
         "topic_has_photo": any(w.has_photo for w in picked),
+        "session_id": session.id,
     })
 
 
@@ -428,11 +451,16 @@ def mixed(request):
     ])
     _bump_streak(request.user)
     topics_covered = sorted({w.topic.name for w in picked_words})
+    session = _create_study_session(
+        request.user, mode="misturar", word_ids=[w.id for w in picked_words],
+        affects_srs=True,
+    )
     return render(request, "flashcards/mixed.html", {
         "words_json": words_json,
         "total": len(picked_words),
         "topic_has_photo": any(w.has_photo for w in picked_words),
         "topics_covered": topics_covered,
+        "session_id": session.id,
     })
 
 
@@ -586,6 +614,14 @@ def study(request, slug):
         w.pop("_priority_level", None)
 
     _bump_streak(request.user)
+    # Autoriza a rodada no servidor — só palavras devidas (due=True)
+    # entram. api_mark_progress vai rejeitar qualquer word_id fora dessa
+    # lista, mesmo que o cliente tente forjar.
+    session_word_ids = [w["id"] for w in words if w["due"]]
+    session = _create_study_session(
+        request.user, mode=study_mode, word_ids=session_word_ids,
+        affects_srs=True, topic_slug=topic.slug,
+    )
     return render(request, "flashcards/study.html", {
         "topic": topic,
         "words_json": json.dumps(words),
@@ -598,6 +634,7 @@ def study(request, slug):
         "session_cap": session_cap,
         "session_length": session_length,
         "study_mode": study_mode,
+        "session_id": session.id,
     })
 
 
@@ -615,28 +652,36 @@ def _bump_streak(user):
 @login_required
 @require_POST
 def api_mark_progress(request, word_id):
-    # TODO (feedback de QA, P0): a integridade do SRS depende do cliente
-    # aqui. Um usuário autenticado pode chamar essa API com QUALQUER
-    # word_id do banco e marcar como know/miss/soso, mesmo palavras que
-    # não estavam na sessão dele. Isso não é escalonamento de privilégio
-    # (o usuário só sabota o próprio SRS), mas ainda assim vulnerabiliza
-    # os dados. Correção completa: emitir um token de sessão server-side
-    # ao abrir /estudar/, guardar em cache a lista de word_ids elegíveis,
-    # e aceitar o POST só quando o token bate e o word está na lista.
-    # Deixado como próxima iteração — a defesa atual só valida que o word
-    # existe (get_object_or_404) e limita result a valores conhecidos.
+    """Grava progresso da palavra numa rodada AUTORIZADA server-side.
+
+    Fecha o achado A-01 da auditoria: antes o servidor confiava em qualquer
+    word_id + no `mode=challenge` do cliente. Agora exige um session_id
+    válido, criado ao abrir a rodada, com a lista de word_ids elegíveis e
+    a flag affects_srs.
+    """
     result = request.POST.get("result")  # 'miss' | 'soso' | 'know'
     if result not in ("miss", "soso", "know"):
         return JsonResponse({"error": "result inválido"}, status=400)
-    # Modo desafio: o cliente sinaliza que essa rodada não deve mexer no SRS
-    # (é jogo, não estudo). Retornamos ok sem alterar o Progress — o aluno
-    # continua tendo o feedback visual, só que sem consequência.
-    if request.POST.get("mode") == "challenge":
+
+    session_id = request.POST.get("session_id")
+    if not session_id:
+        return JsonResponse({"error": "sessão ausente"}, status=400)
+    try:
+        session = StudySession.objects.get(id=int(session_id), user=request.user)
+    except (StudySession.DoesNotExist, TypeError, ValueError):
+        return JsonResponse({"error": "sessão inválida"}, status=403)
+    if not session.is_valid_now():
+        return JsonResponse({"error": "sessão expirada"}, status=403)
+    if not session.contains(word_id):
+        return JsonResponse({"error": "palavra fora da rodada"}, status=403)
+
+    # A decisão de gravar (ou não) o SRS vem da SESSÃO, não do cliente.
+    # Antes o cliente enviava mode=challenge livremente pra pular o SRS
+    # em qualquer request — agora só se a rodada foi criada como não-SRS.
+    if not session.affects_srs:
         return JsonResponse({"ok": True, "challenge": True})
-    wrong_answer = request.POST.get("wrong_answer", "")
-    # Idioma em que a resposta foi dada (en/pt) — Ditado responde em PT,
-    # os outros modos em EN. Guardado no Progress pra "última vez você
-    # escreveu X" só reaparecer no mesmo modo.
+
+    wrong_answer = request.POST.get("wrong_answer", "")[:100]
     answer_lang = request.POST.get("answer_lang", "en")
     if answer_lang not in ("en", "pt"):
         answer_lang = "en"

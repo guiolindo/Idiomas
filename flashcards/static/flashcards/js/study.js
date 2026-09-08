@@ -633,17 +633,16 @@
     renderControls();
   }
   function syncWord(wordId, result, wrongAnswer){
-    // Modo desafio: manda o mode pro backend, que não altera o SRS.
-    // Ainda registramos pra o coach de sessão poder comentar a rodada.
-    const modeParam = window.CHALLENGE_MODE ? '&mode=challenge' : '';
-    // Idioma da resposta — Ditado responde em português, resto em inglês.
-    // Guardado com o last_wrong pra "última vez você escreveu X" só
-    // aparecer no mesmo modo depois.
+    // Backend agora exige session_id — sem ele a autoridade da rodada
+    // (quais words podem ser marcadas, se afeta SRS) fica no cliente e
+    // dá pra forjar. mode=challenge já não decide nada; é a sessão que
+    // guarda affects_srs.
+    const sessionId = window.SESSION_ID || '';
     const answerLang = prefs.cue === 'ditado' ? 'pt' : 'en';
     return fetch(`${window.MARK_URL_BASE}${wordId}/`, {
       method: 'POST',
       headers: { 'X-CSRFToken': window.CSRF_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}&answer_lang=${answerLang}${modeParam}`,
+      body: `result=${result}&wrong_answer=${encodeURIComponent(wrongAnswer||'')}&answer_lang=${answerLang}&session_id=${encodeURIComponent(sessionId)}`,
     }).catch(()=>{});
   }
   function next(){ st.i++; st.revealed = false; renderCard(); }

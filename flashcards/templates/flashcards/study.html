@@ -39,10 +39,10 @@ NÃO aparecem aqui — são modos separados, escolhidos antes da sessão.
 </div>
 {% else %}
 <div class="mode-badge">
-  {% if study_mode == 'ditado' %}Modo Compreensão
-  {% elif study_mode == 'transcricao' %}Modo Transcrição
-  {% elif study_mode == 'voz' %}Modo Voz
-  {% else %}Modo Escrita{% endif %}
+  {% if study_mode == 'ditado' %}Ouvir e escolher
+  {% elif study_mode == 'transcricao' %}Ouvir e escrever
+  {% elif study_mode == 'voz' %}Falar e comparar
+  {% else %}Traduzir{% endif %}
 </div>
 {% endif %}
 
@@ -112,6 +112,7 @@ NÃO aparecem aqui — são modos separados, escolhidos antes da sessão.
   // é apresentado e como a resposta é validada. O JS força o estado
   // inicial conforme o modo e trata alguns como não-alteráveis.
   window.STUDY_MODE = "{{ study_mode|escapejs }}";
+  window.SESSION_ID = "{{ session_id }}";
 </script>
 <script src="{% static 'flashcards/js/study.js' %}"></script>
 {% endblock %}

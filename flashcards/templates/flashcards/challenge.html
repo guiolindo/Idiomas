@@ -93,6 +93,7 @@
   // Sinaliza pro study.js: rodada não afeta o SRS. syncWord manda
   // "mode=challenge" e o backend ignora a atualização de Progress.
   window.CHALLENGE_MODE = true;
+  window.SESSION_ID = "{{ session_id }}";
 </script>
 <script src="{% static 'flashcards/js/study.js' %}"></script>
 {% endblock %}

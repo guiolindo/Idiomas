@@ -97,23 +97,23 @@
   {% if action_topic %}
     <a class="action-card mode-escrita" href="{% url 'study' action_topic.slug %}?modo=escrita">
       <div class="action-eyebrow">Modo · {{ action_topic.name }}</div>
-      <div class="action-title">Escrita</div>
-      <div class="action-sub">Vê em português, escreve em inglês</div>
+      <div class="action-title">Traduzir</div>
+      <div class="action-sub">Você vê em português e escreve em inglês</div>
     </a>
     <a class="action-card mode-ditado" href="{% url 'study' action_topic.slug %}?modo=ditado">
       <div class="action-eyebrow">Modo · {{ action_topic.name }}</div>
-      <div class="action-title">Compreensão</div>
-      <div class="action-sub">Ouve em inglês, escolhe o significado</div>
+      <div class="action-title">Ouvir e escolher</div>
+      <div class="action-sub">Ouve em inglês, escolhe entre 3 significados</div>
     </a>
     <a class="action-card mode-transcricao" href="{% url 'study' action_topic.slug %}?modo=transcricao">
       <div class="action-eyebrow">Modo · {{ action_topic.name }}</div>
-      <div class="action-title">Transcrição</div>
-      <div class="action-sub">Ouve em inglês, escreve em inglês</div>
+      <div class="action-title">Ouvir e escrever</div>
+      <div class="action-sub">Ouve em inglês, escreve o que ouviu</div>
     </a>
     <a class="action-card mode-voz" id="action-voz" href="{% url 'study' action_topic.slug %}?modo=voz">
       <div class="action-eyebrow">Modo · {{ action_topic.name }}</div>
-      <div class="action-title">Voz</div>
-      <div class="action-sub">Vê em português, fala em inglês</div>
+      <div class="action-title">Falar e comparar</div>
+      <div class="action-sub">Fala em inglês, compara com o áudio · você se avalia</div>
     </a>
   {% endif %}
   <a class="action-card action-mixed" href="{% url 'mixed' %}">

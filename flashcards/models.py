@@ -138,6 +138,43 @@ class Progress(models.Model):
         self.save()
 
 
+class StudySession(models.Model):
+    """Sessão de estudo autorizada pelo servidor.
+
+    Sem isso (feedback da auditoria A-01), api_mark_progress aceitava qualquer
+    word_id + modo enviados pelo cliente — dava pra corromper o próprio SRS
+    marcando palavras arbitrárias como 'sabia' ou usar mode=challenge em
+    qualquer request pra pular a gravação. Agora:
+
+    - Ao abrir /estudar/, /misturar/ ou /desafio/, o servidor cria uma
+      StudySession com os word_ids elegíveis e se afeta o SRS.
+    - O id da sessão é passado pro cliente.
+    - api_mark_progress rejeita:
+        * session_id que não existe / expirou / não é do user
+        * word_id que não está na lista da sessão
+      A decisão de "afeta SRS" vem da sessão, não do cliente.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_sessions")
+    mode = models.CharField(max_length=20)  # 'escrita' | 'ditado' | 'transcricao' | 'voz'
+    word_ids = models.JSONField(default=list)  # lista de int com os ids elegíveis
+    affects_srs = models.BooleanField(default=True)  # false pro modo Desafio
+    topic_slug = models.CharField(max_length=40, blank=True, default="")  # opcional, só pra debug
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "expires_at"])]
+
+    def is_valid_now(self):
+        return self.expires_at > timezone.now()
+
+    def contains(self, word_id: int) -> bool:
+        try:
+            return int(word_id) in self.word_ids
+        except (TypeError, ValueError):
+            return False
+
+
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     streak_count = models.PositiveIntegerField(default=0)
