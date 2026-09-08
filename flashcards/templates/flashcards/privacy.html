@@ -1,0 +1,80 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Privacidade · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="doc-page">
+  <h1 class="doc-title">Privacidade</h1>
+  <p class="doc-lead">O que sai do sistema, quando, e como você desliga.</p>
+
+  <section class="doc-section">
+    <h2>O que fica só aqui</h2>
+    <p>
+      Seu e-mail, sua senha (guardada como hash, ninguém enxerga o texto), suas respostas (quais palavras você domina, quais errou, quando reviu), a sua sequência de dias estudados e a análise já gerada de progresso. Tudo isso mora no banco da aplicação e não vai pra ninguém.
+    </p>
+  </section>
+
+  <section class="doc-section" id="ia">
+    <h2>Quando a inteligência artificial entra em cena</h2>
+    <p>
+      O <b>coach de IA</b> é opcional e vem <b>desligado por padrão</b>. Se você ligar em <a href="{% url 'settings' %}">Configurações</a>, ao terminar cada rodada de estudo o sistema envia um <b>resumo da rodada</b> pra uma inteligência artificial (Google Gemini, com Groq como reserva) pra gerar uma análise em português.
+    </p>
+    <p>
+      O que sai do sistema quando o coach está ligado:
+    </p>
+    <ul>
+      <li>Nome do tópico e do modo estudado (ex: "Pessoas e família", "Traduzir")</li>
+      <li>Palavras que apareceram na rodada (em português e em inglês)</li>
+      <li>O que você digitou (ou falou) em cada uma</li>
+      <li>Se acertou, quase, ou errou</li>
+      <li>Seu nível CEFR estimado e contagem de palavras dominadas</li>
+    </ul>
+    <p>
+      O que <b>não</b> sai: seu e-mail, sua senha, seu IP, seu histórico completo, ou dados de qualquer outra pessoa. O prompt que a IA recebe é um JSON com só o necessário pra o feedback.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Google e Groq — o que eles fazem com isso</h2>
+    <p>
+      Quem responde à requisição segue a política de retenção do serviço:
+    </p>
+    <ul>
+      <li><a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener">Termos do Gemini API</a></li>
+      <li><a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">Política do Groq</a></li>
+    </ul>
+    <p>
+      Em contas gratuitas ou de desenvolvimento, esses serviços podem usar o conteúdo pra melhorar seus modelos. Se isso te incomoda, mantenha o coach desligado (o padrão).
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Como desligar</h2>
+    <p>
+      Em qualquer momento, vá em <a href="{% url 'settings' %}">Configurações</a> e desmarque "Coach de IA ligado". A partir daí, nenhum dado seu sai do sistema.
+    </p>
+    <p>
+      Se você desligar depois de ter usado, a última análise já gerada continua salva no seu perfil (ela ficou aqui, no banco da aplicação). Você pode limpar isso pedindo exclusão de conta — veja <a href="{% url 'terms' %}">Termos de uso</a>.
+    </p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Serviços de fora que sempre entram (mesmo sem coach)</h2>
+    <ul>
+      <li><b>Pexels</b> e <b>Wikipedia</b> — mostram as fotos das palavras. As imagens ficam nesses sites, não copiadas aqui.</li>
+      <li><b>Resend</b> — envia o e-mail de recuperação de senha quando você pede.</li>
+      <li><b>Reconhecimento de voz do navegador</b> — só se você usar o modo "Falar e comparar". No Chrome/Edge o áudio vai pra o servidor de reconhecimento do Google (mesmo do "OK Google"). Nada é armazenado aqui.</li>
+    </ul>
+  </section>
+
+  <section class="doc-section">
+    <h2>Cookies</h2>
+    <p>
+      Só o cookie de sessão do Django (pra você continuar logado) e o cookie de proteção CSRF (pra formulários serem seguros). Não usamos cookie de rastreamento, nem passamos seus dados pra anunciantes.
+    </p>
+  </section>
+
+  <p class="doc-back">
+    <a href="{% url 'home' %}">← Voltar aos tópicos</a>
+  </p>
+</div>
+{% endblock %}

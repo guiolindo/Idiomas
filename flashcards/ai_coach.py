@@ -234,19 +234,32 @@ def _parse_session_reply(text):
     return {"message": message}
 
 
-def generate_feedback(user):
-    """None se IA desligada ou as duas chamadas falharem."""
+def coach_enabled_for(user) -> bool:
+    """Só chama a IA se: (1) o app tem chave configurada, E (2) o usuário
+    ligou explicitamente o coach no perfil (privacy by default — A-03)."""
     if not AI_ENABLED:
+        return False
+    try:
+        return bool(user.profile.coach_enabled)
+    except Exception:
+        return False
+
+
+def generate_feedback(user):
+    """None se IA desligada, sem opt-in do usuário, ou as duas chamadas
+    falharem. Nenhum dado sai do sistema se o coach não estiver ligado."""
+    if not coach_enabled_for(user):
         return None
     prompt = PROMPT_INSTRUCTIONS + json.dumps(_build_summary(user), ensure_ascii=False)
     reply = _call_gemini(prompt) or _call_groq(prompt)
     return _parse_reply(reply)
 
 
-def generate_session_feedback(session_data):
-    """Comentário específico sobre uma rodada de estudo que acabou de terminar.
-    session_data: {"topic": "...", "answers": [{"pt","en","typed","result"}]}
-    Retorna {"message": "..."} ou None."""
+def generate_session_feedback(session_data, user=None):
+    """Comentário específico sobre uma rodada. Retorna None sem opt-in
+    do usuário — nada é enviado pra Gemini/Groq."""
+    if user is not None and not coach_enabled_for(user):
+        return None
     if not AI_ENABLED:
         return None
     prompt = SESSION_PROMPT_INSTRUCTIONS + json.dumps(session_data, ensure_ascii=False)

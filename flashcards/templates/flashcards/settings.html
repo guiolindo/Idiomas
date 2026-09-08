@@ -1,0 +1,52 @@
+{% extends "flashcards/base.html" %}
+{% block title %}Configurações · Caderno de Idiomas{% endblock %}
+{% block content %}
+
+<div class="doc-page">
+  <h1 class="doc-title">Configurações</h1>
+  <p class="doc-lead">Poucos ajustes, todos importantes.</p>
+
+  {% if saved %}
+  <div class="settings-saved" role="status">Preferência salva.</div>
+  {% endif %}
+
+  <form method="post" class="settings-form">
+    {% csrf_token %}
+
+    <section class="doc-section">
+      <h2>Coach de inteligência artificial</h2>
+      <p>
+        Se ligado, ao terminar cada rodada de estudo o sistema envia um resumo do que aconteceu pra Google Gemini (ou Groq como reserva) gerar um comentário em português e uma análise dos seus pontos fortes e do que ajustar.
+      </p>
+      <p>
+        O que sai daqui quando ligado: o tópico, as palavras da rodada, o que você respondeu, e seus acertos/erros. <b>Não sai</b> seu e-mail, sua senha, seu IP, nem histórico completo. Detalhes em <a href="{% url 'privacy' %}#ia">Privacidade</a>.
+      </p>
+      <label class="settings-toggle">
+        <input type="checkbox" name="coach_enabled" {% if profile.coach_enabled %}checked{% endif %} {% if not ai_available %}disabled{% endif %}>
+        <span class="settings-toggle-label">Coach de IA ligado</span>
+      </label>
+      {% if not ai_available %}
+        <p class="settings-hint">O coach de IA não está disponível neste servidor (chave da API não configurada).</p>
+      {% endif %}
+
+      <button type="submit" class="btn primary" style="margin-top:16px">Salvar</button>
+    </section>
+  </form>
+
+  <section class="doc-section">
+    <h2>Alterar senha</h2>
+    <p><a href="{% url 'password_change' %}">Trocar minha senha</a></p>
+  </section>
+
+  <section class="doc-section">
+    <h2>Apagar conta</h2>
+    <p>
+      Você pode pedir a exclusão da sua conta e todos os dados por e-mail ao autor. Detalhes em <a href="{% url 'terms' %}">Termos de uso</a>.
+    </p>
+  </section>
+
+  <p class="doc-back">
+    <a href="{% url 'home' %}">← Voltar aos tópicos</a>
+  </p>
+</div>
+{% endblock %}

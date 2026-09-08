@@ -20,9 +20,10 @@
           <button class="topnav-user" id="account-btn" type="button" aria-haspopup="true" aria-expanded="false" title="{{ user.email }}">{{ user.email|slice:":1"|upper }}</button>
           <div class="account-drop" id="account-drop" hidden role="menu">
             <div class="account-hd">{{ user.email }}</div>
+            <a role="menuitem" href="{% url 'settings' %}">Configurações</a>
             <a role="menuitem" href="{% url 'help' %}">Ajuda</a>
-            <a role="menuitem" href="{% url 'password_change' %}">Alterar senha</a>
             <a role="menuitem" href="{% url 'about' %}">Sobre</a>
+            <a role="menuitem" href="{% url 'privacy' %}">Privacidade</a>
             <a role="menuitem" href="{% url 'terms' %}">Termos de uso</a>
             <div class="account-sep"></div>
             <form method="post" action="{% url 'logout' %}" role="none">
@@ -56,6 +57,7 @@
       <nav class="footer-links" aria-label="Rodapé">
         <a href="{% url 'help' %}">Ajuda</a>
         <a href="{% url 'about' %}">Sobre</a>
+        <a href="{% url 'privacy' %}">Privacidade</a>
         <a href="{% url 'terms' %}">Termos</a>
         <a href="https://github.com/guiolindo/Idiomas" target="_blank" rel="noopener">Código-fonte</a>
       </nav>

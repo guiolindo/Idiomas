@@ -92,9 +92,15 @@
 </a>
 {% endif %}
 
-{# ============ Modos de estudo + Desafio + Travadas — cartões grandes clicáveis ============ #}
+{# ============ Modos de estudo + Desafio + Travadas — cartões grandes clicáveis
+     Para novo usuário, escondemos os 4 cards de modo alternativo — o CTA
+     principal já basta pra começar. Depois da primeira palavra estudada
+     eles aparecem como "outros jeitos de estudar". ============ #}
+{% if not is_new_user %}
+<p class="mode-preamble">Ou escolha um jeito diferente pra treinar {{ action_topic.name }} hoje:</p>
+{% endif %}
 <div class="action-grid">
-  {% if action_topic %}
+  {% if action_topic and not is_new_user %}
     <a class="action-card mode-escrita" href="{% url 'study' action_topic.slug %}?modo=escrita">
       <div class="action-eyebrow">Modo · {{ action_topic.name }}</div>
       <div class="action-title">Traduzir</div>

@@ -470,19 +470,76 @@ class NextTopicTests(TestCase):
 
     def test_mode_cards_show_topic_name(self):
         """Cada card de modo mostra qual tópico vai abrir — a pessoa não
-        clica no escuro."""
+        clica no escuro. Novo usuário NÃO vê os 4 cards (só o CTA
+        principal, pra não sobrecarregar). Depois da primeira palavra
+        estudada, os 4 cards aparecem."""
+        # Novo user: cards NÃO aparecem
         resp = self.client.get(reverse("home"))
-        # 4 cards de modo + Escrita/Ditado/Transcrição/Voz — todos com "Um"
-        # no eyebrow.
+        self.assertNotContains(resp, "Modo · Um")
+        # Após primeira palavra estudada, os 4 cards ficam visíveis
+        word = self.t1.words.first()
+        Progress.objects.create(user=self.user, word=word)
+        resp = self.client.get(reverse("home"))
         self.assertContains(resp, "Modo · Um", count=4)
 
 
 class HealthzTests(TestCase):
-    """Health check pra sondagem externa — 200 ok se app + DB vivos."""
-    def test_healthz_returns_ok(self):
+    """Health check pra sondagem externa — 200 se app+DB+migrations+vocab
+    ok. Retorno com checks:{db,migrations,vocabulario} pra ver o que falhou."""
+    def test_healthz_returns_checks(self):
+        # Cria 100 palavras pra passar o vocab check
+        topic = Topic.objects.create(slug="v", name="V", order=0)
+        for i in range(100):
+            Word.objects.create(topic=topic, pt=f"pt{i}", en=f"en{i}", order=i)
         resp = self.client.get(reverse("healthz"))
         self.assertEqual(resp.status_code, 200)
-        self.assertJSONEqual(resp.content, {"ok": True})
+        data = resp.json()
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["checks"]["db"], "ok")
+        self.assertEqual(data["checks"]["vocabulario"], "ok")
+
+
+class AliasesTests(TestCase):
+    """A-05 da auditoria: /login/ e /conta/criar/ redirecionam
+    pras rotas oficiais (/entrar/ e /criar-conta/)."""
+    def test_login_alias_redirects(self):
+        resp = self.client.get("/login/")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/entrar/", resp.url)
+
+    def test_conta_criar_alias_redirects(self):
+        resp = self.client.get("/conta/criar/")
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn("/criar-conta/", resp.url)
+
+
+class CoachOptInTests(TestCase):
+    """A-03 da auditoria: coach de IA vem desligado por padrão. Nada é
+    enviado pra Gemini/Groq sem opt-in explícito no perfil."""
+    def setUp(self):
+        make_topic()
+        self.user = User.objects.create_user(username="c@t.com", email="c@t.com", password="x1234567")
+        self.profile = Profile.objects.create(user=self.user)
+        self.client.login(username="c@t.com", password="x1234567")
+
+    def test_coach_default_disabled(self):
+        self.assertFalse(self.profile.coach_enabled)
+
+    def test_settings_page_toggles_coach(self):
+        resp = self.client.post(reverse("settings"), {"coach_enabled": "on"})
+        self.assertEqual(resp.status_code, 200)
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.coach_enabled)
+        # Desligar de novo
+        resp = self.client.post(reverse("settings"), {})
+        self.profile.refresh_from_db()
+        self.assertFalse(self.profile.coach_enabled)
+
+    def test_privacy_page_loads(self):
+        resp = self.client.get(reverse("privacy"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Gemini")
+        self.assertContains(resp, "desligado por padrão")
 
 
 class DisplayNameTests(TestCase):

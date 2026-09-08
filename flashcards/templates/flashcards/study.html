@@ -21,6 +21,12 @@
 </div>
 {% else %}
 
+{% if study_mode == 'voz' %}
+<div class="voice-intro">
+  <b>Falar e comparar</b> — você fala em inglês, depois ouve o áudio modelo e se auto-avalia (Errei / Quase / Sabia). O app <b>não dá nota de pronúncia</b> — pra não penalizar sotaque brasileiro correto. Você é o juiz.
+</div>
+{% endif %}
+
 {% if session_capped %}
 <div class="cap-notice" role="status">
   Rodada de hoje: <b>{{ session_cap }}</b> de <b>{{ total_due }}</b> vencidas — o resto fica pra amanhã pra evitar sobrecarga. As mais atrasadas vêm primeiro.

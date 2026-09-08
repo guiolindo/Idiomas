@@ -9,9 +9,22 @@
   <div class="study-count">{{ total }}</div>
 </div>
 
+<p class="topic-summary-sentence">
+  {% if counts.due %}
+    Você tem <b>{{ counts.due }}</b> {{ counts.due|pluralize:"palavra pra revisar,palavras pra revisar" }}
+    {% if counts.new %} e <b>{{ counts.new }}</b> {{ counts.new|pluralize:"nunca vista,nunca vistas" }}{% endif %}.
+    {% if counts.mastered %}Já dominou <b>{{ counts.mastered }}</b>.{% endif %}
+  {% elif counts.new %}
+    Você tem <b>{{ counts.new }}</b> {{ counts.new|pluralize:"palavra nova,palavras novas" }} pra estudar.
+    {% if counts.mastered %}Já dominou <b>{{ counts.mastered }}</b>.{% endif %}
+  {% else %}
+    Tudo em dia. {% if counts.mastered %}Já dominou <b>{{ counts.mastered }}</b> {{ counts.mastered|pluralize:"palavra,palavras" }} deste tópico.{% endif %}
+  {% endif %}
+</p>
+
 <div class="topic-summary">
   <div class="ts-item"><span class="ts-num">{{ counts.mastered }}</span><span class="ts-label">dominadas</span></div>
-  <div class="ts-item"><span class="ts-num">{{ counts.due }}</span><span class="ts-label">vencidas</span></div>
+  <div class="ts-item"><span class="ts-num">{{ counts.due }}</span><span class="ts-label">pra revisar</span></div>
   <div class="ts-item"><span class="ts-num">{{ counts.learning }}</span><span class="ts-label">em revisão</span></div>
   <div class="ts-item"><span class="ts-num">{{ counts.new }}</span><span class="ts-label">novas</span></div>
 </div>

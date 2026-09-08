@@ -305,7 +305,8 @@
       wrap.className = 'controls';
       wrap.innerHTML = `
         <button class="btn" id="giveup-btn">Não lembro</button>
-        <button class="btn primary" id="reveal-btn" disabled>Conferir <kbd>Enter</kbd></button>`;
+        <button class="btn primary" id="reveal-btn" disabled aria-describedby="reveal-hint">Conferir <kbd>Enter</kbd></button>
+        <span class="reveal-hint" id="reveal-hint">Digite sua resposta pra conferir</span>`;
       $('#giveup-btn').addEventListener('click', ()=>reveal({giveup:true}));
       $('#reveal-btn').addEventListener('click', ()=>reveal());
       updateConferirState();
@@ -320,6 +321,8 @@
     if(!btn) return;
     const hasText = $('#nb-input').value.trim().length > 0;
     btn.disabled = !hasText;
+    const hint = $('#reveal-hint');
+    if(hint) hint.hidden = hasText;
   }
   // ============ TTS (Web Speech API) ============
   // Sem servidor, sem arquivo permanente — o próprio navegador sintetiza
@@ -670,7 +673,7 @@
         <p class="done-sub">${missedCount ? `${missedCount} ${missedCount===1?'palavra pra revisar':'palavras pra revisar'} agora.` : 'Perfeito. Volte amanhã pra próxima rodada.'}</p>
         ${localSummary}
         <div class="coach-slot" id="coach-slot" hidden>
-          <div class="coach-label">Coach</div>
+          <div class="coach-label">Resumo da sua sessão</div>
           <p class="coach-msg" id="coach-msg"></p>
         </div>
       </div>

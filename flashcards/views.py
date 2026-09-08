@@ -279,7 +279,7 @@ def home(request):
         "overdue_count": overdue_count,
         "overdue_topic": overdue_topic,
         "ai_analysis": ai_analysis,
-        "ai_enabled": AI_ENABLED,
+        "ai_enabled": AI_ENABLED and profile.coach_enabled,
         "ai_generated_at": profile.ai_feedback_at,
         "level": level,
         "coverage": coverage,
@@ -702,8 +702,10 @@ def api_mark_progress(request, word_id):
 def api_session_coach(request):
     """Recebe o resumo de uma rodada de estudo que acabou de terminar e
     devolve um comentário curto e específico da IA. Chamado pelo study.js
-    no done screen. Sem chaves de IA configuradas, devolve {"enabled": False}."""
-    if not AI_ENABLED:
+    no done screen. Precisa: chaves configuradas E opt-in do usuário
+    (Profile.coach_enabled) — sem uma das duas, nada é enviado."""
+    from .ai_coach import coach_enabled_for
+    if not coach_enabled_for(request.user):
         return JsonResponse({"enabled": False})
     try:
         data = json.loads(request.body or "{}")
@@ -733,7 +735,7 @@ def api_session_coach(request):
         "topic": str(data.get("topic", ""))[:60],
         "mode": mode,
         "answers": clean_answers,
-    })
+    }, user=request.user)
     # Também atualiza a análise geral (strengths/focus/recommendation)
     # aqui, no fim da sessão, em vez de deixar a home regenerar depois
     # sem contexto novo. Se a chamada falhar, mantém a análise anterior
@@ -752,18 +754,40 @@ def api_session_coach(request):
 
 
 def healthz(request):
-    """Endpoint de health check pra sondagem externa (Railway, monitor
-    externo). Faz um SELECT trivial no banco pra confirmar que a app +
-    conexão de DB estão vivas. Retorna 200 ok / 500 se algo trava.
-    Sem autenticação — é infra, não UI."""
+    """Health check pra sondagem externa (Railway, uptime monitor).
+    Verifica banco + migrations pendentes + vocabulário mínimo. Nunca
+    expõe detalhes que só operador precisa saber (nome de host, versão,
+    stack trace). Segue recomendação A-06 da auditoria."""
     from django.db import connection
+    checks = {}
+    ok = True
     try:
         with connection.cursor() as c:
-            c.execute("SELECT 1")
-            c.fetchone()
-    except Exception as e:
-        return JsonResponse({"ok": False, "error": str(e)[:120]}, status=500)
-    return JsonResponse({"ok": True})
+            c.execute("SELECT 1"); c.fetchone()
+        checks["db"] = "ok"
+    except Exception:
+        checks["db"] = "erro"; ok = False
+    # Migrations aplicadas
+    try:
+        from django.db.migrations.executor import MigrationExecutor
+        executor = MigrationExecutor(connection)
+        pending = executor.migration_plan(executor.loader.graph.leaf_nodes())
+        checks["migrations"] = "ok" if not pending else "pendente"
+        if pending:
+            ok = False
+    except Exception:
+        checks["migrations"] = "erro"; ok = False
+    # Vocabulário mínimo carregado
+    try:
+        from .models import Word
+        n = Word.objects.count()
+        checks["vocabulario"] = "ok" if n >= 100 else "insuficiente"
+        if n < 100:
+            ok = False
+    except Exception:
+        checks["vocabulario"] = "erro"; ok = False
+    payload = {"ok": ok, "checks": checks}
+    return JsonResponse(payload, status=200 if ok else 500)
 
 
 def help_page(request):
@@ -776,6 +800,27 @@ def about_page(request):
 
 def terms_page(request):
     return render(request, "flashcards/terms.html")
+
+
+def privacy_page(request):
+    return render(request, "flashcards/privacy.html")
+
+
+@login_required
+def settings_page(request):
+    """Configurações do usuário. Por enquanto só o opt-in do coach de IA
+    (A-03 da auditoria — privacy by default, controle explícito)."""
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    saved = False
+    if request.method == "POST":
+        profile.coach_enabled = request.POST.get("coach_enabled") == "on"
+        profile.save(update_fields=["coach_enabled"])
+        saved = True
+    return render(request, "flashcards/settings.html", {
+        "profile": profile,
+        "saved": saved,
+        "ai_available": AI_ENABLED,
+    })
 
 
 @login_required

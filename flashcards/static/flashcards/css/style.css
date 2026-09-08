@@ -1096,6 +1096,62 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 }
 .challenge-intro b{ color:var(--gold); font-weight:600; }
 
+/* ==== Configurações ==== */
+.settings-saved{
+  padding:10px 14px; background:var(--accent-soft); color:var(--accent);
+  border:1px solid var(--accent); border-radius:6px;
+  font-family:var(--mono); font-size:12px; letter-spacing:.06em;
+  margin-bottom:20px;
+}
+.settings-toggle{
+  display:flex; align-items:center; gap:10px; padding:12px 0;
+  cursor:pointer;
+}
+.settings-toggle input{
+  width:20px; height:20px; accent-color:var(--accent); cursor:pointer;
+}
+.settings-toggle-label{
+  font-family:var(--serif); font-size:16px; color:var(--ink);
+}
+/* Aviso do modo Falar e comparar antes do primeiro cartão */
+.voice-intro{
+  margin:0 0 16px; padding:14px 16px;
+  background:var(--wrong-soft); border:1px solid var(--wrong);
+  border-radius:8px; font-size:13.5px; line-height:1.55; color:var(--ink);
+  max-width:60ch;
+}
+.voice-intro b{ color:var(--wrong); font-weight:600; }
+
+/* Preambulo antes do grid de modos alternativos */
+.mode-preamble{
+  margin:0 0 12px; font-family:var(--mono); font-size:11px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--graphite);
+}
+
+/* Frase-resumo do tópico em português natural, acima dos contadores */
+.topic-summary-sentence{
+  margin:0 0 16px; padding:12px 16px;
+  background:var(--paper); border:1px solid var(--line);
+  border-radius:6px 12px 12px 6px; border-left:2.5px solid var(--margin);
+  font-family:var(--serif); font-size:15px; line-height:1.55;
+  color:var(--ink); max-width:60ch;
+}
+.topic-summary-sentence b{ font-weight:600; color:var(--accent); }
+
+/* Hint que aparece perto do "Conferir" quando o campo está vazio */
+.reveal-hint{
+  grid-column:1 / -1;
+  font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  color:var(--graphite); font-style:italic;
+  text-align:center; margin-top:4px;
+}
+.reveal-hint[hidden]{ display:none; }
+
+.settings-hint{
+  font-family:var(--mono); font-size:12px; letter-spacing:.04em;
+  color:var(--graphite); font-style:italic; margin:8px 0 0;
+}
+
 /* ==== Menu de conta (dropdown do header) ==== */
 .account-menu{ position:relative; }
 .account-drop{

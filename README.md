@@ -5,6 +5,12 @@ Flashcards de vocabulário português → inglês. Sistema único em Python
 mesmo processo, na raiz deste repositório — sem front separado, sem
 serviço terceiro pra autenticação.
 
+## Estado do produto publicado
+
+- **Aplicação em produção:** [cadernodeidiomas.co.uk](https://cadernodeidiomas.co.uk) (também acessível via `idiomas-production-8caa.up.railway.app`)
+- **Vocabulário no banco publicado:** ~92 tópicos, ~2500 palavras. O arquivo `data/words.json` do repositório é apenas o vocabulário INICIAL (~33 tópicos, ~440 palavras) — a expansão é aplicada em cima disso por `import_words` a partir de `data/vocab_extra.json`.
+- **Testes automatizados:** 56 passando (`python manage.py test flashcards`).
+
 ## O que tem hoje
 
 - **Contas de verdade**: cadastro com e-mail + senha (hash seguro do
@@ -45,7 +51,8 @@ flashcards/             o app: models, views, templates, admin
     import_words.py       importa tópicos/palavras (JSON ou CSV)
     check_photos.py       verifica na Wikipedia se cada palavra tem foto e atualiza sozinho
 data/
-  words.json              vocabulário base (33 tópicos, ~440 palavras)
+  words.json              vocabulário inicial do repositório (~33 tópicos, ~440 palavras)
+  vocab_extra.json        expansão até ~92 tópicos, ~2500 palavras (o que está no produto publicado hoje)
 prompts/                 prompts prontos pra pedir a uma IA que melhore o sistema ou gere mais vocabulário
 ```
 
