@@ -182,6 +182,23 @@ a{ color:inherit }
   .footer-inner{ max-width:1080px; }
 }
 
+/* Topic detail em paisagem/desktop — coluna esquerda: ações (resumo,
+   contadores, modo, tempo); coluna direita: lista de palavras. Em
+   retrato/mobile, tudo empilha na ordem natural do HTML. */
+.topic-detail-grid{ display:contents; }
+@media (min-width: 900px){
+  .topic-detail-grid{
+    display:grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap:36px;
+    align-items:start;
+    margin-top:6px;
+  }
+  .td-col{ min-width:0; }
+  .td-col-actions > :first-child{ margin-top:0; }
+  .td-col-words > :first-child{ margin-top:0; }
+}
+
 /* Form elements */
 input[type="email"], input[type="password"], input[type="text"], input[type="search"]{
   width:100%; height:44px; border-radius:10px; border:1px solid var(--line-2);

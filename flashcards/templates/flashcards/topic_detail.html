@@ -9,6 +9,8 @@
   <div class="study-count">{{ total }}</div>
 </div>
 
+<div class="topic-detail-grid">
+<div class="td-col td-col-actions">
 <p class="topic-summary-sentence">
   {% if counts.due %}
     Você tem <b>{{ counts.due }}</b> {{ counts.due|pluralize:"palavra pra revisar,palavras pra revisar" }}
@@ -118,6 +120,7 @@
   {% endif %}
 {% endif %}
 
+</div><div class="td-col td-col-words">
 <h3 class="section-h">Palavras deste tópico</h3>
 <ul class="word-list">
   {% for row in rows %}
@@ -154,5 +157,7 @@
   </ul>
   <p>Se quiser praticar antes da hora, o botão <b>Praticar tudo</b> ignora as datas — o progresso continua sendo gravado normal.</p>
 </details>
+</div>
+</div>
 
 {% endblock %}
