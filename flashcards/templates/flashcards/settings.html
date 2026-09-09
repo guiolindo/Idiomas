@@ -16,10 +16,10 @@
     <section class="doc-section">
       <h2>Coach de inteligência artificial</h2>
       <p>
-        Se ligado, ao terminar cada rodada de estudo o sistema envia um resumo do que aconteceu pra Google Gemini (ou Groq como reserva) gerar um comentário em português e uma análise dos seus pontos fortes e do que ajustar.
+        Vem <b>ligado por padrão</b> — ao criar conta você declarou ciência disso ao aceitar os <a href="{% url 'terms' %}">Termos</a> e a <a href="{% url 'privacy' %}#ia">Privacidade</a>. Se preferir estudar sem o coach, é só desmarcar abaixo.
       </p>
       <p>
-        O que sai daqui quando ligado: o tópico, as palavras da rodada, o que você respondeu, e seus acertos/erros. <b>Não sai</b> seu e-mail, sua senha, seu IP, nem histórico completo. Detalhes em <a href="{% url 'privacy' %}#ia">Privacidade</a>.
+        Quando ligado, ao terminar cada rodada o sistema envia um resumo do que aconteceu pra Google Gemini (ou Groq como reserva) gerar um comentário em português. Sai daqui: tópico, palavras da rodada, o que você respondeu, acertos/erros. <b>Não sai</b>: e-mail, senha, IP, histórico completo.
       </p>
       <label class="settings-toggle">
         <input type="checkbox" name="coach_enabled" {% if profile.coach_enabled %}checked{% endif %} {% if not ai_available %}disabled{% endif %}>

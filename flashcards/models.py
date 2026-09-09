@@ -179,14 +179,16 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     streak_count = models.PositiveIntegerField(default=0)
     last_study_date = models.DateField(null=True, blank=True)
-    # Opt-in explícito no coach de IA (feedback A-03 da auditoria).
-    # Default False respeita privacy-by-default — o aluno tem que ligar
-    # ativamente pra qualquer dado sair do sistema pra Gemini/Groq.
+    # Coach de IA — ligado por padrão. Ao aceitar os Termos e a
+    # Privacidade, o usuário está ciente de que um resumo da rodada
+    # é enviado pra Gemini/Groq gerar o feedback. Pode ser desligado
+    # em Configurações a qualquer momento.
     coach_enabled = models.BooleanField(
         "coach de IA ligado",
-        default=False,
+        default=True,
         help_text="Se ligado, envia resumo de erros/rodadas pra Gemini/Groq "
-                  "gerar feedback. Padrão desligado (privacy by default).",
+                  "gerar feedback. Padrão ligado — cobertura pela aceitação "
+                  "dos Termos/Privacidade na criação da conta.",
     )
 
     # Coach com IA: última vez que o aluno respondeu algo, e o feedback

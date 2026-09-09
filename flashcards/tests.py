@@ -514,32 +514,34 @@ class AliasesTests(TestCase):
 
 
 class CoachOptInTests(TestCase):
-    """A-03 da auditoria: coach de IA vem desligado por padrão. Nada é
-    enviado pra Gemini/Groq sem opt-in explícito no perfil."""
+    """Coach de IA vem ligado por padrão — cobertura pela aceitação dos
+    Termos/Privacidade na criação da conta. Usuário pode desligar em
+    Configurações a qualquer momento."""
     def setUp(self):
         make_topic()
         self.user = User.objects.create_user(username="c@t.com", email="c@t.com", password="x1234567")
         self.profile = Profile.objects.create(user=self.user)
         self.client.login(username="c@t.com", password="x1234567")
 
-    def test_coach_default_disabled(self):
-        self.assertFalse(self.profile.coach_enabled)
+    def test_coach_default_enabled(self):
+        self.assertTrue(self.profile.coach_enabled)
 
     def test_settings_page_toggles_coach(self):
-        resp = self.client.post(reverse("settings"), {"coach_enabled": "on"})
+        # Desligar
+        resp = self.client.post(reverse("settings"), {})
         self.assertEqual(resp.status_code, 200)
         self.profile.refresh_from_db()
-        self.assertTrue(self.profile.coach_enabled)
-        # Desligar de novo
-        resp = self.client.post(reverse("settings"), {})
-        self.profile.refresh_from_db()
         self.assertFalse(self.profile.coach_enabled)
+        # Ligar de novo
+        resp = self.client.post(reverse("settings"), {"coach_enabled": "on"})
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.coach_enabled)
 
     def test_privacy_page_loads(self):
         resp = self.client.get(reverse("privacy"))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Gemini")
-        self.assertContains(resp, "desligado por padrão")
+        self.assertContains(resp, "ligado por padrão")
 
 
 class DisplayNameTests(TestCase):
