@@ -24,9 +24,10 @@
 {% else %}
 
 {% if study_mode == 'voz' %}
-<div class="voice-intro">
-  <b>Falar e comparar</b> — você fala em inglês, depois ouve o áudio modelo e se auto-avalia (Errei / Quase / Sabia). O app <b>não dá nota de pronúncia</b> — pra não penalizar sotaque brasileiro correto. Você é o juiz.
-</div>
+<details class="voice-intro">
+  <summary>Falar e comparar — como funciona</summary>
+  <p>Você fala em inglês, depois ouve o áudio modelo e se auto-avalia (Errei / Quase / Sabia). O app <b>não dá nota de pronúncia</b> — pra não penalizar sotaque brasileiro correto. Você é o juiz.</p>
+</details>
 {% endif %}
 
 {% if session_capped %}
