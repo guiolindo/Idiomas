@@ -4,6 +4,7 @@
 {% block content %}
 
 <div class="focus-flow">
+<div class="focus-main">
 <div class="study-head">
   <a class="back" href="{% url 'home' %}">← Tópicos</a>
   <div class="title">Desafio relâmpago</div>
@@ -78,6 +79,27 @@
 </div>
 
 {% endif %}
+</div>
+
+<aside class="study-side" aria-label="Contexto da rodada">
+  <div class="study-side-block">
+    <div class="ssb-label">Modo</div>
+    <div class="ssb-topic">Desafio</div>
+    <div class="ssb-mode">12 palavras aleatórias — não afeta suas revisões</div>
+  </div>
+  <div class="study-side-block">
+    <div class="ssb-label">Atalhos</div>
+    <div class="study-side-shortcuts">
+      <kbd>Enter</kbd><span>conferir resposta</span>
+      <kbd>Espaço</kbd><span>ouvir pronúncia</span>
+      <kbd>Esc</kbd><span>não lembro</span>
+      <kbd>→</kbd><span>próxima palavra</span>
+    </div>
+  </div>
+  <div class="study-side-quote">
+    Contato amplo com o vocabulário — sem risco de voltar no progresso.
+  </div>
+</aside>
 </div>
 {% endblock %}
 

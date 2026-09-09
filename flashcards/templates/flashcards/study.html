@@ -4,6 +4,7 @@
 {% block content %}
 
 <div class="focus-flow">
+<div class="focus-main">
 <div class="study-head">
   <a class="back" href="{% url 'home' %}">← Tópicos</a>
   <div class="title">{{ topic.name }}</div>
@@ -100,6 +101,32 @@ NÃO aparecem aqui — são modos separados, escolhidos antes da sessão.
 </div>
 
 {% endif %}
+</div>
+
+<aside class="study-side" aria-label="Contexto da rodada">
+  <div class="study-side-block">
+    <div class="ssb-label">Tópico</div>
+    <div class="ssb-topic">{{ topic.name }}</div>
+    <div class="ssb-mode">
+      {% if study_mode == 'ditado' %}Ouvir e escolher
+      {% elif study_mode == 'transcricao' %}Ouvir e escrever em inglês
+      {% elif study_mode == 'voz' %}Falar e comparar
+      {% else %}Traduzir pra inglês{% endif %}
+    </div>
+  </div>
+  <div class="study-side-block">
+    <div class="ssb-label">Atalhos</div>
+    <div class="study-side-shortcuts">
+      <kbd>Enter</kbd><span>conferir resposta</span>
+      <kbd>Espaço</kbd><span>ouvir pronúncia</span>
+      <kbd>Esc</kbd><span>não lembro</span>
+      <kbd>→</kbd><span>próxima palavra</span>
+    </div>
+  </div>
+  <div class="study-side-quote">
+    Você revê a palavra logo antes de esquecer. É por isso que funciona.
+  </div>
+</aside>
 </div>
 {% endblock %}
 
