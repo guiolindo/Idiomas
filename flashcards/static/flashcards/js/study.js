@@ -605,20 +605,26 @@
       //   - transcricao / PT / Foto / Voz: alvo é o inglês (w.en)
       const target = prefs.cue === 'ditado' ? w.pt : w.en;
       const v = matchAnswer(typed, target);
-      // Diff tipográfico: mostra o que foi digitado com as letras certas
-      // em tinta e as diferentes em vermelho — feedback é o próprio texto,
-      // não precisa de ícone. Uma vozinha de professor sem palavra escrita.
-      const diffHTML = buildDiff(typed, target);
       if(v==='ok'){
         el.innerHTML = '<span class="verdict-mark ok">✓</span> Perfeito.';
         el.className='verdict ok';
         result='know';
       } else if(v==='close'){
+        // Erro pequeno (grafia): diff tipográfico ajuda a ver A LETRA
+        // que faltou/sobrou. Só faz sentido quando as palavras são
+        // parecidas — LCS entre palavras muito diferentes vira lixo
+        // visual tipo "cashbangeek".
+        const diffHTML = buildDiff(typed, target);
         el.innerHTML = `<span class="verdict-mark close">≈</span> Quase — veja a grafia. <span class="diff">${diffHTML}</span>`;
         el.className='verdict close';
         result='soso';
       } else {
-        el.innerHTML = `<span class="verdict-mark no">✗</span> Não bateu. <span class="diff">${diffHTML}</span>`;
+        // Palavras completamente diferentes: NÃO mostrar diff. Mostrar
+        // o que a pessoa escreveu (riscado) e a resposta certa (destaque).
+        // Bem mais claro que um LCS pegando letras coincidentes soltas.
+        const typedEsc = escapeHtml(typed);
+        const targetEsc = escapeHtml(target);
+        el.innerHTML = `<span class="verdict-mark no">✗</span> Você escreveu <span class="wrong-typed">${typedEsc}</span>; era <span class="right-target">${targetEsc}</span>.`;
         el.className='verdict no';
         result='miss';
       }

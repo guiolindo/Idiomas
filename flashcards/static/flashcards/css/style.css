@@ -717,6 +717,17 @@ footer{
 .verdict .d-ok{ color:var(--ink); }
 .verdict .d-extra{ color:var(--wrong); text-decoration:line-through; text-decoration-thickness:1px; }
 .verdict .d-miss{ color:var(--gold-ink); border-bottom:1.5px solid var(--gold); padding-bottom:1px; }
+/* Resposta totalmente errada — mostra o que a pessoa escreveu (riscado)
+   e a resposta correta (destacada). Sem tentar alinhar letras — palavras
+   diferentes não têm alinhamento honesto. */
+.verdict.no .wrong-typed{
+  color:var(--wrong); text-decoration:line-through; text-decoration-thickness:1px;
+  font-family:var(--serif); font-style:italic;
+}
+.verdict.no .right-target{
+  color:var(--ink); font-family:var(--serif); font-style:italic;
+  border-bottom:1.5px solid var(--gold); padding-bottom:1px;
+}
 
 /* Botões — mais peso, mais físicos */
 .controls{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; }
