@@ -182,6 +182,14 @@ a{ color:inherit }
   .footer-inner{ max-width:1080px; }
 }
 
+/* Fluxo focado (estudo, misturar, desafio) — mesmo com .app largo em
+   paisagem, esses telas mantem uma coluna focada centrada em ~640px pra
+   nao dispersar a atencao entre card, controles e coach. Aplicado via
+   body class na base ou wrapper na template. */
+@media (min-width: 900px){
+  .focus-flow{ max-width:640px; margin:0 auto; }
+}
+
 /* Topic detail em paisagem/desktop — coluna esquerda: ações (resumo,
    contadores, modo, tempo); coluna direita: lista de palavras. Em
    retrato/mobile, tudo empilha na ordem natural do HTML. */
@@ -873,6 +881,16 @@ footer{
 .srs-help li{ margin:3px 0; }
 .srs-help b{ color:var(--ink); font-weight:600; }
 .word-list{ list-style:none; padding:0; margin:0; }
+/* Em paisagem/desktop a lista de travadas (que ocupa a largura toda)
+   vira 2 colunas. Word-list dentro do topico já vive em coluna estreita
+   do grid, então não recebe esse tratamento. */
+@media (min-width: 900px){
+  .word-list.word-list-wide{
+    display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:6px 14px;
+  }
+  .word-list.word-list-wide .word-row{ margin-bottom:0; }
+}
 .word-row{
   display:grid; grid-template-columns:12px 1fr auto auto; gap:12px; align-items:baseline;
   padding:12px 14px; background:var(--paper); border:1px solid var(--line);
@@ -1227,7 +1245,21 @@ input:focus-visible{ outline:none; } /* já tem borda animada */
 .footer-links a:hover{ color:var(--accent); }
 
 /* ==== Páginas de documento (Ajuda, Sobre, Termos) ==== */
+/* Em retrato/mobile: coluna estreita (640px) pra leitura confortável.
+   Em paisagem/desktop: usa toda a largura do .app e distribui as
+   sections em 2 colunas — evita a "faixa central" com sobra dos lados. */
 .doc-page{ max-width:640px; }
+@media (min-width: 900px){
+  .doc-page{ max-width:none; }
+  .doc-page .doc-title{ font-size:44px; }
+  .doc-page .doc-lead{ max-width:60ch; font-size:16px; }
+  .doc-page .doc-sections-grid{
+    display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px 40px; align-items:start;
+  }
+  .doc-page .doc-sections-grid .doc-section{ margin:18px 0; break-inside:avoid; }
+  .doc-page .doc-back{ grid-column:1 / -1; }
+}
 .doc-title{
   font-family:var(--display); font-weight:400; font-size:36px; letter-spacing:-.02em;
   color:var(--ink); margin:12px 0 6px;

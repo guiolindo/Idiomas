@@ -3,6 +3,7 @@
 {% block title %}{{ topic.name }} · Caderno de Idiomas{% endblock %}
 {% block content %}
 
+<div class="focus-flow">
 <div class="study-head">
   <a class="back" href="{% url 'home' %}">← Tópicos</a>
   <div class="title">{{ topic.name }}</div>
@@ -99,6 +100,7 @@ NÃO aparecem aqui — são modos separados, escolhidos antes da sessão.
 </div>
 
 {% endif %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
