@@ -92,10 +92,12 @@
 </a>
 {% endif %}
 
-{# ============ Modos de estudo + Desafio + Travadas — cartões grandes clicáveis
-     Para novo usuário, escondemos os 4 cards de modo alternativo — o CTA
-     principal já basta pra começar. Depois da primeira palavra estudada
-     eles aparecem como "outros jeitos de estudar". ============ #}
+{% comment %}
+Modos de estudo + Desafio + Travadas — cartões grandes clicáveis.
+Para novo usuário, escondemos os 4 cards de modo alternativo — o CTA
+principal já basta pra começar. Depois da primeira palavra estudada
+eles aparecem como "outros jeitos de estudar".
+{% endcomment %}
 {% if not is_new_user %}
 <p class="mode-preamble">Ou escolha um jeito diferente pra treinar {{ action_topic.name }} hoje:</p>
 {% endif %}

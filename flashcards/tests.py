@@ -569,6 +569,32 @@ class DisplayNameTests(TestCase):
         self.assertEqual(_display_name(u), "Ux")
 
 
+class TemplateHygieneTests(TestCase):
+    """Bug recorrente: comentário Django '{# ... #}' só funciona em UMA
+    linha. Multi-linha vaza pro HTML e vira lixo visual na home. Este
+    teste varre todos os templates procurando aberturas '{#' sem
+    fechamento na mesma linha — impede a regressão."""
+    def test_no_multiline_django_comments(self):
+        import os
+        offenders = []
+        base = os.path.join(os.path.dirname(__file__), "templates")
+        for root, _dirs, files in os.walk(base):
+            for f in files:
+                if not f.endswith(".html"):
+                    continue
+                path = os.path.join(root, f)
+                with open(path, encoding="utf-8") as fp:
+                    for i, line in enumerate(fp, 1):
+                        idx = line.find("{#")
+                        if idx >= 0 and "#}" not in line[idx:]:
+                            offenders.append(f"{path}:{i}")
+        self.assertEqual(
+            offenders, [],
+            "Comentário Django multi-linha detectado — use {% comment %}...{% endcomment %} "
+            "em vez de {# ... #} pra bloco. Locais:\n" + "\n".join(offenders),
+        )
+
+
 class StaticPagesTests(TestCase):
     """Ajuda/Sobre/Termos são páginas públicas — não exigem login."""
     def test_help_page_loads(self):
